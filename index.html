@@ -345,6 +345,12 @@ function saveVP(){S.set('vP2',vP);}
 function lCount(){return Object.values(vP).filter(p=>p.score>=3).length;}
 function dCount(){return Object.values(vP).filter(p=>p.seen>0&&p.nextReview<=Date.now()).length;}
 
+let vSt={cat:'all',mode:'mixed',size:10,screen:'home',session:[],idx:0,results:[],flipped:false,mcqSel:null,mcqOpts:[],fill:'',fillDone:false};
+function getPool(){return vSt.cat==='all'?AW:AW.filter(w=>w.catId===vSt.cat);}
+function getSorted(){return [...getPool()].sort((a,b)=>{const pa=vP[wKey(a)],pb=vP[wKey(b)];const now=Date.now();const ad=pa.nextReview<=now?0:1,bd=pb.nextReview<=now?0:1;if(ad!==bd)return ad-bd;if(pa.score!==pb.score)return pa.score-pb.score;return pa.seen-pb.seen;});}
+function genMCQ(w){const others=AW.filter(x=>x.w!==w.w).sort(()=>Math.random()-0.5).slice(0,3).map(x=>x.g);vSt.mcqOpts=[...others,w.g].sort(()=>Math.random()-0.5);}
+function getMode(idx){if(vSt.mode!=='mixed')return vSt.mode;return['flashcard','mcq','fill'][idx%3];}
+
 // HOME
 function renderHome(){
   const xp=getXP();const lv=getLv(xp);const ld=LVS[lv];
@@ -410,11 +416,6 @@ function renderHome(){
 }
 
 // VOCAB
-let vSt={cat:'all',mode:'mixed',size:10,screen:'home',session:[],idx:0,results:[],flipped:false,mcqSel:null,mcqOpts:[],fill:'',fillDone:false};
-function getPool(){return vSt.cat==='all'?AW:AW.filter(w=>w.catId===vSt.cat);}
-function getSorted(){return [...getPool()].sort((a,b)=>{const pa=vP[wKey(a)],pb=vP[wKey(b)];const now=Date.now();const ad=pa.nextReview<=now?0:1,bd=pb.nextReview<=now?0:1;if(ad!==bd)return ad-bd;if(pa.score!==pb.score)return pa.score-pb.score;return pa.seen-pb.seen;});}
-function genMCQ(w){const others=AW.filter(x=>x.w!==w.w).sort(()=>Math.random()-0.5).slice(0,3).map(x=>x.g);vSt.mcqOpts=[...others,w.g].sort(()=>Math.random()-0.5);}
-function getMode(idx){if(vSt.mode!=='mixed')return vSt.mode;return['flashcard','mcq','fill'][idx%3];}
 function startVS(){vSt.session=getSorted().slice(0,vSt.size);vSt.idx=0;vSt.results=[];vSt.flipped=false;vSt.mcqSel=null;vSt.fill='';vSt.fillDone=false;if(getMode(0)==='mcq')genMCQ(vSt.session[0]);vSt.screen='study';renderVStudy();}
 function recordV(correct){
   const cw=vSt.session[vSt.idx];const key=wKey(cw);const old=vP[key];
@@ -487,7 +488,8 @@ function renderVStudy(){
     const optBtns=vSt.mcqOpts.map((opt,i)=>{
       let bg='var(--bg3)',br='var(--border)',col='var(--text3)';
       if(vSt.mcqSel){if(opt===cw.g){bg='#061a0f';br='#10b981';col='var(--green)';}else if(vSt.mcqSel===opt){bg='#180808';br='#ef4444';col='var(--red)';}}
-      return `<button class="mcq-opt" onclick="if(!vSt.mcqSel){vSt.mcqSel=this.dataset.v;renderVStudy();setTimeout(()=>recordV(this.dataset.v===decodeURIComponent('${encodeURIComponent(cw.g)}')),750);}" data-v="${encodeURIComponent(opt)}" style="background:${bg};border:1px solid ${br};color:${col};"><span style="color:var(--text3);margin-right:8px;font-family:var(--cinzel);">${String.fromCharCode(65+i)}.</span>${opt}</button>`;
+      const isCorrectOpt = opt === cw.g;
+      return `<button class="mcq-opt" onclick="vMCQClick(${i})" id="mcqopt_${i}" style="background:${bg};border:1px solid ${br};color:${col};"><span style="color:var(--text3);margin-right:8px;font-family:var(--cinzel);">${String.fromCharCode(65+i)}.</span>${opt}</button>`;
     }).join('');
     cb=`<div class="tc mb16"><div class="slabel mb6">ΤΙ ΣΗΜΑΙΝΕΙ:</div><div style="font-family:var(--cinzel);font-size:22px;color:#f3f0ea;margin-bottom:6px;">${cw.w}</div><div class="f12 c3 italic">"${cw.e}"</div></div><div>${optBtns}</div>`;
   }else{
@@ -521,6 +523,13 @@ function renderVStudy(){
       <span class="slabel">WORD FAMILY · </span>${cw.f.map(f=>`<span class="tag" style="margin-left:4px;background:#6366f118;border:1px solid #6366f140;color:var(--purple);">${f}</span>`).join('')}
     </div>`:''}`;
   if(em==='fill'&&!vSt.fillDone)setTimeout(()=>document.getElementById('fi')?.focus(),50);
+}
+
+function vMCQClick(optIdx){
+  if(vSt.mcqSel!==null)return;
+  vSt.mcqSel=optIdx;
+  renderVStudy();
+  setTimeout(()=>recordV(vSt.mcqOpts[optIdx]===vSt.session[vSt.idx].g),750);
 }
 function renderVResults(){
   const el=document.getElementById('vocab-c');
@@ -643,7 +652,7 @@ function renderTMain(){
   if(tSt.tab==='theory'){
     body=`<div class="card mb12 fadein"><div class="slabel mb10" style="color:${t.color};">ΧΡΗΣΕΙΣ</div>${t.uses.map((u,i)=>`<div style="margin-bottom:10px;padding-bottom:10px;${i<t.uses.length-1?'border-bottom:1px solid var(--border)':''}"><div style="font-family:var(--cinzel);font-size:11px;color:#c8c4bc;margin-bottom:3px;">${i+1}. ${u.split(':')[0]}${u.includes(':')?':':''}</div>${u.includes(':')?`<div class="f11 c3 italic" style="padding-left:12px;">"${u.split(':').slice(1).join(':')}"</div>`:''}</div>`).join('')}</div>
     <div class="card mb12"><div class="slabel mb8" style="color:var(--purple);">SIGNAL WORDS</div><div style="display:flex;flex-wrap:wrap;gap:5px;">${t.kw.map(k=>`<span class="tag" style="background:#1a103050;border:1px solid #3b2a6b;color:var(--purple);">${k}</span>`).join('')}</div></div>
-    ${t.tips?.length?`<div class="card card-green"><button onclick="tSt.tips=!tSt.tips;renderTMain()" style="background:none;border:none;color:var(--green);font-family:var(--cinzel);font-size:9px;letter-spacing:2px;">${tSt.tips?'▾':'▸'} TIPS & ΠΑΓΙΔΕΣ</button>${tSt.tips?t.tips.map(tp=>`<div class="mt8 f12 cg" style="line-height:1.6;padding-left:12px;">💡 ${tp}</div>`).join(''):''}`):''}`.replace(/undefined/g,'')+'</div>':''}</div>`;
+    ${t.tips&&t.tips.length?`<div class="card card-green"><button onclick="tSt.tips=!tSt.tips;renderTMain()" style="background:none;border:none;color:var(--green);font-family:var(--cinzel);font-size:9px;letter-spacing:2px;">${tSt.tips?'▾':'▸'} TIPS</button>${tSt.tips?t.tips.map(tp=>`<div class="mt8 f12 cg" style="line-height:1.6;padding-left:12px;">💡 ${tp}</div>`).join(''):''}</div>`:''}`;
   }else if(tSt.tab==='forms'){
     body=t.forms.map(([l,v])=>`<div class="card mb8 fadein"><div style="font-family:var(--cinzel);font-size:10px;color:${t.color};margin-bottom:8px;">${l}</div><div class="mono f12 c2" style="line-height:1.6;padding-left:8px;border-left:2px solid ${t.color}40;">${v}</div></div>`).join('');
   }else if(tSt.tab==='examples'){
@@ -868,6 +877,10 @@ function renderStats(){
 }
 
 // TRACKER
+let trkScr='today';let trkNW={word:'',greek:'',example:''};
+function todayKey(){return new Date().toISOString().split('T')[0];}
+function getLast90(){const d=[];for(let i=89;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);d.push(x.toISOString().split('T')[0]);}return d;}
+function getLast7(){const d=[];for(let i=6;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);d.push(x.toISOString().split('T')[0]);}return d;}
 const PLAN=[
   {id:'vocab',label:'Vocabulary',icon:'📚',mins:10,color:'#f59e0b',tip:'1 session με 10 λέξεις'},
   {id:'tenses',label:'Tenses',icon:'⏱',mins:10,color:'#0ea5e9',tip:'Διάβασε 1 χρόνο ή κάνε quiz'},
@@ -875,6 +888,9 @@ const PLAN=[
   {id:'reading',label:'Reading',icon:'📄',mins:10,color:'#f97316',tip:'Διάβασε aviation text'},
   {id:'listening',label:'Listening',icon:'🎧',mins:10,color:'#fb7185',tip:'Άκου 10\' αγγλικά (podcast, BBC)'},
 ];
+
+function calcStreak(){const comp=S.get('trkComp',{});let s=0;const d=new Date();if((comp[todayKey()]||[]).length<3)d.setDate(d.getDate()-1);while(true){const k=d.toISOString().split('T')[0];if((comp[k]||[]).length<3)break;s++;d.setDate(d.getDate()-1);}return s;}
+
 const MILESTONES=[{d:3,l:'Πρώτα βήματα',i:'🌱'},{d:7,l:'1 Εβδομάδα!',i:'⭐'},{d:14,l:'2 Εβδομάδες',i:'🔥'},{d:21,l:'Συνήθεια!',i:'💪'},{d:30,l:'1 Μήνας!',i:'🏆'},{d:60,l:'2 Μήνες',i:'🚀'},{d:100,l:'100 Μέρες!',i:'👑'}];
 const LISTEN=[
   {n:'BBC 6 Minute English',u:'https://www.bbc.co.uk/learningenglish/english/features/6-minute-english',d:'6 λεπτά, καθημερινά',lv:'B1-B2',c:'#38bdf8'},
@@ -897,11 +913,7 @@ const PRON=[
   {w:'authority',ph:'/ɔːˈθɒr.ɪ.ti/',t:'Stress: au-THOR-ity'},
 ];
 const QUOTES=['The more that you read, the more things you will know.','Consistency is what transforms average into excellence.','An investment in knowledge pays the best interest.','Small daily improvements are the key to staggering long-term results.','Language is the road map of a culture.'];
-let trkScr='today';let trkNW={word:'',greek:'',example:''};
-function todayKey(){return new Date().toISOString().split('T')[0];}
-function getLast90(){const d=[];for(let i=89;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);d.push(x.toISOString().split('T')[0]);}return d;}
-function getLast7(){const d=[];for(let i=6;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);d.push(x.toISOString().split('T')[0]);}return d;}
-function calcStreak(){const comp=S.get('trkComp',{});let s=0;const d=new Date();if((comp[todayKey()]||[]).length<3)d.setDate(d.getDate()-1);while(true){const k=d.toISOString().split('T')[0];if((comp[k]||[]).length<3)break;s++;d.setDate(d.getDate()-1);}return s;}
+
 function renderTracker(){
   const comp=S.get('trkComp',{});const today=todayKey();
   const todayDone=comp[today]||[];const totalDays=Object.keys(comp).filter(k=>(comp[k]||[]).length>=3).length;
