@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0049)file:///C:/Users/Vozinis.E/Downloads/index_3.html -->
+<!-- saved from url=(0049)file:///C:/Users/Vozinis.E/Downloads/index_5.html -->
 <html lang="el"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -255,9 +255,9 @@ body.light .c-info{background:#eef3ff;border-color:#a3b8e8}
   </div>
 </nav>
 <div id="cnt">
-  <div id="home" class="pnl" style="display:block"><div style="padding:20px;max-width:900px;margin:0 auto" class="fu">
+  <div id="home" class="pnl" style="display: block;"><div style="padding:20px;max-width:900px;margin:0 auto" class="fu">
     <!-- Word of the Day -->
-    <div class="card mb16" style="border-color:var(--ro)33"><div class="fx ac jb mb8"><div class="sl" style="color:var(--ro)">⭐ WORD OF THE DAY</div><span class="tag f9" style="background:var(--ro)1a;border:1px solid var(--ro)33;color:var(--ro)">B1-C1</span></div><div class="fx ac jb"><div><div class="fp f20 b mb4">in other words</div><div class="f13 mb4" style="color:var(--ro)">με άλλα λόγια</div><div class="f11 c3 it">"In other words, we simply need more time."</div></div><div class="fx col ac g8"><button onclick="speak(&#39;in&#39;)" style="padding:6px 14px;border:1px solid var(--tl)44;border-radius:20px;color:var(--tl);font-size:12px;cursor:pointer;background:var(--s3)">🔊</button><button onclick="setWS(&#39;ph08&#39;,true);toast(&#39;Εμαθα +8 XP&#39;,&#39;var(--gr)&#39;)" style="padding:5px 12px;border:1px solid var(--gr)44;border-radius:20px;color:var(--gr);font-size:10px;cursor:pointer;background:var(--s3)">Εμαθα ✓</button></div></div></div>
+    <div class="card mb16" style="border-color:var(--ro)33"><div class="fx ac jb mb8"><div class="sl" style="color:var(--ro)">⭐ WORD OF THE DAY</div><span class="tag f9" style="background:var(--ro)1a;border:1px solid var(--ro)33;color:var(--ro)">B1-C1</span></div><div class="fx ac jb"><div><div class="fp f20 b mb4">in other words</div><div class="f13 mb4" style="color:var(--ro)">με άλλα λόγια</div><div class="f11 c3 it">"In other words, we simply need more time."</div></div><div class="fx col ac g8"><button onclick="speak(&#39;in&#39;)" style="padding:6px 14px;border:1px solid var(--tl)44;border-radius:20px;color:var(--tl);font-size:12px;cursor:pointer;background:var(--s3)">🔊</button><button onclick="setWS(&#39;ph08&#39;,true);addXP(10);DB.set(&#39;wotd_done_&#39;+(&#39;2026-05-12&#39;),true);toast(&#39;✓ Εμαθα! +10 XP — αποθηκεύτηκε στο Vocabular!&#39;,&#39;var(--gr)&#39;);rHome()" style="padding:5px 12px;border:1px solid var(--gr)44;border-radius:20px;color:var(--gr);font-size:10px;cursor:pointer;background:var(--s3)">Εμαθα ✓</button></div></div></div>
     <div style="text-align:center;padding:24px 20px 20px">
       <div class="sl mb8 cam">ENGLISH MASTER — B1 → C1 · GENERAL &amp; BUSINESS</div>
       <h1 class="fp" style="font-size:26px;background:linear-gradient(135deg,#f0eef8 30%,var(--bl) 70%,var(--vi));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px">Καλώς ήρθες!</h1>
@@ -366,18 +366,123 @@ body.light .c-info{background:#eef3ff;border-color:#a3b8e8}
 
     
   </div></div>
-  <div id="vocab" class="pnl fpnl"></div>
-  <div id="tenses" class="pnl fpnl"></div>
-  <div id="grammar" class="pnl"></div>
-  <div id="writing" class="pnl"></div>
-  <div id="reading" class="pnl"></div>
-  <div id="speaking" class="pnl"></div>
-  <div id="lessons" class="pnl"></div>
-  <div id="builder" class="pnl"></div>
-  <div id="falsefriends" class="pnl"></div>
-  <div id="stats" class="pnl"></div>
-  <div id="tracker" class="pnl fpnl"></div>
-  <div id="settings" class="pnl"></div>
+  <div id="vocab" class="pnl fpnl" style="display: none;"></div>
+  <div id="tenses" class="pnl fpnl" style="display: none;"></div>
+  <div id="grammar" class="pnl" style="display: none;"></div>
+  <div id="writing" class="pnl" style="display: none;"></div>
+  <div id="reading" class="pnl" style="display: none;"></div>
+  <div id="speaking" class="pnl" style="display: none;"></div>
+  <div id="lessons" class="pnl" style="display: none;"><div class="sec fu" style="max-width:740px">
+    <div class="sl mb4 cbl">DAILY LESSON</div>
+    <div class="fp f16 b mb4">Μάθημα Σήμερα — 2026-05-12</div>
+    
+    <div class="fx ac jb mb16">
+      <div class="f12 c2">Ολοκλήρωσε όλα τα βήματα για να πάρεις XP!</div>
+      <div class="fx ac g8">
+        <span class="xp-pill">⭐ 0 XP</span>
+        <span class="f11 c3">0/5</span>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="pb mb16" style="height:6px">
+      <div class="pf" style="width:0%;background:linear-gradient(90deg,var(--bl),var(--gr))"></div>
+    </div>
+
+    
+
+    <!-- STEP 1: Learn the word -->
+    <div class="lesson-step " style="cursor:default">
+      <div class="step-num">1</div>
+      <div style="flex:1">
+        <div class="fp f12 b mb2" style="color:var(--t1)">Νέα Λέξη</div>
+        <div style="background:var(--s3);border-radius:8px;padding:12px;margin-top:8px">
+          <div class="fp f20 b mb4">achieve</div>
+          <div class="fx ac g8 mb6">
+            <span class="tag f9" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr)">🌍 verb</span>
+            <span class="tag f9" style="background:var(--s4);border:1px solid var(--ln2);color:var(--t2)">B1</span>
+          </div>
+          <div class="f13 b mb4" style="color:var(--gr)">επιτυγχάνω / κατορθώνω</div>
+          <div class="f12 c3 it">"She achieved her goal after months of hard work."</div>
+          <div class="f10 c3 mt6">Family: <span style="color:var(--vi)">achievement</span> · <span style="color:var(--vi)">achievable</span></div>
+        </div>
+      </div>
+      <div class="fx col ac g4">
+        <span class="xp-pill">+10 XP</span>
+        <button onclick="markStep(0)" class="btn bp bsm mt4" style="font-size:10px">Εμαθα ✓</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Context examples -->
+    <div class="lesson-step ">
+      <div class="step-num">2</div>
+      <div style="flex:1">
+        <div class="fp f12 b mb2" style="color:var(--t1)">3 Παραδείγματα στο Context</div>
+        <div class="f11 c3 mb8">Διάβασε πώς χρησιμοποιείται σε πραγματικές προτάσεις:</div>
+        <div class="f12 c2 mb6" style="padding:6px 10px;background:var(--s3);border-left:2px solid var(--gr)44;border-radius:0 6px 6px 0">
+          <span class="f10 b" style="color:var(--gr);margin-right:6px">1.</span>She achieved her goal after months of hard work.
+        </div><div class="f12 c2 mb6" style="padding:6px 10px;background:var(--s3);border-left:2px solid var(--gr)44;border-radius:0 6px 6px 0">
+          <span class="f10 b" style="color:var(--gr);margin-right:6px">2.</span>She decided to achieve as soon as possible.
+        </div><div class="f12 c2 mb6" style="padding:6px 10px;background:var(--s3);border-left:2px solid var(--gr)44;border-radius:0 6px 6px 0">
+          <span class="f10 b" style="color:var(--gr);margin-right:6px">3.</span>Many experts achieve that communication is key.
+        </div>
+      </div>
+      <div class="fx col ac g4">
+        <span class="xp-pill">+10 XP</span>
+        <button onclick="markStep(1)" class="btn bp bsm mt4" style="font-size:10px">Διαβασα ✓</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Grammar tip -->
+    <div class="lesson-step ">
+      <div class="step-num">3</div>
+      <div style="flex:1">
+        <div class="fp f12 b mb2" style="color:var(--t1)">Grammar Tip — Reported Speech</div>
+        <div class="f11 c3 mb8">Σύντομη υπενθύμιση:</div>
+        <div class="f12 c2" style="padding:10px;background:var(--s3);border-radius:8px;line-height:1.7">
+          <span class="f11 b" style="color:var(--bl)">Παράδειγμα: </span>"I work in London." → She said she <span style="color:var(--gr);font-weight:700">worked</span> in London.
+        </div>
+        <button onclick="go(&#39;grammar&#39;);GST.topic=&#39;reported&#39;" class="btn bgh bsm mt8" style="font-size:10px">📖 Δες πλήρη θεωρία →</button>
+      </div>
+      <div class="fx col ac g4">
+        <span class="xp-pill">+15 XP</span>
+        <button onclick="markStep(2)" class="btn bp bsm mt4" style="font-size:10px">Εμαθα ✓</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: Mini Quiz -->
+    <div class="lesson-step ">
+      <div class="step-num">4</div>
+      <div style="flex:1">
+        <div class="fp f12 b mb8" style="color:var(--t1)">Mini Quiz — Τι σημαίνει: <span style="color:var(--bl)">achieve</span>?</div>
+        <button onclick="lessonQuizSel(0)" style="width:100%;padding:8px 12px;border-radius:7px;text-align:left;font-size:12px;margin-bottom:6px;cursor:pointer;background:var(--s3);border:1px solid var(--ln);color:var(--t2);transition:all .12s">ευκαιρία</button><button onclick="lessonQuizSel(1)" style="width:100%;padding:8px 12px;border-radius:7px;text-align:left;font-size:12px;margin-bottom:6px;cursor:pointer;background:var(--s3);border:1px solid var(--ln);color:var(--t2);transition:all .12s">επιτυγχάνω / κατορθώνω</button><button onclick="lessonQuizSel(2)" style="width:100%;padding:8px 12px;border-radius:7px;text-align:left;font-size:12px;margin-bottom:6px;cursor:pointer;background:var(--s3);border:1px solid var(--ln);color:var(--t2);transition:all .12s">βρίσκω τυχαία / φαίνομαι</button><button onclick="lessonQuizSel(3)" style="width:100%;padding:8px 12px;border-radius:7px;text-align:left;font-size:12px;margin-bottom:6px;cursor:pointer;background:var(--s3);border:1px solid var(--ln);color:var(--t2);transition:all .12s">συνοπτικός / περιεκτικός</button>
+      </div>
+      <div class="fx col ac g4">
+        <span class="xp-pill">+20 XP</span>
+      </div>
+    </div>
+
+    <!-- STEP 5: Write a sentence -->
+    <div class="lesson-step ">
+      <div class="step-num">5</div>
+      <div style="flex:1">
+        <div class="fp f12 b mb4" style="color:var(--t1)">Γράψε τη Δική σου Πρόταση</div>
+        <div class="f11 c3 mb8">Χρησιμοποίησε τη λέξη <strong class="cbl">achieve</strong> σε δική σου πρόταση:</div>
+        <textarea id="lesson-sentence" rows="2" placeholder="Write your sentence here..." style="width:100%;background:var(--s3);border:1px solid var(--ln);border-radius:7px;color:var(--t1);font-size:13px;padding:9px;font-family:var(--f);line-height:1.5;resize:none" oninput="updateLessonSentence(this.value)"></textarea>
+        
+        <button onclick="markStep(4)" class="btn bp bsm mt8" style="font-size:10px" id="submit-sentence">Υποβολή ✓</button>
+      </div>
+      <div class="fx col ac g4">
+        <span class="xp-pill">+25 XP</span>
+      </div>
+    </div>
+
+  </div></div>
+  <div id="builder" class="pnl" style="display: none;"></div>
+  <div id="falsefriends" class="pnl" style="display: none;"></div>
+  <div id="stats" class="pnl" style="display: none;"></div>
+  <div id="tracker" class="pnl fpnl" style="display: none;"></div>
+  <div id="settings" class="pnl" style="display: none;"></div>
 </div>
 </div>
 <div id="toast"></div>
@@ -813,14 +918,32 @@ function getWB(){return DB.get('wb',{})}
 function getWS(id){return getWB()[id]||{sc:0,st:0,nr:0,seen:0}}
 function setWS(id,correct){
   const wb=getWB(),old=wb[id]||{sc:0,st:0,nr:0,seen:0};
-  const SM=[1,3,7,14,30];
-  const ns=correct?old.st+1:0;
-  const sc=Math.max(0,Math.min(5,old.sc+(correct?1:-1)));
-  wb[id]={sc,st:ns,nr:Date.now()+SM[Math.min(ns,4)]*86400000,seen:old.seen+1};
-  DB.set('wb',wb);addXP(correct?(sc>=3?15:8):2)
+  // SM-2 intervals: wrong=10min, then 1/3/7/14/30 days
+  const SM_MS=[600000,86400000,259200000,604800000,1209600000,2592000000];
+  const ns=correct?Math.min(old.st+1,5):0;
+  const sc=correct?Math.min(5,old.sc+1):Math.max(0,old.sc-1);
+  // Wrong answers come back sooner based on error count
+  const errors=DB.get('errors',{});
+  const errCount=(errors[id]?.count||0);
+  let nextMs=SM_MS[ns];
+  if(!correct && errCount>=3) nextMs=300000; // 5 min if chronic error
+  else if(!correct && errCount>=2) nextMs=600000; // 10 min
+  wb[id]={sc,st:ns,nr:Date.now()+nextMs,seen:old.seen+1};
+  DB.set('wb',wb);
+  if(correct){ addXP(sc>=3?15:sc>=1?10:8); }
+  else { addXP(2); trackError(id,'vocab'); }
 }
 function learnedW(){return getAllW().filter(w=>getWS(w.id).sc>=3)}
-function dueW(){const n=Date.now();return getAllW().filter(w=>{const s=getWS(w.id);return s.seen>0&&s.nr<=n})}
+function dueW(){
+  const n=Date.now();
+  return getAllW().filter(w=>{
+    const s=getWS(w.id);
+    // Due if: seen before AND (nextReview passed OR score < 3 and not seen today)
+    if(s.seen===0)return false;
+    if(s.nr<=n)return true;
+    return false;
+  });
+}
 function sortedW(cat='all'){
   const pool=cat==='all'?getAllW():getAllW().filter(w=>w.cat===cat);
   const n=Date.now();
@@ -832,7 +955,7 @@ function sortedW(cat='all'){
 }
 
 /* ══ VOCAB UI ══ */
-let VS={mode:'home',cat:'all',q:{mode:'mixed',sess:[],idx:0,res:[],fl:false,opts:[],sel:-1,fill:'',fd:false}};
+let VS={mode:'home',cat:'all',search:'',q:{mode:'mixed',sess:[],idx:0,res:[],fl:false,opts:[],sel:-1,fill:'',fd:false}};
 function rVocab(){
   const el=document.getElementById('vocab');
   const lc=learnedW().length,due=dueW().length,all=getAllW().length;
@@ -910,13 +1033,23 @@ function rVAll(el){
   const catBtns=[['all','🌐','Όλες'],...Object.entries(VCATS).map(([id,c])=>[id,c.ic,c.l.split(' ')[0]])].map(([id,ic,lb])=>
     `<button onclick="VS.cat='${id}';VS.mode='all';rVocab()" style="padding:4px 11px;border-radius:20px;border:1px solid ${VS.cat===id?'var(--bl)':'var(--ln)'};background:${VS.cat===id?'var(--s3)':'transparent'};color:${VS.cat===id?'var(--bl)':'var(--t3)'};font-size:11px;white-space:nowrap;cursor:pointer">${ic} ${lb}</button>`
   ).join('');
+  const searchQ=VS.search||'';
+  const filteredWords=searchQ?words.filter(w=>
+    w.w.toLowerCase().includes(searchQ.toLowerCase())||
+    w.g.toLowerCase().includes(searchQ.toLowerCase())||
+    (w.e&&w.e.toLowerCase().includes(searchQ.toLowerCase()))
+  ):words;
   el.innerHTML=`<div style="max-width:760px;margin:0 auto">
     <div class="fx ac jb mb12">
-      <div class="sl">ΛΕΞΙΛΟΓΙΟ (${words.length})</div>
+      <div class="sl">ΛΕΞΙΛΟΓΙΟ (${filteredWords.length}${searchQ?' αποτελέσματα':''})</div>
       <button class="btn bp bsm" onclick="VS.mode='add';rVocab()">➕ Νέα Λέξη</button>
     </div>
+    <div class="fx ac g8 mb12">
+      <input id="vsearch" value="${searchQ}" oninput="VS.search=this.value;rVAll(document.getElementById('vm'))" placeholder="🔍 Αναζήτηση λέξης..." style="flex:1;padding:8px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px">
+      ${searchQ?`<button onclick="VS.search='';rVAll(document.getElementById('vm'))" style="padding:6px 10px;border:1px solid var(--ln);border-radius:6px;color:var(--t3);font-size:11px;cursor:pointer">✕</button>`:''}
+    </div>
     <div class="fx g8 fw mb14">${catBtns}</div>
-    ${words.map(w=>{
+    ${filteredWords.map(w=>{
       const s=getWS(w.id),cat=VCATS[w.cat],pct=s.sc/5*100;
       return `<div class="wc">
         <div class="fx ac jb mb6">
@@ -957,8 +1090,18 @@ function rVReview(el){
 
 function startQ(el,mode){
   const cat=VS.cat==='all'?'all':VS.cat;
-  VS.q={mode,sess:sortedW(cat).slice(0,10),idx:0,res:[],fl:false,opts:[],sel:-1,fill:'',fd:false};
+  // Check for saved session
+  const saved=DB.get('quiz_session',null);
+  if(saved&&saved.mode===mode&&saved.cat===cat&&saved.sess&&saved.sess.length>0&&saved.idx<saved.sess.length){
+    // Resume saved session - verify words still exist
+    const allIds=new Set(getAllW().map(w=>w.id));
+    if(saved.sess.every(w=>allIds.has(w.id))){
+      VS.q=saved;rQCard(el);return;
+    }
+  }
+  VS.q={mode,cat,sess:sortedW(cat).slice(0,10),idx:0,res:[],fl:false,opts:[],sel:-1,fill:'',fd:false};
   if(!VS.q.sess.length){el.innerHTML=`<div style="text-align:center;padding:40px"><div class="f16 c2">Δεν υπάρχουν λέξεις. <button class="btn bp bsm" onclick="VS.mode='add';rVocab()">Προσθήκη</button></div></div>`;return;}
+  DB.set('quiz_session',{mode,cat,sess:VS.q.sess,idx:0,res:[],fl:false,opts:[],sel:-1,fill:'',fd:false});
   rQCard(el);
 }
 
@@ -982,7 +1125,7 @@ function rQCard(el){
   if(em==='fc'){
     body=!q.fl
       ?`<div class="tc mb16"><div class="fp f24 b mb8" style="color:#f0eef8">${cw.w}</div><button onclick="speak('${cw.w.split(' → ')[0]}')" style="background:none;border:1px solid var(--tl)44;border-radius:20px;padding:3px 10px;color:var(--tl);font-size:11px;cursor:pointer;margin-bottom:8px">🔊 Άκουσε</button><div class="f12 c3 it">"${cw.e}"</div></div>
-         <button class="btn bp w100" style="justify-content:center;letter-spacing:.5px" onclick="VS.q.fl=true;document.getElementById('vm')&&rQCard(document.getElementById('vm'))">ΑΠΟΚΑΛΥΨΗ</button>`
+         <button class="btn bp w100" style="justify-content:center;letter-spacing:.5px" onclick="VS.q.fl=true;document.getElementById('vm')&&rQCard(document.getElementById('vm'))">ΑΠΟΚΑΛΥΨΗ <span style="opacity:.5;font-size:10px">[Space]</span></button>`
       :`<div class="tc mb12"><div class="fp f22 b mb8" style="color:#f0eef8">${cw.w}</div></div>
         <div class="tc mb12" style="background:var(--s3);border-radius:var(--r);padding:12px">
           <div class="sl mb4">ΜΕΤΑΦΡΑΣΗ</div><div class="fp f16 b" style="color:${cat?.col||'var(--bl)'}">${cw.g}</div>
@@ -1064,9 +1207,14 @@ function vRec(correct){
   const lc=learnedW().length;
   if(VS.q.res.length===1&&getWS(cw.id).seen===1)unlockAch('w1');
   if(lc>=10)unlockAch('w10');if(lc>=50)unlockAch('w50');if(lc>=100)unlockAch('w100');if(lc>=200)unlockAch('w200');
+  // Update daily tracker word count
+  const today=todayK();
+  const wCount=DB.get('wcount_'+today,0)+1;
+  DB.set('wcount_'+today,wCount);
   const nxt=VS.q.idx+1;
-  if(nxt>=VS.q.sess.length){showQRes(document.getElementById('vm'));return;}
+  if(nxt>=VS.q.sess.length){DB.delete?DB.delete('quiz_session'):localStorage.removeItem('quiz_session');showQRes(document.getElementById('vm'));return;}
   VS.q.idx=nxt;VS.q.fl=false;VS.q.opts=[];VS.q.sel=-1;VS.q.fill='';VS.q.fd=false;
+  DB.set('quiz_session',{...VS.q});
   rQCard(document.getElementById('vm'))
 }
 
@@ -1175,7 +1323,13 @@ function addCW(){
   if(!w||!g){toast('Συμπλήρωσε λέξη και μετάφραση','var(--ro)');return;}
   const cws=DB.get('customW',[]);
   cws.push({id:'c'+Date.now(),w,g,p:document.getElementById('ap')?.value||'word',cat:document.getElementById('ac')?.value||'custom',e:document.getElementById('ae')?.value||`${w} — νέα λέξη.`,d:2,f:[]});
-  DB.set('customW',cws);toast('Λέξη προστέθηκε ✓','var(--gr)');addXP(5);VS.mode='all';rVocab();
+  DB.set('customW',cws);
+  // Initialize word state so it appears in review tomorrow
+  const wb=getWB();
+  wb[cws[cws.length-1].id]={sc:0,st:0,nr:Date.now()+86400000,seen:0};
+  DB.set('wb',wb);
+  toast('✓ Λέξη προστέθηκε! Θα εμφανιστεί στο Quiz αύριο.','var(--gr)');
+  addXP(5);VS.mode='all';rVocab();
 }
 function delCW(id){
   if(!confirm('Διαγραφή;'))return;
@@ -1321,7 +1475,7 @@ function rTM(){
     body=`<div class="f12 c2 mb14">Μετέφρασε στα αγγλικά:</div>`+
     t.tr.map((tr,i)=>`<div class="card mb10 fu"><div class="f14 mb10 it" style="color:${t.col}">🇬🇷 ${tr.gr}</div>
     <textarea id="tt${i}" rows="2" oninput="TST.ta[${i}]=this.value" ${TST.tc[i]?'disabled':''} placeholder="Γράψε εδώ τη μετάφρασή σου..." style="width:100%;background:var(--s2);border:1px solid var(--ln);border-radius:7px;color:var(--t1);font-size:13px;padding:9px;font-family:var(--f);line-height:1.5;resize:none;margin-bottom:8px">${TST.ta[i]||''}</textarea>
-    ${!TST.tc[i]?`<button onclick="TST.tc[${i}]=true;rTM()" ${!(TST.ta[i]||'').trim()?'disabled':''} style="padding:7px 16px;background:${t.col};border:none;border-radius:6px;color:#07080f;font-size:10px;font-weight:700;cursor:pointer;opacity:${!(TST.ta[i]||'').trim()?0.4:1}">ΑΠΟΚΑΛΥΨΗ</button>`:
+    ${!TST.tc[i]?`<button id="tr_btn_${i}" onclick="TST.tc[${i}]=true;rTM()" style="padding:7px 16px;background:${t.col};border:none;border-radius:6px;color:#07080f;font-size:10px;font-weight:700;cursor:pointer">ΑΠΟΚΑΛΥΨΗ</button>`:
     `<div class="card c-ok"><div class="sl mb4">ΑΠΑΝΤΗΣΗ</div><div class="f13" style="color:var(--gr)">🇬🇧 ${tr.en}</div></div>`}
     </div>`).join('');
   } else {
@@ -1336,7 +1490,7 @@ function rTM(){
     }).join('');
     const allA=Object.keys(TST.qa).length>=t.quiz.length;
     body=qrows+(!TST.qs
-      ?`<button onclick="if(${allA}){let c=0;TENSES[TST.idx].quiz.forEach((q,i)=>{if(TST.qa[i]===q.a)c++});TST.qsc=c;TST.qs=true;addXP(c*5);rTM()}" style="padding:10px 22px;background:${t.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${allA?1:0.4}">ΥΠΟΒΟΛΗ</button>`
+      ?`<button onclick="if(${allA}){let sc=0;TENSES[TST.idx].quiz.forEach((q,i)=>{if(TST.qa[i]===q.a)sc++});TST.qsc=sc;TST.qs=true;addXP(sc*5);const td=DB.get('tDone',[]);if(!td.includes(TST.idx)){td.push(TST.idx);DB.set('tDone',td);}toast('Quiz: '+sc+'/'+TENSES[TST.idx].quiz.length+' σωστές — +'+sc*5+' XP',sc===TENSES[TST.idx].quiz.length?'var(--am)':'var(--bl)');rTM()}" style="padding:10px 22px;background:${t.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${allA?1:0.4}">ΥΠΟΒΟΛΗ</button>`
       :`<div class="fx ac g12"><div class="card" style="border:2px solid ${TST.qsc===t.quiz.length?'var(--am)':TST.qsc>=Math.ceil(t.quiz.length*.6)?'var(--gr)':'var(--bl)'}">
          <span class="f11 c3">Αποτέλεσμα: </span><span class="fp f20 b" style="color:${TST.qsc===t.quiz.length?'var(--am)':TST.qsc>=Math.ceil(t.quiz.length*.6)?'var(--gr)':'var(--bl)'}">${TST.qsc}/${t.quiz.length}</span>
          </div><button onclick="resetTQ();rTM()" style="padding:9px 16px;border:1px solid ${t.col};border-radius:7px;color:${t.col};background:transparent;cursor:pointer;font-size:10px;font-weight:700">ΕΠΑΝΑΛΗΨΗ</button></div>`);
@@ -1679,7 +1833,7 @@ function rGTopic(){
       return `<div class="card mb10"><div class="f13 mb10" style="line-height:1.6"><span class="fp b" style="color:${t.col};margin-right:7px">${i+1}.</span>${ex.q}</div><div class="g2 mb8">${opts}</div>${GST.es?`<div class="f11"><span style="color:${GST.ea[i]===ex.a?'var(--gr)':'var(--ro)'}">${GST.ea[i]===ex.a?'✓ Σωστό! ':'✗ Σωστό: "'+ex.a+'" — '}</span><span class="c3">${ex.exp}</span></div>`:''}</div>`;
     }).join('')}
     ${!GST.es
-      ?`<button onclick="const allA=Object.keys(GST.ea).length>=${t.exercises.length};if(allA){let c=0;GRAM.find(x=>x.id===GST.topic).exercises.forEach((ex,i)=>{if(GST.ea[i]===ex.a)c++;else{const ge=DB.get('gramErr',{});if(!ge[GST.topic])ge[GST.topic]={count:0,last:null};ge[GST.topic].count++;ge[GST.topic].last=todayK();DB.set('gramErr',ge);}});GST.esc=c;GST.es=true;addXP(c*8);rGTopic()}" style="padding:10px 22px;background:${t.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${Object.keys(GST.ea).length>=t.exercises.length?1:0.4}">ΥΠΟΒΟΛΗ</button>`
+      ?`<button onclick="const allA=Object.keys(GST.ea).length>=${t.exercises.length};if(allA){let sc=0;GRAM.find(x=>x.id===GST.topic).exercises.forEach((ex,i)=>{if(GST.ea[i]===ex.a)sc++;else{const ge=DB.get('gramErr',{});if(!ge[GST.topic])ge[GST.topic]={count:0,last:null};ge[GST.topic].count++;ge[GST.topic].last=todayK();DB.set('gramErr',ge);}});GST.esc=sc;GST.es=true;addXP(sc*8);const pct=Math.round(sc/${t.exercises.length}*100);toast((pct>=80?'✓ ':pct>=50?'👍 ':'📖 ')+sc+'/${t.exercises.length} σωστές — '+(pct>=80?'Εξαιρετικά!':pct>=50?'Καλά!':'Συνέχισε!'),'var(--'+(pct>=80?'gr':pct>=50?'bl':'ro')+')');rGTopic()}" style="padding:10px 22px;background:${t.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${Object.keys(GST.ea).length>=t.exercises.length?1:0.4}">ΥΠΟΒΟΛΗ</button>`
       :`<div class="fx ac g12"><div class="card" style="border:2px solid ${GST.esc===t.exercises.length?'var(--am)':'var(--gr)'}">
          <span class="f11 c3">Αποτέλεσμα: </span><span class="fp f20 b" style="color:${GST.esc===t.exercises.length?'var(--am)':'var(--gr)'}">${GST.esc}/${t.exercises.length}</span>
          </div><button onclick="GST.ea={};GST.es=false;GST.esc=null;rGTopic()" style="padding:9px 16px;border:1px solid ${t.col};border-radius:7px;color:${t.col};background:transparent;cursor:pointer;font-size:10px;font-weight:700">ΕΠΑΝΑΛΗΨΗ</button></div>`}
@@ -1831,8 +1985,12 @@ function rWTopic(){
         <textarea id="wptx" rows="14" placeholder="Γράψε εδώ..." style="width:100%;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px;padding:12px;font-family:var(--f);line-height:1.7;resize:vertical">${saved}</textarea>
         <div class="fx jb ac mt10">
           <div class="f11 c3">Αυτόματη αποθήκευση ✓</div>
-          <button onclick="document.getElementById('wptx').value='';DB.set('wp_'+WST.topic,'')" class="btn bgh bsm">Καθαρισμός</button>
+          <div class="fx g8">
+            <button onclick="getAIWritingFeedback()" class="btn bp bsm" id="ai-feedback-btn">🤖 AI Feedback</button>
+            <button onclick="document.getElementById('wptx').value='';DB.set('wp_'+WST.topic,'')" class="btn bgh bsm">Καθαρισμός</button>
+          </div>
         </div>
+        <div id="ai-feedback-result" style="margin-top:12px"></div>
       </div>
       <div>
         <div class="card mb12">
@@ -2027,7 +2185,11 @@ function rReading(){
       <div class="sl mb12">COMPREHENSION QUESTIONS</div>
       ${qRows}
       ${!RST.rs
-        ?`<button onclick="if(${allA}){let c=0;READINGS.find(x=>x.id===RST.art).qs.forEach((q,i)=>{if(RST.ra[i]===q.a)c++});RST.rsc=c;RST.rs=true;addXP(c*10);rReading()}" style="padding:10px 22px;background:${a.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${allA?1:0.4}">ΥΠΟΒΟΛΗ</button>`
+        ?`<button onclick="if(${allA}){let c=0;READINGS.find(x=>x.id===RST.art).qs.forEach((q,i)=>{if(RST.ra[i]===q.a)c++});RST.rsc=c;RST.rs=true;addXP(c*10);
+  const rd=DB.get('rdDone',[]);if(!rd.includes(RST.art)){rd.push(RST.art);DB.set('rdDone',rd);}
+  if(c===READINGS.find(x=>x.id===RST.art).qs.length)toast('✓ Τέλειο! +'+c*10+' XP','var(--gr)');
+  else toast('Αποτέλεσμα: '+c+'/'+READINGS.find(x=>x.id===RST.art).qs.length+' — +'+c*10+' XP','var(--bl)');
+  rReading()}" style="padding:10px 22px;background:${a.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${allA?1:0.4}">ΥΠΟΒΟΛΗ</button>`
         :`<div class="fx ac g12"><div class="card" style="border:2px solid ${RST.rsc===a.qs.length?'var(--am)':'var(--gr)'}">
            <span class="f11 c3">Αποτέλεσμα: </span><span class="fp f20 b" style="color:${RST.rsc===a.qs.length?'var(--am)':'var(--gr)'}">${RST.rsc}/${a.qs.length}</span>
            </div><button onclick="RST.ra={};RST.rs=false;RST.rsc=null;rReading()" style="padding:9px 16px;border:1px solid ${a.col};border-radius:7px;color:${a.col};background:transparent;cursor:pointer;font-size:10px;font-weight:700">ΞΑΝΑ</button></div>`}
@@ -2039,8 +2201,15 @@ function saveFromR(word){
   const all=getAllW();
   if(all.find(w=>w.w===word)){toast('"'+word+'" ήδη στο Vocabular ✓','var(--gr)');return;}
   const cws=DB.get('customW',[]);
-  cws.push({id:'r'+Date.now(),w:word,g:'(πρόσθεσε μετάφραση)',p:'word',cat:'b2_daily',e:'"'+word+'" — found while reading.',d:2,f:[]});
-  DB.set('customW',cws);toast('"'+word+'" αποθηκεύτηκε ✓','var(--gr)');addXP(3);
+  const newId='r'+Date.now();
+  cws.push({id:newId,w:word,g:'(πρόσθεσε μετάφραση στο Vocabular)',p:'word',cat:'b2_daily',e:'"'+word+'" — found while reading.',d:2,f:[]});
+  DB.set('customW',cws);
+  // Schedule for review
+  const wb=getWB();
+  wb[newId]={sc:0,st:0,nr:Date.now()+3600000,seen:0}; // review in 1 hour
+  DB.set('wb',wb);
+  toast('✓ "'+word+'" → Vocabular! Θα εμφανιστεί στο Quiz σύντομα.','var(--gr)');
+  addXP(3);
 }
 
 /* ══ SPEAKING ══ */
@@ -2514,15 +2683,63 @@ function getTodayLesson(){
   const tk=todayK();
   const saved=DB.get('lesson_'+tk,null);
   if(saved)return saved;
-  // Build today's lesson from words and grammar
+  
   const allW=getAllW();
-  const sorted=sortedW('all').slice(0,3);
+  const errors=DB.get('errors',{});
+  const wb=getWB();
+  
+  // Smart word selection:
+  // Priority 1: Words with errors (chronic mistakes)
+  // Priority 2: Words never seen (introduce new)  
+  // Priority 3: Words with low score seen recently
+  
+  let wordPick=null;
+  
+  // Check for chronic error words (3+ errors, score < 3)
+  const errorWords=Object.entries(errors)
+    .filter(([id,e])=>e.count>=2)
+    .sort(([,a],[,b])=>b.count-a.count)
+    .map(([id])=>allW.find(w=>w.id===id))
+    .filter(w=>w&&(wb[w.id]?.sc||0)<3);
+  
+  if(errorWords.length>0){
+    // Pick least recently practiced error word
+    wordPick=errorWords[0];
+  }
+  
+  if(!wordPick){
+    // Find unseen words (never practiced)
+    const unseenWords=allW.filter(w=>!wb[w.id]||wb[w.id].seen===0);
+    if(unseenWords.length>0){
+      // Pick based on difficulty level (B1 first, then B2, then C1)
+      const byLevel=unseenWords.sort((a,b)=>a.d-b.d);
+      wordPick=byLevel[0];
+    }
+  }
+  
+  if(!wordPick){
+    // Fallback: word with lowest score
+    const sorted=sortedW('all');
+    wordPick=sorted[0]||allW[0];
+  }
+  
+  // Smart grammar selection: pick chapter with most errors
+  const gramErrors=DB.get('gramErr',{});
   const gramTopics=GRAM.map(g=>g.id);
-  const gramIdx=new Date().getDate()%gramTopics.length;
+  let gramTopic=gramTopics[new Date().getDate()%gramTopics.length];
+  
+  // If there are grammar errors, pick the most problematic chapter
+  const topGramError=Object.entries(gramErrors)
+    .sort(([,a],[,b])=>b.count-a.count)[0];
+  if(topGramError&&gramTopics.includes(topGramError[0])){
+    gramTopic=topGramError[0];
+  }
+  
   const lesson={
     date:tk,
-    word:sorted[0]||allW[0],
-    gramTopic:gramTopics[gramIdx],
+    word:wordPick,
+    gramTopic,
+    isReview:errorWords.includes(wordPick),
     steps:[
       {id:'learn',label:'Μάθε τη λέξη',desc:'',done:false,xp:10},
       {id:'context',label:'Δες παραδείγματα',desc:'',done:false,xp:10},
@@ -2561,6 +2778,7 @@ function rLessons(){
   el.innerHTML=`<div class="sec fu" style="max-width:740px">
     <div class="sl mb4 cbl">DAILY LESSON</div>
     <div class="fp f16 b mb4">Μάθημα Σήμερα — ${lesson.date}</div>
+    ${lesson.isReview?`<div style="padding:6px 14px;background:var(--am)1a;border:1px solid var(--am)33;border-radius:8px;margin-bottom:12px;display:inline-flex;align-items:center;gap:6px"><span style="font-size:12px">⚠</span><span class="f11" style="color:var(--am)">Εμφανίστηκε γιατί σε δυσκολεύει — επανάληψη!</span></div>`:''}
     <div class="fx ac jb mb16">
       <div class="f12 c2">Ολοκλήρωσε όλα τα βήματα για να πάρεις XP!</div>
       <div class="fx ac g8">
@@ -2715,10 +2933,22 @@ function markStep(idx){
   lesson.steps[idx].done=true;
   saveTodayLesson(lesson);
   addXP(lesson.steps[idx].xp);
-  // Check achievements
+  // Step 1 (learn word) = mark word as seen in vocab
+  if(idx===0&&lesson.word){
+    const wb=getWB();
+    const old=wb[lesson.word.id]||{sc:0,st:0,nr:0,seen:0};
+    if(old.seen===0){
+      wb[lesson.word.id]={...old,seen:1,nr:Date.now()+86400000};
+      DB.set('wb',wb);
+    }
+  }
+  // Step 4 (quiz) also calls setWS so that's handled in lessonQuizSel
+  // All steps done
   if(lesson.steps.every(s=>s.done)){
-    toast('🎉 Μάθημα ολοκληρώθηκε! +80 XP συνολικά','var(--gr)');
+    toast('🎉 Μάθημα ολοκληρώθηκε! +'+lesson.steps.reduce((s,x)=>s+x.xp,0)+' XP','var(--gr)');
     unlockAch('w10');
+    // Mark word as learned in vocab system
+    if(lesson.word) setWS(lesson.word.id, true);
   }
   rLessons();
 }
@@ -2731,13 +2961,13 @@ function lessonQuizSel(i){
   lesson.quizQ.done=true;
   if(correct){
     lesson.steps[3].done=true;
-    toast('✓ Σωστό! +'+lesson.steps[3].xp+' XP','var(--gr)');
     addXP(lesson.steps[3].xp);
     setWS(lesson.word.id,true);
+    toast('✓ Σωστό! +'+lesson.steps[3].xp+' XP','var(--gr)');
   } else {
-    toast('✗ Λάθος — η σωστή: "'+lesson.word.g+'"','var(--ro)');
     setWS(lesson.word.id,false);
-    trackError(lesson.word.id,'quiz');
+    trackError(lesson.word.id,'lesson');
+    toast('✗ Λάθος — σωστό: "'+lesson.word.g+'"','var(--ro)');
   }
   saveTodayLesson(lesson);
   rLessons();
@@ -3075,8 +3305,14 @@ function ffSelect(idx,opt){
   FFST.sel=idx;FFST.show=true;FFST.total++;
   const ff=FALSE_FRIENDS[FFST.qidx%FALSE_FRIENDS.length];
   const correct=opt===ff.real;
-  if(correct){FFST.score++;addXP(15);toast('✓ Σωστό! +15 XP','var(--gr)');}
-  else{addXP(3);toast('✗ Λάθος!','var(--ro)');}
+  if(correct){
+    FFST.score++;addXP(15);
+    toast('✓ Σωστό! "'+ff.en+'" = '+ff.real+' +15 XP','var(--gr)');
+  } else {
+    addXP(3);
+    toast('✗ Λάθος! "'+ff.en+'" = '+ff.real,'var(--ro)');
+  }
+  if(FFST.total===FALSE_FRIENDS.length&&FFST.score===FALSE_FRIENDS.length)unlockAch('pq');
   rFalseFriends();
 }
 
@@ -3174,8 +3410,13 @@ function cqSel(idx,verb){
   if(CQST.sel!==null)return;
   CQST.sel=idx;CQST.total++;
   const q=COLLOCATIONS[CQST.idx%COLLOCATIONS.length];
-  if(verb===q.verb){CQST.score++;addXP(12);toast('✓ Σωστό! +12 XP','var(--gr)');}
-  else{addXP(3);toast('✗ Λάθος!','var(--ro)');}
+  if(verb===q.verb){
+    CQST.score++;addXP(12);
+    toast('✓ '+q.verb+' '+q.noun+' — σωστό! +12 XP','var(--gr)');
+  } else {
+    addXP(3);
+    toast('✗ Σωστό: "'+q.verb+' '+q.noun+'"','var(--ro)');
+  }
   rCollocations();
 }
 
@@ -3214,8 +3455,10 @@ function rStats(){
   });
 
   document.getElementById('stats').innerHTML=`<div class="sec fu" style="max-width:900px">
-    <div class="sl mb4 cvi">ANALYTICS & PROGRESS</div>
-    <div class="fp f16 b mb20">Στατιστικά Προόδου</div>
+    <div class="fx ac jb mb20">
+      <div><div class="sl mb4 cvi">ANALYTICS & PROGRESS</div><div class="fp f16 b">Στατιστικά Προόδου</div></div>
+      <button onclick="showWeeklySummary()" class="btn bgh bsm">📊 Εβδομαδιαία Σύνοψη</button>
+    </div>
 
     <div class="card mb16">
       <div class="fx ac jb mb8">
@@ -3519,8 +3762,14 @@ function rTRContent(){
 function toggleTask(id){
   const comp=DB.get('comp',{});const today=todayK();
   const cur=comp[today]||[];
-  comp[today]=cur.includes(id)?cur.filter(x=>x!==id):[...cur,id];
+  const wasMarked=cur.includes(id);
+  comp[today]=wasMarked?cur.filter(x=>x!==id):[...cur,id];
   DB.set('comp',comp);
+  if(!wasMarked){
+    const plan_item=PLAN.find(p=>p.id===id);
+    if(plan_item) addXP(5);
+    toast('✓ '+( PLAN.find(p=>p.id===id)?.label||id),'var(--gr)');
+  }
   const s=calcStreak();if(s>=7)unlockAch('s7');if(s>=30)unlockAch('s30');
   const td=Object.keys(comp).filter(k=>(comp[k]||[]).length>=3).length;
   if(td>=10)unlockAch('st10');
@@ -3641,18 +3890,28 @@ function buildWOTD(){
   }
   if(!wotd)return '';
   const cat=VCATS[wotd.cat]||VCATS.b1_daily;
-  const wid=wotd.id.replace(/'/g,'');
+  const wid=wotd.id;
+  const ws=getWS(wid);
+  const alreadyLearned=ws.sc>=3||DB.get('wotd_done_'+tk,false);
   return '<div class="card mb16" style="border-color:'+cat.col+'33">'
-    +'<div class="fx ac jb mb8"><div class="sl" style="color:'+cat.col+'">⭐ WORD OF THE DAY</div>'
-    +'<span class="tag f9" style="background:'+cat.col+'1a;border:1px solid '+cat.col+'33;color:'+cat.col+'">'+cat.lv+'</span></div>'
+    +'<div class="fx ac jb mb8">'
+    +'<div class="sl" style="color:'+cat.col+'">⭐ WORD OF THE DAY</div>'
+    +'<span class="tag f9" style="background:'+cat.col+'1a;border:1px solid '+cat.col+'33;color:'+cat.col+'">'+cat.lv+'</span>'
+    +'</div>'
     +'<div class="fx ac jb">'
-    +'<div><div class="fp f20 b mb4">'+wotd.w+'</div>'
+    +'<div>'
+    +'<div class="fp f20 b mb4">'+wotd.w+'</div>'
     +'<div class="f13 mb4" style="color:'+cat.col+'">'+wotd.g+'</div>'
-    +'<div class="f11 c3 it">"'+wotd.e+'"</div></div>'
+    +'<div class="f11 c3 it">"'+wotd.e+'"</div>'
+    +'</div>'
     +'<div class="fx col ac g8">'
     +'<button onclick="speak(\''+wotd.w.split(' ')[0]+'\')" style="padding:6px 14px;border:1px solid var(--tl)44;border-radius:20px;color:var(--tl);font-size:12px;cursor:pointer;background:var(--s3)">🔊</button>'
-    +'<button onclick="setWS(\''+wid+'\',true);toast(\'Εμαθα +8 XP\',\'var(--gr)\')" style="padding:5px 12px;border:1px solid var(--gr)44;border-radius:20px;color:var(--gr);font-size:10px;cursor:pointer;background:var(--s3)">Εμαθα ✓</button>'
-    +'</div></div></div>';
+    +(alreadyLearned
+      ?'<span class="tag f9" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr)">✓ Εμαθα!</span>'
+      :'<button onclick="setWS(\''+wid+'\',true);addXP(10);DB.set(\'wotd_done_\'+(\''+tk+'\'),true);toast(\'✓ Εμαθα! +10 XP — αποθηκεύτηκε στο Vocabular!\',\'var(--gr)\');rHome()" style="padding:5px 12px;border:1px solid var(--gr)44;border-radius:20px;color:var(--gr);font-size:10px;cursor:pointer;background:var(--s3)">Εμαθα ✓</button>')
+    +'</div>'
+    +'</div>'
+    +'</div>';
 }
 
 
@@ -3758,6 +4017,291 @@ function rHome(){
 }
 
 /* ══ INIT ══ */
+
+/* ══ KEYBOARD SHORTCUTS ══ */
+document.addEventListener('keydown',function(e){
+  // Only in vocab quiz
+  if(VS.mode!=='fc'&&VS.mode!=='mc'&&VS.mode!=='fi'&&VS.mode!=='mx'&&VS.mode!=='review')return;
+  const vm=document.getElementById('vm');if(!vm)return;
+  const q=VS.q;if(!q||!q.sess||!q.sess[q.idx])return;
+  const em=effMode(q.idx);
+
+  if(em==='fc'){
+    if(e.code==='Space'&&!q.fl){e.preventDefault();VS.q.fl=true;vm&&rQCard(vm);}
+    else if((e.key==='y'||e.key==='Enter')&&q.fl){e.preventDefault();vRec(true);}
+    else if(e.key==='n'&&q.fl){e.preventDefault();vRec(false);}
+  } else if(em==='mc'){
+    const num=parseInt(e.key);
+    if(num>=1&&num<=4&&q.sel<0){
+      e.preventDefault();vMCQ(num-1);
+    }
+  } else if(em==='fi'){
+    if(e.key==='Enter'&&VS.q.fill.trim()&&!VS.q.fd){
+      e.preventDefault();VS.q.fd=true;vm&&rQCard(vm);
+    } else if(e.key==='Enter'&&VS.q.fd){
+      e.preventDefault();vRec(true);
+    }
+  }
+});
+
+
+/* ══ ONBOARDING ══ */
+function showOnboarding(){
+  if(DB.get('onboarded',false))return;
+  const modal=document.createElement('div');
+  modal.id='onboard-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML=renderOnboardStep(0);
+  document.body.appendChild(modal);
+}
+
+
+function renderOnboardStep(step){
+  const steps=[
+    {ico:'👋',title:'Καλώς ήρθες στο English Master!',
+     body:'Σε βοηθάει να περάσεις από <strong>Passive B1</strong> σε <strong>Active B2→C1</strong>.<br><br>Σε 2 βήματα θα στήσουμε το πρόγραμμά σου.',btn:'Ξεκινάμε →'},
+    {ico:'📖',title:'Πώς λειτουργεί',
+     body:'<strong>Κάθε μέρα (45-60 λεπτά):</strong><br>• 🎯 <strong>Daily Lesson</strong>: νέα λέξη + 5 βήματα<br>• 📚 <strong>Vocabulary</strong>: Spaced Repetition<br>• ✏ <strong>Grammar/Tenses</strong>: 1 κεφάλαιο<br>• 📄 <strong>Reading/Writing</strong>: εξάσκηση',btn:'Κατάλαβα →'},
+    {ico:'🎯',title:'Ορισε τον στόχο σου',
+     body:'Πόσες λέξεις θέλεις να μαθαίνεις κάθε μέρα;<br><div style="display:flex;gap:8px;justify-content:center;margin:16px 0">'+[5,10,15,20].map(n=>`<button onclick="DB.set('gw',${n});document.querySelectorAll('.ob-goal').forEach(b=>{b.style.background='var(--s3)';b.style.color='var(--t2)';});this.style.background='var(--bl)';this.style.color='#fff'" class="ob-goal" style="padding:8px 16px;border:1px solid var(--ln);border-radius:8px;cursor:pointer;background:${n===10?'var(--bl)':'var(--s3)'};color:${n===10?'#fff':'var(--t2)'}">${n}</button>`).join('')+'</div><div class="f11 c3 tc">Συνιστάται: <strong>10/μέρα</strong></div>',btn:'Ξεκίνα! 🚀'},
+  ];
+  const s=steps[step];
+  const isLast=step===steps.length-1;
+  const nextAction=isLast?`DB.set('onboarded',true);document.getElementById('onboard-modal').remove();go('lessons')`:`document.getElementById('onboard-modal').innerHTML=renderOnboardStep(${step+1})`;
+  return `<div style="background:var(--s1);border:1px solid var(--ln2);border-radius:var(--r2);padding:28px;max-width:460px;width:100%;text-align:center">
+    <div style="font-size:36px;margin-bottom:12px">${s.ico}</div>
+    <div class="fp f18 b mb12">${s.title}</div>
+    <div class="f13 c2 mb20" style="line-height:1.8;text-align:left">${s.body}</div>
+    <div class="fx ac jb">
+      <div class="fx g4u">${steps.map((_,i)=>`<div style="width:8px;height:8px;border-radius:50%;background:${i===step?'var(--bl)':'var(--ln2)'}"></div>`).join('')}</div>
+      <button onclick="${nextAction}" class="btn bp">${s.btn}</button>
+    </div>
+  </div>`;
+}
+
+
+/* ══ WEEKLY SUMMARY ══ */
+function buildWeeklySummary(){
+  const comp=DB.get('comp',{});
+  const wb=getWB();
+  const last7=getLast7();
+  const today=todayK();
+  
+  // Words learned this week
+  const weeklyLearned=Object.entries(wb).filter(([id,s])=>{
+    if(s.sc<3)return false;
+    // Check if score reached 3 in the last 7 days (approximate via seen count)
+    return true;
+  });
+  
+  // Days studied this week  
+  const daysStudied=last7.filter(d=>(comp[d]||[]).length>=3).length;
+  
+  // Tasks completed this week
+  const tasksTotal=last7.reduce((sum,d)=>(comp[d]||[]).length+sum,0);
+  
+  // XP earned this week (approximate from current)
+  const xp=getXP();
+  
+  // Words due for review
+  const due=dueW().length;
+  
+  // Error words
+  const errors=DB.get('errors',{});
+  const topErrors=Object.entries(errors)
+    .sort(([,a],[,b])=>b.count-a.count)
+    .slice(0,3)
+    .map(([id])=>getAllW().find(w=>w.id===id)?.w)
+    .filter(Boolean);
+  
+  // Streak
+  const streak=calcStreak();
+  
+  return {daysStudied,tasksTotal,xp,due,topErrors,streak,learnedCount:learnedW().length};
+}
+
+function showWeeklySummary(){
+  const s=buildWeeklySummary();
+  const modal=document.createElement('div');
+  modal.id='weekly-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  
+  const dayEmojis=['','😴','🌱','📖','💪','🎯','🔥','🏆'];
+  const dayEmoji=dayEmojis[Math.min(s.daysStudied,7)];
+  
+  modal.innerHTML=`<div style="background:var(--s1);border:1px solid var(--ln2);border-radius:var(--r2);padding:28px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto">
+    <div class="tc mb16">
+      <div style="font-size:40px;margin-bottom:8px">${dayEmoji||'📊'}</div>
+      <div class="fp f20 b mb4">Εβδομαδιαία Σύνοψη</div>
+      <div class="f12 c3">${new Date().toLocaleDateString('el-GR',{weekday:'long',day:'numeric',month:'long'})}</div>
+    </div>
+    
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      ${[
+        ['📅',s.daysStudied+'/7','Μέρες μελέτης',s.daysStudied>=5?'var(--gr)':s.daysStudied>=3?'var(--am)':'var(--ro)'],
+        ['🔥',s.streak,'Streak','var(--or)'],
+        ['📚',s.learnedCount,'Λέξεις εκμαθημένες','var(--bl)'],
+        ['✅',s.tasksTotal,'Tasks εβδομάδας','var(--vi)'],
+      ].map(([ic,v,l,col])=>`<div style="background:var(--s2);border-radius:var(--r);padding:12px;text-align:center">
+        <div style="font-size:20px;margin-bottom:4px">${ic}</div>
+        <div class="fp f18 b" style="color:${col}">${v}</div>
+        <div class="f10 c3 mt4">${l}</div>
+      </div>`).join('')}
+    </div>
+    
+    ${s.due>0?`<div style="background:var(--s2);border:1px solid var(--am)33;border-radius:var(--r);padding:12px;margin-bottom:12px">
+      <div class="f12 b cam mb4">⏰ ${s.due} λέξεις για επανάληψη</div>
+      <div class="f11 c3">Άνοιξε το Vocabular → Ημερήσια Επανάληψη για να τις επαναλάβεις.</div>
+    </div>`:'<div style="background:#051a0a;border:1px solid var(--gr)33;border-radius:var(--r);padding:12px;margin-bottom:12px"><div class="f12 b cgr">✓ Καμία λέξη για επανάληψη — εξαιρετικά!</div></div>'}
+    
+    ${s.topErrors.length?`<div style="background:var(--s2);border:1px solid var(--ro)33;border-radius:var(--r);padding:12px;margin-bottom:12px">
+      <div class="f12 b cro mb6">⚠ Λέξεις που σε δυσκολεύουν:</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${s.topErrors.map(w=>`<span style="padding:3px 10px;background:var(--ro)1a;border:1px solid var(--ro)33;color:var(--ro);border-radius:20px;font-size:11px;font-weight:600">${w}</span>`).join('')}</div>
+    </div>`:''}
+    
+    <div style="background:var(--s2);border-radius:var(--r);padding:12px;margin-bottom:20px">
+      <div class="f12 b mb8">🎯 Πλάνο για την επόμενη εβδομάδα:</div>
+      <div class="f11 c2" style="line-height:1.8">
+        ${s.daysStudied<5?'• Στόχος: <strong>5+ μέρες</strong> μελέτη (τώρα: '+s.daysStudied+'/7)<br>':'✓ Μελέτη 5+ μέρες — συνέχισε!<br>'}
+        ${s.due>3?'• Κάνε <strong>Vocabulary Review</strong> καθημερινά για 10 λεπτά<br>':'✓ Vocabular ενημερωμένο!<br>'}
+        • Εστίασε στο <strong>Daily Lesson</strong> κάθε πρωί
+      </div>
+    </div>
+    
+    <div style="display:flex;gap:10px">
+      <button onclick="document.getElementById('weekly-modal').remove()" class="btn bp" style="flex:1;justify-content:center">Κλείσιμο</button>
+      <button onclick="document.getElementById('weekly-modal').remove();VS.mode='review';go('vocab')" class="btn bgh" style="flex:1;justify-content:center">Επανάληψη →</button>
+    </div>
+  </div>`;
+  
+  document.body.appendChild(modal);
+  DB.set('lastWeekly',todayK());
+}
+
+function checkWeeklySummary(){
+  const day=new Date().getDay(); // 0=Sunday
+  const lastWeekly=DB.get('lastWeekly','');
+  if(day===0&&lastWeekly!==todayK()&&DB.get('onboarded',false)){
+    setTimeout(()=>showWeeklySummary(),2000);
+  }
+}
+
+
+/* ══ AI WRITING FEEDBACK ══ */
+async function getAIWritingFeedback(){
+  const text=document.getElementById('wptx')?.value?.trim();
+  if(!text||text.length<20){
+    toast('Γράψε τουλάχιστον μια πρόταση πρώτα!','var(--am)');
+    return;
+  }
+  
+  const btn=document.getElementById('ai-feedback-btn');
+  const result=document.getElementById('ai-feedback-result');
+  if(!btn||!result)return;
+  
+  btn.textContent='⏳ Αναλύω...';
+  btn.disabled=true;
+  result.innerHTML=`<div style="padding:12px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;text-align:center" class="pulse">
+    <div class="f12 c3">🤖 Το AI αναλύει το κείμενό σου...</div>
+  </div>`;
+  
+  const topic=WRITING.find(w=>w.id===WST.topic);
+  const level=topic?.lv||'B1-B2';
+  
+  try {
+    const response=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`You are an expert English teacher helping a Greek speaker improve their English writing. 
+The student's level is ${level}. Analyze the text concisely and give feedback in Greek.
+Respond ONLY with valid JSON (no markdown, no backticks):
+{
+  "score": <number 1-10>,
+  "summary": "<2 sentence overall assessment in Greek>",
+  "strengths": ["<strength 1>","<strength 2>"],
+  "improvements": [{"issue":"<what to fix>","correction":"<how to fix it>","example":"<corrected example>"}],
+  "vocabulary_tips": ["<tip 1>","<tip 2>"],
+  "better_phrases": [{"original":"<phrase from text>","better":"<improved version>"}]
+}`,
+        messages:[{role:'user',content:`Please analyze this English text:\n\n${text}`}]
+      })
+    });
+    
+    const data=await response.json();
+    const raw=data.content?.[0]?.text||'';
+    
+    let feedback;
+    try {
+      const clean=raw.replace(/```json|```/g,'').trim();
+      feedback=JSON.parse(clean);
+    } catch(e) {
+      result.innerHTML=`<div style="padding:12px;background:var(--s2);border:1px solid var(--ln);border-radius:8px">
+        <div class="f12 c2">${raw}</div></div>`;
+      btn.textContent='🤖 AI Feedback';btn.disabled=false;return;
+    }
+    
+    const scoreColor=feedback.score>=8?'var(--gr)':feedback.score>=6?'var(--am)':'var(--ro)';
+    
+    result.innerHTML=`<div class="fu" style="border:1px solid var(--ln2);border-radius:var(--r2);overflow:hidden">
+      <div style="padding:14px 16px;background:var(--s2);border-bottom:1px solid var(--ln);display:flex;align-items:center;gap:12px">
+        <div style="font-size:28px">🤖</div>
+        <div style="flex:1">
+          <div class="f12 b mb2">AI Writing Feedback</div>
+          <div class="f11 c3">${topic?.t||'Writing'}</div>
+        </div>
+        <div style="text-align:center">
+          <div class="fp f24 b" style="color:${scoreColor}">${feedback.score}/10</div>
+          <div class="f9 c3">Βαθμός</div>
+        </div>
+      </div>
+      
+      <div style="padding:14px 16px">
+        <div class="f13 c2 mb14" style="line-height:1.7;padding:10px;background:var(--s3);border-radius:8px">${feedback.summary}</div>
+        
+        ${feedback.strengths?.length?`<div class="mb12">
+          <div class="sl mb8 cgr">✓ ΔΥΝΑΤΑ ΣΗΜΕΙΑ</div>
+          ${feedback.strengths.map(s=>`<div class="f12 c2 mb4" style="padding:5px 10px;border-left:2px solid var(--gr)44;border-radius:0 6px 6px 0">• ${s}</div>`).join('')}
+        </div>`:''}
+        
+        ${feedback.improvements?.length?`<div class="mb12">
+          <div class="sl mb8 cro">⚠ ΒΕΛΤΙΩΣΕΙΣ</div>
+          ${feedback.improvements.map(imp=>`<div style="margin-bottom:8px;padding:10px;background:var(--s2);border-radius:8px;border-left:3px solid var(--ro)44">
+            <div class="f12 b mb4 cro">${imp.issue}</div>
+            <div class="f11 c3 mb2">${imp.correction}</div>
+            ${imp.example?`<div class="f11 c2 it" style="color:var(--gr)">"${imp.example}"</div>`:''}
+          </div>`).join('')}
+        </div>`:''}
+        
+        ${feedback.better_phrases?.length?`<div class="mb12">
+          <div class="sl mb8 cbl">🔄 ΚΑΛΥΤΕΡΕΣ ΕΚΦΡΑΣΕΙΣ</div>
+          ${feedback.better_phrases.map(p=>`<div class="fx ac g8 mb6">
+            <div class="f11 cro" style="text-decoration:line-through;flex:1">${p.original}</div>
+            <span class="f10 c3">→</span>
+            <div class="f11 cgr" style="flex:1;font-weight:600">${p.better}</div>
+          </div>`).join('')}
+        </div>`:''}
+        
+        ${feedback.vocabulary_tips?.length?`<div>
+          <div class="sl mb8 cvi">💡 ΛΕΞΙΛΟΓΙΟ</div>
+          ${feedback.vocabulary_tips.map(t=>`<div class="f11 c2 mb4" style="padding:5px 10px;border-left:2px solid var(--vi)44;border-radius:0 6px 6px 0">• ${t}</div>`).join('')}
+        </div>`:''}
+      </div>
+    </div>`;
+    
+    addXP(20);
+    
+  } catch(err) {
+    result.innerHTML=`<div style="padding:12px;background:var(--s2);border:1px solid var(--ro)33;border-radius:8px">
+      <div class="f12 cro">Σφάλμα σύνδεσης. Δοκίμασε ξανά.</div></div>`;
+  }
+  
+  btn.textContent='🤖 AI Feedback';
+  btn.disabled=false;
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
   if(DB.get('lm',false))document.body.classList.add('light');
   updXP();
@@ -3769,6 +4313,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   const td=Object.keys(DB.get('comp',{})).filter(k=>(DB.get('comp',{})[k]||[]).length>=3).length;
   if(td>=10)unlockAch('st10');
   // Daily notification
+  showOnboarding();
+  checkWeeklySummary();
   if(DB.get('nf',false)&&DB.get('lastR','')!==todayK()&&Notification.permission==='granted'){
     DB.set('lastR',todayK());
     setTimeout(()=>{try{new Notification('📗 English Master',{body:'Ώρα για τη σημερινή σου μελέτη! 🎯'});}catch(e){}},3000);
