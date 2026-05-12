@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="el">
-<head>
-<meta charset="UTF-8">
+<!-- saved from url=(0049)file:///C:/Users/Vozinis.E/Downloads/index_3.html -->
+<html lang="el"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="theme-color" content="#0f1117">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="English Master">
 <title>English Master — B1 to C1</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="./English Master — B1 to C1_files/css2" rel="stylesheet">
+<script src="./English Master — B1 to C1_files/chart.umd.min.js.αρχείο λήψης"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -226,7 +226,7 @@ body.light .c-info{background:#eef3ff;border-color:#a3b8e8}
 @media(max-width:700px){.tsb{width:130px}.vsb{width:150px}.tabs{display:none}.hgrid{grid-template-columns:1fr}.hstats{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
-<body>
+<body class="light">
 <div id="app">
 <nav id="nav">
   <div class="brand">
@@ -234,28 +234,138 @@ body.light .c-info{background:#eef3ff;border-color:#a3b8e8}
     <div><div class="brand-name">English Master</div><span class="brand-sub">B1 → C1</span></div>
   </div>
   <div class="tabs">
-    <button class="tab on" onclick="go('home')" id="t-home">🏠 Home</button>
-    <button class="tab" onclick="go('vocab')" id="t-vocab">📚 Vocabulary</button>
-    <button class="tab" onclick="go('tenses')" id="t-tenses">⏱ Tenses</button>
-    <button class="tab" onclick="go('grammar')" id="t-grammar">✏ Grammar</button>
-    <button class="tab" onclick="go('writing')" id="t-writing">✍ Writing</button>
-    <button class="tab" onclick="go('reading')" id="t-reading">📄 Reading</button>
-    <button class="tab" onclick="go('speaking')" id="t-speaking">🗣 Speaking</button>
-    <button class="tab" onclick="go('lessons')" id="t-lessons">🎯 Daily Lesson</button>
-    <button class="tab" onclick="go('builder')" id="t-builder">🔤 Sentence Builder</button>
-    <button class="tab" onclick="go('falsefriends')" id="t-falsefriends">⚠ False Friends</button>
-    <button class="tab" onclick="go('stats')" id="t-stats">📊 Stats</button>
-    <button class="tab" onclick="go('tracker')" id="t-tracker">📅 Tracker</button>
-    <button class="tab" onclick="go('settings')" id="t-settings">⚙ Settings</button>
+    <button class="tab on" onclick="go(&#39;home&#39;)" id="t-home">🏠 Home</button>
+    <button class="tab" onclick="go(&#39;vocab&#39;)" id="t-vocab">📚 Vocabulary</button>
+    <button class="tab" onclick="go(&#39;tenses&#39;)" id="t-tenses">⏱ Tenses</button>
+    <button class="tab" onclick="go(&#39;grammar&#39;)" id="t-grammar">✏ Grammar</button>
+    <button class="tab" onclick="go(&#39;writing&#39;)" id="t-writing">✍ Writing</button>
+    <button class="tab" onclick="go(&#39;reading&#39;)" id="t-reading">📄 Reading</button>
+    <button class="tab" onclick="go(&#39;speaking&#39;)" id="t-speaking">🗣 Speaking</button>
+    <button class="tab" onclick="go(&#39;lessons&#39;)" id="t-lessons">🎯 Daily Lesson</button>
+    <button class="tab" onclick="go(&#39;builder&#39;)" id="t-builder">🔤 Sentence Builder</button>
+    <button class="tab" onclick="go(&#39;falsefriends&#39;)" id="t-falsefriends">⚠ False Friends</button>
+    <button class="tab" onclick="go(&#39;stats&#39;)" id="t-stats">📊 Stats</button>
+    <button class="tab" onclick="go(&#39;tracker&#39;)" id="t-tracker">📅 Tracker</button>
+    <button class="tab" onclick="go(&#39;settings&#39;)" id="t-settings">⚙ Settings</button>
   </div>
   <div class="nav-r">
-    <span class="lv-b" id="xp-lv">Lv 1</span>
-    <div class="xpw"><div class="xpt" id="xp-txt">0 XP</div><div class="xpb"><div class="xpf" id="xp-f" style="width:0%"></div></div></div>
+    <span class="lv-b" id="xp-lv">Lv 2</span>
+    <div class="xpw"><div class="xpt" id="xp-txt">200 XP</div><div class="xpb"><div class="xpf" id="xp-f" style="width: 20%;"></div></div></div>
     <button id="pwab" onclick="doPWA()">⬇ Install</button>
   </div>
 </nav>
 <div id="cnt">
-  <div id="home" class="pnl" style="display:block"></div>
+  <div id="home" class="pnl" style="display:block"><div style="padding:20px;max-width:900px;margin:0 auto" class="fu">
+    <!-- Word of the Day -->
+    <div class="card mb16" style="border-color:var(--ro)33"><div class="fx ac jb mb8"><div class="sl" style="color:var(--ro)">⭐ WORD OF THE DAY</div><span class="tag f9" style="background:var(--ro)1a;border:1px solid var(--ro)33;color:var(--ro)">B1-C1</span></div><div class="fx ac jb"><div><div class="fp f20 b mb4">in other words</div><div class="f13 mb4" style="color:var(--ro)">με άλλα λόγια</div><div class="f11 c3 it">"In other words, we simply need more time."</div></div><div class="fx col ac g8"><button onclick="speak(&#39;in&#39;)" style="padding:6px 14px;border:1px solid var(--tl)44;border-radius:20px;color:var(--tl);font-size:12px;cursor:pointer;background:var(--s3)">🔊</button><button onclick="setWS(&#39;ph08&#39;,true);toast(&#39;Εμαθα +8 XP&#39;,&#39;var(--gr)&#39;)" style="padding:5px 12px;border:1px solid var(--gr)44;border-radius:20px;color:var(--gr);font-size:10px;cursor:pointer;background:var(--s3)">Εμαθα ✓</button></div></div></div>
+    <div style="text-align:center;padding:24px 20px 20px">
+      <div class="sl mb8 cam">ENGLISH MASTER — B1 → C1 · GENERAL &amp; BUSINESS</div>
+      <h1 class="fp" style="font-size:26px;background:linear-gradient(135deg,#f0eef8 30%,var(--bl) 70%,var(--vi));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px">Καλώς ήρθες!</h1>
+      <p class="f12 c3">Vocabulary · Tenses · Grammar · Writing · Reading · Speaking</p>
+    </div>
+
+    <div class="card mb16">
+      <div class="fx ac jb mb8">
+        <div><span class="f11 c3">Level 2 — </span><span class="f12 b cam">Elementary</span></div>
+        <span class="f11 c3">200 / 400 XP</span>
+      </div>
+      <div class="pb" style="height:7px"><div class="pf" style="width:20%;background:linear-gradient(90deg,var(--am),var(--or));height:100%"></div></div>
+    </div>
+
+    <div class="hstats">
+      
+      <div class="hs"><div style="font-size:20px;margin-bottom:3px">🔥</div><div class="hs-v" style="color:var(--or)">0</div><div class="hs-l">STREAK</div></div>
+      <div class="hs"><div style="font-size:20px;margin-bottom:3px">📅</div><div class="hs-v" style="color:var(--gr)">0</div><div class="hs-l">ΜΕΡΕΣ</div></div>
+      <div class="hs"><div style="font-size:20px;margin-bottom:3px">📚</div><div class="hs-v" style="color:var(--bl)">0</div><div class="hs-l">ΛΕΞΕΙΣ</div></div>
+      <div class="hs"><div style="font-size:20px;margin-bottom:3px">⏱</div><div class="hs-v" style="color:var(--vi)">0'</div><div class="hs-l">ΣΗΜΕΡΑ</div></div>
+      <div class="hs"><div style="font-size:20px;margin-bottom:3px">🏆</div><div class="hs-v" style="color:var(--am)">4/13</div><div class="hs-l">ΕΠΙΤ.</div></div>
+    </div>
+
+    <div class="hgrid">
+      <div class="hcard" onclick="go(&#39;vocab&#39;)" style="background:linear-gradient(135deg,#051a0a,#0a2a14);border-color:#22c77a22">
+        <div class="hcard-ico">📚</div><h3 style="color:var(--gr)">Vocabulary</h3>
+        <p>286 λέξεις B1→C1 · Spaced Repetition · 4 Quiz Modes</p>
+        <div class="mt8"><div class="pb" style="height:3px"><div class="pf" style="width:0%;background:var(--gr)"></div></div>
+        <div class="f9 c3 mt4">0/286 · Ενημερωμένο ✓</div></div>
+      </div>
+      <div class="hcard" onclick="go(&#39;tenses&#39;)" style="background:linear-gradient(135deg,#0a0818,#150a28);border-color:#7c5cf522">
+        <div class="hcard-ico">⏱</div><h3 style="color:var(--vi)">Tenses</h3>
+        <p>9 χρόνοι · Θεωρία · Quiz · Μετάφραση · Confusable Pairs</p>
+        <div class="mt8 f9 c3">45 quiz ερωτήσεις · Tips &amp; Παγίδες</div>
+      </div>
+      <div class="hcard" onclick="go(&#39;grammar&#39;)" style="background:linear-gradient(135deg,#050d18,#0a1830);border-color:#5b8def22">
+        <div class="hcard-ico">✏</div><h3 style="color:var(--bl)">Grammar</h3>
+        <p>8 κεφάλαια: Modals · Reported Speech · Rel. Clauses · Conditionals + άλλα</p>
+        <div class="mt8 f9 c3">Πλήρης θεωρία + Ασκήσεις με feedback</div>
+      </div>
+      <div class="hcard" onclick="go(&#39;writing&#39;)" style="background:linear-gradient(135deg,#060518,#0a0828);border-color:#7c5cf522">
+        <div class="hcard-ico">✍</div><h3 style="color:var(--vi)">Writing</h3>
+        <p>Formal/Informal Email · Conversation · Opinion Essay</p>
+        <div class="mt8 f9 c3">Δομή + Φράσεις + Εξάσκηση (autosave)</div>
+      </div>
+      <div class="hcard" onclick="go(&#39;reading&#39;)" style="background:linear-gradient(135deg,#181200,#281c00);border-color:#f5b72222">
+        <div class="hcard-ico">📄</div><h3 style="color:var(--am)">Reading</h3>
+        <p>5 κείμενα B1→C1 · Κατανόηση · Vocabulary Extraction</p>
+        <div class="mt8 f9 c3">Αποθήκευση λέξεων απευθείας στο Vocabular</div>
+      </div>
+      <div class="hcard" onclick="go(&#39;speaking&#39;)" style="background:linear-gradient(135deg,#051a0a,#081a12);border-color:#22c77a22">
+        <div class="hcard-ico">🗣</div><h3 style="color:var(--gr)">Speaking</h3>
+        <p>Conversation Phrases · Προφορά · Shadowing Guide</p>
+        <div class="mt8 f9 c3">7 κατηγορίες φράσεων · Listening resources</div>
+      </div>
+      <div class="hcard" onclick="go(&#39;lessons&#39;)" style="background:linear-gradient(135deg,#0a0518,#160828);border-color:#7c5cf522">
+        <div class="hcard-ico">🎯</div><h3 style="color:var(--vi)">Daily Lesson</h3>
+        <p>Νέα λέξη + Context + Grammar tip + Mini Quiz + Πρόταση</p>
+        <div class="mt8 f9 c3">5 βήματα · 0/5 σήμερα</div>
+      </div>
+      <div class="hcard" onclick="go(&#39;builder&#39;)" style="background:linear-gradient(135deg,#051a1a,#081a1a);border-color:#20c8c822">
+        <div class="hcard-ico">🔤</div><h3 style="color:var(--tl)">Sentence Builder</h3>
+        <p>Φτιάξε προτάσεις από λέξεις · Word order · Grammar</p>
+        <div class="mt8 f9 c3">20 προτάσεις B1→C1 · Instant feedback</div>
+      </div>
+    </div>
+
+    <div class="today-box">
+      <div class="fx ac jb mb10">
+        <div class="sl">ΣΗΜΕΡΙΝΟΣ ΣΤΟΧΟΣ</div>
+        <div class="f11 c3">0/6 ολοκληρωμένα · 0 λεπτά</div>
+      </div>
+      <div class="pb mb12" style="height:4px"><div class="pf" style="width:0%;background:linear-gradient(90deg,var(--bl),var(--gr))"></div></div>
+      <div class="td-t " onclick="toggleTask(&#39;vocab&#39;);rHome()">
+        <div class="tck"></div>
+        <span style="font-size:16px">📚</span>
+        <div style="flex:1"><div class="f12 b" style="color:var(--t2)">Vocabulary Session</div><div class="f10 c3 mt4">10 λέξεις — Mixed Practice ή Review</div></div>
+        <div class="f10 c3">10'</div>
+      </div><div class="td-t " onclick="toggleTask(&#39;tenses&#39;);rHome()">
+        <div class="tck"></div>
+        <span style="font-size:16px">⏱</span>
+        <div style="flex:1"><div class="f12 b" style="color:var(--t2)">Tenses</div><div class="f10 c3 mt4">1 χρόνος — θεωρία ή quiz</div></div>
+        <div class="f10 c3">10'</div>
+      </div><div class="td-t " onclick="toggleTask(&#39;grammar&#39;);rHome()">
+        <div class="tck"></div>
+        <span style="font-size:16px">✏</span>
+        <div style="flex:1"><div class="f12 b" style="color:var(--t2)">Grammar</div><div class="f10 c3 mt4">1 κεφάλαιο γραμματικής + ασκήσεις</div></div>
+        <div class="f10 c3">10'</div>
+      </div><div class="td-t " onclick="toggleTask(&#39;reading&#39;);rHome()">
+        <div class="tck"></div>
+        <span style="font-size:16px">📄</span>
+        <div style="flex:1"><div class="f12 b" style="color:var(--t2)">Reading</div><div class="f10 c3 mt4">1 κείμενο + comprehension</div></div>
+        <div class="f10 c3">10'</div>
+      </div><div class="td-t " onclick="toggleTask(&#39;writing&#39;);rHome()">
+        <div class="tck"></div>
+        <span style="font-size:16px">✍</span>
+        <div style="flex:1"><div class="f12 b" style="color:var(--t2)">Writing Practice</div><div class="f10 c3 mt4">Email, συνομιλία ή άποψη</div></div>
+        <div class="f10 c3">15'</div>
+      </div><div class="td-t " onclick="toggleTask(&#39;listening&#39;);rHome()">
+        <div class="tck"></div>
+        <span style="font-size:16px">🎧</span>
+        <div style="flex:1"><div class="f12 b" style="color:var(--t2)">Listening / Speaking</div><div class="f10 c3 mt4">BBC 6 Min · Shadowing</div></div>
+        <div class="f10 c3">10'</div>
+      </div>
+    </div>
+
+    
+  </div></div>
   <div id="vocab" class="pnl fpnl"></div>
   <div id="tenses" class="pnl fpnl"></div>
   <div id="grammar" class="pnl"></div>
@@ -3665,5 +3775,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
 });
 </script>
-</body>
-</html>
+
+
+</body></html>
