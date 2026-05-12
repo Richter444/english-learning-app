@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0044)file:///C:/Users/air2/Downloads/index_5.html -->
+<!-- saved from url=(0044)file:///C:/Users/air2/Downloads/index_7.html -->
 <html lang="el"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -198,6 +198,31 @@ body.light .c-ok{background:#edfaf4;border-color:#a3d9b8}
 body.light .c-warn{background:#fffbf0;border-color:#e8d5a0}
 body.light .c-info{background:#eef3ff;border-color:#a3b8e8}
 
+
+/* ═══ LESSONS ═══ */
+.lesson-card{background:var(--s1);border:1px solid var(--ln);border-radius:var(--r2);padding:20px;margin-bottom:12px}
+.lesson-step{display:flex;align-items:flex-start;gap:12px;padding:12px;background:var(--s2);border:1px solid var(--ln);border-radius:var(--r);margin-bottom:8px;transition:all .15s}
+.lesson-step.active{border-color:var(--bl);background:var(--s3)}
+.lesson-step.done{background:#051a0a;border-color:#22c77a33}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;color:var(--t3)}
+.lesson-step.active .step-num{background:var(--bl);color:#fff}
+.lesson-step.done .step-num{background:var(--gr);color:#051a0a}
+.xp-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;background:var(--am)1a;border:1px solid var(--am)33;color:var(--am);font-size:10px;font-weight:700}
+
+/* ═══ BUILDER ═══ */
+.builder-word{display:inline-flex;align-items:center;padding:8px 14px;background:var(--s2);border:1px solid var(--ln2);border-radius:8px;font-size:14px;cursor:pointer;margin:4px;transition:all .15s;user-select:none}
+.builder-word:hover{background:var(--s3);border-color:var(--bl)}
+.builder-word.used{opacity:.3;cursor:not-allowed}
+.builder-word.selected{background:var(--bl)1a;border-color:var(--bl);color:var(--bl)}
+.drop-zone{min-height:52px;background:var(--s2);border:2px dashed var(--ln2);border-radius:var(--r);padding:8px;display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-bottom:12px;transition:all .15s}
+.drop-zone.has-words{border-color:var(--bl)44;background:var(--s3)}
+.placed-word{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;background:var(--bl)1a;border:1px solid var(--bl)44;border-radius:7px;font-size:13px;cursor:pointer;color:var(--bl)}
+.placed-word:hover{background:var(--ro)1a;border-color:var(--ro)44;color:var(--ro)}
+
+/* ═══ ERROR TRACKER ═══ */
+.err-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;margin-bottom:6px}
+.err-count{width:28px;height:28px;border-radius:50%;background:var(--ro)1a;border:1px solid var(--ro)33;color:var(--ro);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
 @media(max-width:700px){.tsb{width:130px}.vsb{width:150px}.tabs{display:none}.hgrid{grid-template-columns:1fr}.hstats{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
@@ -216,6 +241,8 @@ body.light .c-info{background:#eef3ff;border-color:#a3b8e8}
     <button class="tab" onclick="go(&#39;writing&#39;)" id="t-writing">✍ Writing</button>
     <button class="tab" onclick="go(&#39;reading&#39;)" id="t-reading">📄 Reading</button>
     <button class="tab" onclick="go(&#39;speaking&#39;)" id="t-speaking">🗣 Speaking</button>
+    <button class="tab" onclick="go(&#39;lessons&#39;)" id="t-lessons">🎯 Daily Lesson</button>
+    <button class="tab" onclick="go(&#39;builder&#39;)" id="t-builder">🔤 Sentence Builder</button>
     <button class="tab" onclick="go(&#39;stats&#39;)" id="t-stats">📊 Stats</button>
     <button class="tab" onclick="go(&#39;tracker&#39;)" id="t-tracker">📅 Tracker</button>
     <button class="tab" onclick="go(&#39;settings&#39;)" id="t-settings">⚙ Settings</button>
@@ -254,9 +281,9 @@ body.light .c-info{background:#eef3ff;border-color:#a3b8e8}
     <div class="hgrid">
       <div class="hcard" onclick="go(&#39;vocab&#39;)" style="background:linear-gradient(135deg,#051a0a,#0a2a14);border-color:#22c77a22">
         <div class="hcard-ico">📚</div><h3 style="color:var(--gr)">Vocabulary</h3>
-        <p>214 λέξεις B1→C1 · Spaced Repetition · 4 Quiz Modes</p>
+        <p>286 λέξεις B1→C1 · Spaced Repetition · 4 Quiz Modes</p>
         <div class="mt8"><div class="pb" style="height:3px"><div class="pf" style="width:0%;background:var(--gr)"></div></div>
-        <div class="f9 c3 mt4">0/214 · Ενημερωμένο ✓</div></div>
+        <div class="f9 c3 mt4">0/286 · Ενημερωμένο ✓</div></div>
       </div>
       <div class="hcard" onclick="go(&#39;tenses&#39;)" style="background:linear-gradient(135deg,#0a0818,#150a28);border-color:#7c5cf522">
         <div class="hcard-ico">⏱</div><h3 style="color:var(--vi)">Tenses</h3>
@@ -282,6 +309,16 @@ body.light .c-info{background:#eef3ff;border-color:#a3b8e8}
         <div class="hcard-ico">🗣</div><h3 style="color:var(--gr)">Speaking</h3>
         <p>Conversation Phrases · Προφορά · Shadowing Guide</p>
         <div class="mt8 f9 c3">7 κατηγορίες φράσεων · Listening resources</div>
+      </div>
+      <div class="hcard" onclick="go(&#39;lessons&#39;)" style="background:linear-gradient(135deg,#0a0518,#160828);border-color:#7c5cf522">
+        <div class="hcard-ico">🎯</div><h3 style="color:var(--vi)">Daily Lesson</h3>
+        <p>Νέα λέξη + Context + Grammar tip + Mini Quiz + Πρόταση</p>
+        <div class="mt8 f9 c3">5 βήματα · 0/5 σήμερα</div>
+      </div>
+      <div class="hcard" onclick="go(&#39;builder&#39;)" style="background:linear-gradient(135deg,#051a1a,#081a1a);border-color:#20c8c822">
+        <div class="hcard-ico">🔤</div><h3 style="color:var(--tl)">Sentence Builder</h3>
+        <p>Φτιάξε προτάσεις από λέξεις · Word order · Grammar</p>
+        <div class="mt8 f9 c3">20 προτάσεις B1→C1 · Instant feedback</div>
       </div>
     </div>
 
@@ -332,6 +369,8 @@ body.light .c-info{background:#eef3ff;border-color:#a3b8e8}
   <div id="writing" class="pnl"></div>
   <div id="reading" class="pnl"></div>
   <div id="speaking" class="pnl"></div>
+  <div id="lessons" class="pnl"></div>
+  <div id="builder" class="pnl"></div>
   <div id="stats" class="pnl"></div>
   <div id="tracker" class="pnl fpnl"></div>
   <div id="settings" class="pnl"></div>
@@ -420,7 +459,7 @@ function go(id){
   p.style.display=FPANELS.includes(id)?'flex':'block';
   const t=document.getElementById('t-'+id);if(t)t.classList.add('on');
   ({home:rHome,vocab:rVocab,tenses:rTenses,grammar:rGrammar,writing:rWriting,
-    reading:rReading,speaking:rSpeaking,stats:rStats,tracker:rTracker,settings:rSettings})[id]?.()
+    reading:rReading,speaking:rSpeaking,lessons:rLessons,builder:rBuilder,stats:rStats,tracker:rTracker,settings:rSettings})[id]?.()
 }
 
 /* ══ HELPERS ══ */
@@ -670,6 +709,86 @@ const WORDS=[
   {id:'ir43',w:'win → won → won',g:'κερδίζω',p:'verb',cat:'irregular',e:'Our team won the annual innovation award.',d:1,f:[]},
   {id:'ir44',w:'write → wrote → written',g:'γράφω',p:'verb',cat:'irregular',e:'She wrote a highly professional email to the client.',d:1,f:[]},
   {id:'ir45',w:'come to an agreement',g:'καταλήγω σε συμφωνία',p:'phrase',cat:'irregular',e:'After two hours of talks we came to an agreement.',d:2,f:[]},
+
+  /* ── HEALTH & WELLBEING ── */
+  {id:'h01',w:'anxiety',g:'άγχος / ανησυχία',p:'noun',cat:'b2_daily',e:'Many people experience anxiety before important events.',d:2,f:['anxious','anxiously']},
+  {id:'h02',w:'depression',g:'κατάθλιψη / ύφεση',p:'noun',cat:'b2_daily',e:'Mental health awareness helps reduce stigma around depression.',d:2,f:['depressed','depressing']},
+  {id:'h03',w:'exhausted',g:'εξαντλημένος / κουρασμένος',p:'adj',cat:'b1_daily',e:'After the long meeting, she was completely exhausted.',d:1,f:['exhaustion','exhaust']},
+  {id:'h04',w:'nutrition',g:'διατροφή / θρεπτική αξία',p:'noun',cat:'b2_daily',e:'Good nutrition is essential for maintaining energy levels.',d:2,f:['nutritious','nutritional']},
+  {id:'h05',w:'symptom',g:'σύμπτωμα',p:'noun',cat:'b2_daily',e:'Fatigue is a common symptom of stress.',d:2,f:['symptomatic']},
+  {id:'h06',w:'chronic',g:'χρόνιος / μακροχρόνιος',p:'adj',cat:'c1_adv',e:'Chronic stress can have serious long-term health consequences.',d:3,f:['chronically']},
+  {id:'h07',w:'resilience',g:'ανθεκτικότητα / αντοχή',p:'noun',cat:'c1_adv',e:'Building resilience helps people cope with adversity.',d:3,f:['resilient']},
+  {id:'h08',w:'mindfulness',g:'επίγνωση / ενσυνειδητότητα',p:'noun',cat:'c1_adv',e:'Mindfulness meditation reduces stress and improves focus.',d:3,f:['mindful']},
+  /* ── TECHNOLOGY ── */
+  {id:'t01',w:'algorithm',g:'αλγόριθμος',p:'noun',cat:'b2_daily',e:'Social media algorithms decide what content you see.',d:2,f:['algorithmic']},
+  {id:'t02',w:'artificial intelligence',g:'τεχνητή νοημοσύνη',p:'noun',cat:'b2_daily',e:'Artificial intelligence is transforming many industries.',d:2,f:[]},
+  {id:'t03',w:'automation',g:'αυτοματοποίηση',p:'noun',cat:'b2_daily',e:'Automation is changing the nature of many jobs.',d:2,f:['automate','automated']},
+  {id:'t04',w:'bandwidth',g:'εύρος ζώνης / ικανότητα',p:'noun',cat:'b2_daily',e:'We need more bandwidth to handle this project.',d:2,f:[]},
+  {id:'t05',w:'cybersecurity',g:'κυβερνοασφάλεια',p:'noun',cat:'b2_daily',e:'Companies must invest heavily in cybersecurity measures.',d:2,f:[]},
+  {id:'t06',w:'disruption',g:'διαταραχή / αναστάτωση',p:'noun',cat:'c1_adv',e:'Digital technology has caused major disruption across all sectors.',d:3,f:['disruptive','disrupt']},
+  {id:'t07',w:'innovation',g:'καινοτομία',p:'noun',cat:'b2_daily',e:'Innovation drives economic growth and competitiveness.',d:2,f:['innovative','innovate']},
+  {id:'t08',w:'platform',g:'πλατφόρμα / εξέδρα',p:'noun',cat:'b1_daily',e:'Social media platforms have changed how we communicate.',d:1,f:[]},
+  {id:'t09',w:'virtual',g:'εικονικός / ψηφιακός',p:'adj',cat:'b1_daily',e:'Many meetings are now held virtually.',d:1,f:['virtually']},
+  {id:'t10',w:'obsolete',g:'παρωχημένος / ξεπερασμένος',p:'adj',cat:'c1_adv',e:'Older technologies quickly become obsolete.',d:3,f:['obsolescence']},
+  /* ── ENVIRONMENT ── */
+  {id:'e01',w:'carbon footprint',g:'αποτύπωμα άνθρακα',p:'noun',cat:'b2_daily',e:'We should all try to reduce our carbon footprint.',d:2,f:[]},
+  {id:'e02',w:'climate change',g:'κλιματική αλλαγή',p:'noun',cat:'b1_daily',e:'Climate change is one of the biggest challenges of our time.',d:1,f:[]},
+  {id:'e03',w:'conservation',g:'διατήρηση / συντήρηση',p:'noun',cat:'b2_daily',e:'Wildlife conservation is crucial for biodiversity.',d:2,f:['conserve','conservative']},
+  {id:'e04',w:'emissions',g:'εκπομπές (ρύπων)',p:'noun',cat:'b2_daily',e:'We must significantly reduce carbon emissions.',d:2,f:['emit']},
+  {id:'e05',w:'renewable',g:'ανανεώσιμος',p:'adj',cat:'b1_daily',e:'Renewable energy sources include solar and wind power.',d:1,f:['renew','renewal']},
+  {id:'e06',w:'sustainable',g:'βιώσιμος / αειφόρος',p:'adj',cat:'b2_daily',e:'We need more sustainable approaches to development.',d:2,f:['sustainability','sustain']},
+  {id:'e07',w:'deforestation',g:'αποψίλωση δασών',p:'noun',cat:'c1_adv',e:'Deforestation contributes significantly to climate change.',d:3,f:['deforest']},
+  {id:'e08',w:'biodiversity',g:'βιοποικιλότητα',p:'noun',cat:'c1_adv',e:'Protecting biodiversity is essential for ecosystem health.',d:3,f:[]},
+  /* ── TRAVEL & CULTURE ── */
+  {id:'tr01',w:'itinerary',g:'δρομολόγιο / πρόγραμμα ταξιδιού',p:'noun',cat:'b2_daily',e:'Please send me your itinerary before you arrive.',d:2,f:[]},
+  {id:'tr02',w:'accommodation',g:'διαμονή / στέγαση',p:'noun',cat:'b1_daily',e:'The accommodation was excellent value for money.',d:1,f:['accommodate']},
+  {id:'tr03',w:'commute',g:'μετακινούμαι / καθημερινή μετακίνηση',p:'verb/noun',cat:'b1_daily',e:'My daily commute takes about 45 minutes.',d:1,f:['commuter']},
+  {id:'tr04',w:'destination',g:'προορισμός',p:'noun',cat:'b1_daily',e:'Greece is a popular tourist destination.',d:1,f:[]},
+  {id:'tr05',w:'diversity',g:'ποικιλομορφία / πολυμορφία',p:'noun',cat:'b2_daily',e:'Cultural diversity enriches our society.',d:2,f:['diverse','diversify']},
+  {id:'tr06',w:'heritage',g:'κληρονομιά / παράδοση',p:'noun',cat:'b2_daily',e:'We must preserve our cultural heritage for future generations.',d:2,f:[]},
+  /* ── WORK & SOCIETY ── */
+  {id:'w01',w:'collaboration',g:'συνεργασία',p:'noun',cat:'b2_daily',e:'Effective collaboration is key to project success.',d:2,f:['collaborate','collaborative']},
+  {id:'w02',w:'entrepreneur',g:'επιχειρηματίας',p:'noun',cat:'b2_daily',e:'Young entrepreneurs are driving innovation.',d:2,f:['entrepreneurship']},
+  {id:'w03',w:'flexibility',g:'ευελιξία / ευκαμψία',p:'noun',cat:'b2_daily',e:'Flexibility in working hours improves employee satisfaction.',d:2,f:['flexible','inflexible']},
+  {id:'w04',w:'inequality',g:'ανισότητα',p:'noun',cat:'b2_daily',e:'Economic inequality is growing in many countries.',d:2,f:['unequal','equal']},
+  {id:'w05',w:'initiative',g:'πρωτοβουλία',p:'noun',cat:'b2_daily',e:'She showed great initiative by solving the problem alone.',d:2,f:[]},
+  {id:'w06',w:'redundant',g:'πλεονάζων / άνεργος (UK)',p:'adj',cat:'b2_daily',e:'He was made redundant when the company downsized.',d:2,f:['redundancy']},
+  {id:'w07',w:'transparent',g:'διαφανής / ξεκάθαρος',p:'adj',cat:'b2_daily',e:'Companies should be more transparent about their decisions.',d:2,f:['transparency']},
+  {id:'w08',w:'turnover',g:'κύκλος εργασιών / εναλλαγή προσωπικού',p:'noun',cat:'b2_daily',e:'High staff turnover is costly for organisations.',d:2,f:[]},
+  {id:'w09',w:'welfare',g:'πρόνοια / ευημερία',p:'noun',cat:'b2_daily',e:'Employee welfare should be a priority for every company.',d:2,f:[]},
+  {id:'w10',w:'workforce',g:'εργατικό δυναμικό',p:'noun',cat:'b2_daily',e:'The workforce needs to adapt to new technologies.',d:2,f:[]},
+  /* ── C1 ADVANCED (extra) ── */
+  {id:'c1x01',w:'alleviate',g:'ανακουφίζω / μετριάζω',p:'verb',cat:'c1_adv',e:'These measures will alleviate pressure on public services.',d:3,f:['alleviation']},
+  {id:'c1x02',w:'ambivalent',g:'αμφιταλαντευόμενος / διφορούμενος',p:'adj',cat:'c1_adv',e:'She felt ambivalent about accepting the promotion.',d:3,f:['ambivalence']},
+  {id:'c1x03',w:'catalyst',g:'καταλύτης / αιτία αλλαγής',p:'noun',cat:'c1_adv',e:'The crisis acted as a catalyst for major reform.',d:3,f:[]},
+  {id:'c1x04',w:'contradict',g:'αντιφάσκω / αντικρούω',p:'verb',cat:'c1_adv',e:'The new evidence contradicts the original findings.',d:3,f:['contradiction','contradictory']},
+  {id:'c1x05',w:'criterion',g:'κριτήριο (pl. criteria)',p:'noun',cat:'c1_adv',e:'The main criterion for selection is relevant experience.',d:3,f:['criteria']},
+  {id:'c1x06',w:'diminish',g:'μειώνω / υποβαθμίζω',p:'verb',cat:'c1_adv',e:'Constant criticism will diminish confidence.',d:3,f:['diminishing']},
+  {id:'c1x07',w:'elicit',g:'προκαλώ / αντλώ',p:'verb',cat:'c1_adv',e:'The survey aims to elicit honest feedback.',d:3,f:[]},
+  {id:'c1x08',w:'exacerbate',g:'επιδεινώνω / χειροτερεύω',p:'verb',cat:'c1_adv',e:'Poor communication can exacerbate workplace conflicts.',d:3,f:[]},
+  {id:'c1x09',w:'formidable',g:'τρομερός / εντυπωσιακός',p:'adj',cat:'c1_adv',e:'She faced formidable challenges but overcame them all.',d:3,f:[]},
+  {id:'c1x10',w:'inherent',g:'εγγενής / εσωτερικός',p:'adj',cat:'c1_adv',e:'There are inherent risks in any investment.',d:3,f:['inherently']},
+  {id:'c1x11',w:'mitigate',g:'μετριάζω / ελαφρύνω',p:'verb',cat:'c1_adv',e:'We need strategies to mitigate the risks involved.',d:3,f:['mitigation']},
+  {id:'c1x12',w:'paradox',g:'παράδοξο',p:'noun',cat:'c1_adv',e:'It is a paradox that more choice can lead to less happiness.',d:3,f:['paradoxical']},
+  {id:'c1x13',w:'scrutinise',g:'εξετάζω επισταμένως',p:'verb',cat:'c1_adv',e:'All proposals will be carefully scrutinised before approval.',d:3,f:['scrutiny']},
+  {id:'c1x14',w:'threshold',g:'κατώφλι / όριο',p:'noun',cat:'c1_adv',e:'We have reached a critical threshold in negotiations.',d:3,f:[]},
+  {id:'c1x15',w:'volatile',g:'ασταθής / εκρηκτικός',p:'adj',cat:'c1_adv',e:'The market remains volatile and unpredictable.',d:3,f:['volatility']},
+  /* ── COLLOCATIONS & IDIOMS ── */
+  {id:'col01',w:'make a decision',g:'λαμβάνω απόφαση',p:'collocation',cat:'phrases',e:'We need to make a decision by the end of the week.',d:1,f:[]},
+  {id:'col02',w:'take responsibility',g:'αναλαμβάνω ευθύνη',p:'collocation',cat:'phrases',e:'Good leaders take responsibility for their mistakes.',d:1,f:[]},
+  {id:'col03',w:'reach an agreement',g:'καταλήγω σε συμφωνία',p:'collocation',cat:'phrases',e:'After long negotiations, they finally reached an agreement.',d:2,f:[]},
+  {id:'col04',w:'raise awareness',g:'ευαισθητοποιώ / ανεβάζω συνειδητοποίηση',p:'collocation',cat:'phrases',e:'The campaign aims to raise awareness about climate change.',d:2,f:[]},
+  {id:'col05',w:'meet a deadline',g:'τηρώ / εκπληρώ προθεσμία',p:'collocation',cat:'phrases',e:'The team worked overtime to meet the deadline.',d:1,f:[]},
+  {id:'col06',w:'heavy traffic',g:'πυκνή κυκλοφορία',p:'collocation',cat:'phrases',e:'I was late because of heavy traffic on the motorway.',d:1,f:[]},
+  {id:'col07',w:'strong argument',g:'ισχυρό επιχείρημα',p:'collocation',cat:'phrases',e:'She made a strong argument for increasing the budget.',d:2,f:[]},
+  {id:'col08',w:'break the ice',g:'σπάω τον πάγο',p:'idiom',cat:'phrases',e:'A good joke can help break the ice at meetings.',d:2,f:[]},
+  {id:'col09',w:'hit the nail on the head',g:'βρίσκω το σωστό / λέω ακριβώς',p:'idiom',cat:'phrases',e:'You hit the nail on the head — that is exactly the problem.',d:2,f:[]},
+  {id:'col10',w:'the tip of the iceberg',g:'η κορυφή του παγόβουνου',p:'idiom',cat:'phrases',e:'These problems are just the tip of the iceberg.',d:3,f:[]},
+  {id:'col11',w:'think outside the box',g:'σκέφτομαι δημιουργικά / έξω από τα συνηθισμένα',p:'idiom',cat:'phrases',e:'We need to think outside the box to solve this.',d:2,f:[]},
+  {id:'col12',w:'at the end of the day',g:'στο τέλος της ημέρας / εν τέλει',p:'idiom',cat:'phrases',e:'At the end of the day, results are what matter.',d:1,f:[]},
+  {id:'col13',w:'get the ball rolling',g:'ξεκινώ / παίρνω μπρος',p:'idiom',cat:'phrases',e:'Let us get the ball rolling with the first agenda item.',d:2,f:[]},
+  {id:'col14',w:'a steep learning curve',g:'απότομη μαθησιακή καμπύλη',p:'idiom',cat:'phrases',e:'The new software has a steep learning curve.',d:3,f:[]},
+  {id:'col15',w:'go the extra mile',g:'κάνω ένα βήμα παραπάνω',p:'idiom',cat:'phrases',e:'She always goes the extra mile for her clients.',d:2,f:[]},
 ];
 
 function getAllW(){return[...WORDS,...DB.get('customW',[])]}
@@ -703,7 +822,7 @@ function rVocab(){
   el.innerHTML=`<div class="vsb">
     <div class="vsb-h"><div class="sl mb4">VOCABULAR</div><div class="fp f14 b" style="color:#f0eef8;">Λεξιλόγιο</div><div class="f10 c3 mt4">${all} λέξεις · ${lc} εκμαθημένες</div></div>
     <div style="padding:6px 0">
-    ${[['home','🏠','Dashboard'],['review','🔁','Ημ. Επανάληψη'],['all','📋','Όλες οι Λέξεις'],['fc','🃏','Flashcards'],['mc','✔','Multiple Choice'],['fi','✏','Fill in Blank'],['mx','⚡','Mixed Practice'],['add','➕','Νέα Λέξη']].map(([m,i,l])=>`
+    ${[['home','🏠','Dashboard'],['review','🔁','Ημ. Επανάληψη'],['all','📋','Όλες οι Λέξεις'],['fc','🃏','Flashcards'],['mc','✔','Multiple Choice'],['fi','✏','Fill in Blank'],['mx','⚡','Mixed Practice'],['errors','⚠','Τα Λάθη μου'],['add','➕','Νέα Λέξη']].map(([m,i,l])=>`
     <button class="vmb ${VS.mode===m?'on':''}" onclick="VS.mode='${m}';rVocab()">
       <span>${i}</span><span>${l}</span>
       ${m==='review'&&due>0?`<span class="tag mxa" style="background:var(--ro);color:#fff;font-size:9px;">${due}</span>`:''}
@@ -715,6 +834,7 @@ function rVocab(){
   else if(VS.mode==='review')rVReview(vm);
   else if(VS.mode==='all')rVAll(vm);
   else if(['fc','mc','fi','mx'].includes(VS.mode))startQ(vm,VS.mode);
+  else if(VS.mode==='errors')rVErrors(vm);
   else if(VS.mode==='add')rVAdd(vm);
 }
 
@@ -794,7 +914,9 @@ function rVAll(el){
         <div class="f12 c2 mb4">${w.g}</div>
         <div class="f11 c3 it mb6">"${w.e}"</div>
         ${w.f&&w.f.length?`<div class="f10 c3">Family: ${w.f.map(f=>`<span style="color:var(--vi)">${f}</span>`).join(' · ')}</div>`:''}
-        <div class="fx ac g8 mt8"><div class="pb" style="height:3px;flex:1"><div class="pf" style="width:${pct}%;background:${pct>=60?'var(--gr)':pct>=30?'var(--am)':'var(--t3)'}"></div></div><span class="f9 c3">${s.sc}/5</span></div>
+        <div class="fx ac g8 mt8"><div class="pb" style="height:3px;flex:1"><div class="pf" style="width:${pct}%;background:${pct>=60?'var(--gr)':pct>=30?'var(--am)':'var(--t3)'}"></div></div><span class="f9 c3">${s.sc}/5</span>
+          <a href="https://youglish.com/pronounce/${encodeURIComponent(w.w.split(' ')[0])}/english" target="_blank" class="tag f9" style="background:var(--tl)1a;border:1px solid var(--tl)33;color:var(--tl);text-decoration:none" title="Άκου την προφορά στο YouGlish">🔊</a>
+        </div>
       </div>`;
     }).join('')||`<div class="card tc c3" style="padding:20px">Δεν υπάρχουν λέξεις.</div>`}
   </div>`;
@@ -918,6 +1040,7 @@ function vMCQ(i){
 function vRec(correct){
   const cw=VS.q.sess[VS.q.idx];
   setWS(cw.id,correct);
+  if(!correct)trackError(cw.id,VS.q.mode);
   VS.q.res.push({word:cw,correct});
   const lc=learnedW().length;
   if(VS.q.res.length===1&&getWS(cw.id).seen===1)unlockAch('w1');
@@ -952,6 +1075,55 @@ function showQRes(el){
     </div>
   </div>`;
 }
+
+function rVErrors(el){
+  const topErrors=getTopErrors(15);
+  if(!topErrors.length){
+    el.innerHTML=`<div style="max-width:560px;margin:40px auto;text-align:center">
+      <div style="font-size:48px;margin-bottom:12px">✅</div>
+      <div class="fp f18 b mb8">Μηδέν λάθη!</div>
+      <div class="f13 c2">Κάνε κάποια quiz για να δεις ποιες λέξεις σου δυσκολεύουν.</div>
+    </div>`;return;
+  }
+  el.innerHTML=`<div style="max-width:660px;margin:0 auto">
+    <div class="sl mb4 cro">ERROR TRACKER</div>
+    <div class="fp f16 b mb4">Τα Λάθη μου</div>
+    <p class="f12 c2 mb16" style="line-height:1.6">Αυτές οι λέξεις σε δυσκολεύουν περισσότερο. Εξάσκησε τις πρώτα!</p>
+    <div class="fx ac jb mb12">
+      <span class="f11 c2">${topErrors.length} λέξεις χρειάζονται προσοχή</span>
+      <button onclick="startErrorPractice()" class="btn bp bsm">⚡ Εξάσκηση Λαθών</button>
+    </div>
+    ${topErrors.map(({word:w,errors:e})=>{
+      const cat=VCATS[w.cat];const s=getWS(w.id);
+      return `<div class="err-item">
+        <div class="err-count">${e.count}</div>
+        <div style="flex:1">
+          <div class="fx ac g8 mb4"><span class="f13 b">${w.w}</span><span class="f11 c3 it">${w.g}</span></div>
+          <div class="f10 c3">Τελευταίο λάθος: ${e.lastErr} · Score: ${s.sc}/5</div>
+        </div>
+        <div class="fx ac g6">
+          <span class="tag f9" style="background:${cat?.col||'var(--bl)'}1a;border:1px solid ${cat?.col||'var(--bl)'}33;color:${cat?.col||'var(--bl)'}">${cat?.ic||'📖'}</span>
+          <button onclick="resetWordError('${w.id}')" class="tag f9 bxs" style="background:var(--s3);border:1px solid var(--ln);cursor:pointer;color:var(--t3)">✓ Reset</button>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function startErrorPractice(){
+  const topErrors=getTopErrors(10);
+  if(!topErrors.length)return;
+  VS.q={mode:'mc',sess:topErrors.map(e=>e.word),idx:0,res:[],fl:false,opts:[],sel:-1,fill:'',fd:false};
+  VS.mode='mc';rVocab();
+}
+
+function resetWordError(id){
+  const errors=DB.get('errors',{});
+  delete errors[id];
+  DB.set('errors',errors);
+  VS.mode='errors';rVocab();
+}
+
 
 function rVAdd(el){
   el.innerHTML=`<div style="max-width:540px;margin:0 auto">
@@ -1326,6 +1498,79 @@ const GRAM=[
      {q:'He is ___ home right now.',opts:['in','on','at','by'],a:'at',exp:"'at home' = fixed expression"},
      {q:'I will be at the office ___ 5pm.',opts:['by','until','since','for'],a:'until',exp:"'until' = συνεχίζεται μέχρι τις 5"},
    ]},
+
+  {id:'gerunds',t:'Gerunds vs Infinitives',ic:'🔀',col:'var(--tl)',desc:'enjoy doing vs want to do vs make do',
+   theory:`<div class="card mb12"><div class="sl mb8 ctl">GERUND (-ING) vs INFINITIVE (TO + BASE)</div>
+   <div class="f12 c2 mb12" style="line-height:1.7">Ένα από τα πιο συχνά λάθη! Μερικά ρήματα παίρνουν <strong>-ing</strong>, άλλα <strong>to+base verb</strong>, και μερικά και τα δύο.</div>
+   <div class="card2 mb10"><div class="fp f12 b mb8" style="color:var(--tl)">ΡΗΜΑΤΑ + GERUND (-ing) — απλώς θυμήσου!</div>
+   ${['enjoy','mind','avoid','consider','suggest','finish','keep','practise','miss','deny','imagine','risk','admit','delay'].map(v=>'<span class="tag f9" style="background:var(--tl)1a;border:1px solid var(--tl)33;color:var(--tl);margin:2px">'+v+'</span>').join('')}
+   <div class="f11 c3 mt8 it">"I enjoy learning English." / "She avoided answering the question."</div></div>
+   <div class="card2 mb10"><div class="fp f12 b mb8" style="color:var(--bl)">ΡΗΜΑΤΑ + INFINITIVE (to + base) — απλώς θυμήσου!</div>
+   ${['want','need','decide','plan','hope','agree','refuse','manage','fail','offer','promise','expect','seem','tend'].map(v=>'<span class="tag f9" style="background:var(--bl)1a;border:1px solid var(--bl)33;color:var(--bl);margin:2px">'+v+'</span>').join('')}
+   <div class="f11 c3 mt8 it">"I want to improve my English." / "She decided to apply for the job."</div></div>
+   <div class="card2 mb10"><div class="fp f12 b mb8" style="color:var(--am)">ΡΗΜΑΤΑ + ΑΜΦΟΤΕΡΑ — αλλά με διαφορετική σημασία!</div>
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+   ${[
+     ['remember + -ing','θυμάμαι κάτι που έγινε','I remember locking the door. (το έκανα, το θυμάμαι)'],
+     ['remember + to','θυμάμαι να κάνω κάτι','Remember to lock the door! (μην ξεχάσεις)'],
+     ['stop + -ing','σταματώ να κάνω κάτι','She stopped smoking. (έκοψε το κάπνισμα)'],
+     ['stop + to','σταματώ ΓΙΑ να κάνω κάτι','She stopped to smoke. (σταμάτησε για να καπνίσει)'],
+     ['try + -ing','δοκιμάζω σαν λύση','Try taking a break — it might help.'],
+     ['try + to','προσπαθώ (δύσκολο)','I tried to understand but it was too complex.'],
+   ].map(([v,d,e])=>'<div style="padding:8px;background:var(--s3);border-radius:7px"><div class="f11 b mb2" style="color:var(--am)">'+v+'</div><div class="f10 c3 mb2">'+d+'</div><div class="f10 c2 it">"'+e+'"</div></div>').join('')}
+   </div></div>
+   <div class="card c-info"><div class="sl mb8 cbl">ΜΕΤΑ ΑΠΟ PREPOSITIONS → ΠΑΝΤΑ -ING</div>
+   <div class="f12 c2" style="line-height:1.8">After a preposition (in, on, by, without, before, after, instead of...) → always -ing:<br><em>"She improved by practising every day." / "I left without saying goodbye."</em></div></div>`,
+   exercises:[
+     {q:'I enjoy ___ new things every day.',opts:['learn','to learn','learning','learned'],a:'learning',exp:"enjoy + gerund (-ing)"},
+     {q:'She decided ___ for the manager position.',opts:['applying','applied','to apply','apply'],a:'to apply',exp:"decide + infinitive (to + base verb)"},
+     {q:'Remember ___ the door before you leave!',opts:['locking','to lock','lock','locked'],a:'to lock',exp:"remember + to = reminder for future action"},
+     {q:'He stopped ___ when the doctor advised him to.',opts:['to smoke','smoke','smoked','smoking'],a:'smoking',exp:"stop + -ing = give up the habit"},
+     {q:'She improved her English by ___ every day.',opts:['practise','to practise','practised','practising'],a:'practising',exp:"after preposition 'by' → always -ing"},
+     {q:'I managed ___ the report before the deadline.',opts:['finishing','finish','to finish','finished'],a:'to finish',exp:"manage + infinitive (to + base verb)"},
+   ]},
+  {id:'quantifiers',t:'Quantifiers',ic:'🔢',col:'var(--or)',desc:'much, many, few, little, some, any, a lot of',
+   theory:`<div class="card mb12"><div class="sl mb8 cor">QUANTIFIERS — ΠΟΣΟΤΗΤΑ</div>
+   <div class="f12 c2 mb12" style="line-height:1.7">Ποσοτικά αναφέρονται στο πόσο / πόσα. Εξαρτώνται από το αν η λέξη είναι <strong>countable</strong> (μετρήσιμη) ή <strong>uncountable</strong> (μη μετρήσιμη).</div>
+   ${[
+     ['MUCH','μη μετρήσιμα (uncountable)','αρνητικό & ερωτηματικό','How much time do you have? / I don\'t have much money.'],
+     ['MANY','μετρήσιμα πληθυντικά (countable)','αρνητικό & ερωτηματικό','How many people came? / Not many students failed.'],
+     ['A LOT OF / LOTS OF','και τα δύο','καταφατικό (informal)','There are a lot of people here. / I have a lot of work.'],
+     ['LITTLE / A LITTLE','μη μετρήσιμα','little = σχεδόν μηδέν · a little = λίγο (θετικό)','I have little hope. / Can I have a little water?'],
+     ['FEW / A FEW','μετρήσιμα','few = σχεδόν μηδέν · a few = μερικοί (θετικό)','Few people know this. / I have a few ideas.'],
+     ['SOME','και τα δύο','καταφατικό & ευγενής ερώτηση','Some people prefer tea. / Would you like some coffee?'],
+     ['ANY','και τα δύο','αρνητικό & ερωτηματικό','Is there any milk? / There aren\'t any problems.'],
+   ].map(([q,u,u2,e])=>'<div style="padding:10px;border-bottom:1px solid var(--ln);display:grid;grid-template-columns:90px 1fr;gap:10px"><div><span class="tag f9 b" style="background:var(--or)1a;border:1px solid var(--or)33;color:var(--or)">'+q+'</span></div><div><div class="f11 b mb1">'+u+' · '+u2+'</div><div class="f11 c3 it">'+e+'</div></div></div>').join('')}
+   </div>
+   <div class="card c-ok mt12"><div class="sl mb8 cgr">💡 LITTLE vs FEW — ΚΟΙΝΟ ΛΑΘΟΣ</div>
+   <div class="f12 c2" style="line-height:1.8"><strong>few</strong> friends = σχεδόν κανένας φίλος (αρνητικό)<br><strong>a few</strong> friends = μερικοί φίλοι (θετικό)<br><strong>little</strong> money = σχεδόν καθόλου χρήματα (αρνητικό)<br><strong>a little</strong> money = λίγα χρήματα (θετικό)</div></div>`,
+   exercises:[
+     {q:'How ___ people attended the conference?',opts:['much','many','few','little'],a:'many',exp:"people = countable → many"},
+     {q:'I don\'t have ___ time to finish this today.',opts:['many','few','much','little'],a:'much',exp:"time = uncountable → much"},
+     {q:'She has ___ friends, so she often feels lonely.',opts:['a few','few','a little','little'],a:'few',exp:"few (without a) = σχεδόν κανένας = negative meaning"},
+     {q:'Would you like ___ help with that?',opts:['any','many','much','some'],a:'some',exp:"some in questions = ευγενής προσφορά"},
+     {q:'There is ___ information available on this topic.',opts:['many','few','a lot of','any'],a:'a lot of',exp:"information = uncountable, positive sentence → a lot of"},
+     {q:'___ students passed, which was disappointing.',opts:['Few','A few','Little','Much'],a:'Few',exp:"Few students (countable) = very small number = negative"},
+   ]},
+  {id:'wordorder',t:'Word Order',ic:'📐',col:'var(--vi)',desc:'Σωστή σειρά λέξεων στα αγγλικά',
+   theory:`<div class="card mb12"><div class="sl mb8 cvi">WORD ORDER — ΒΑΣΙΚΟΣ ΚΑΝΟΝΑΣ</div>
+   <div class="f12 c2 mb12" style="line-height:1.7">Τα αγγλικά έχουν αυστηρή σειρά: <strong>Subject → Verb → Object → Place → Time</strong></div>
+   <div style="padding:12px;background:var(--s2);border-radius:8px;text-align:center;margin-bottom:12px">
+   <div class="fp f16 b" style="color:var(--vi)">S → V → O → Place → Time</div>
+   <div class="f12 c3 mt6 it">"She (S) sent (V) the report (O) to the office (Place) yesterday (Time)."</div></div>
+   ${[
+     ['ADVERBS OF FREQUENCY','before main verb, after be','She always arrives early. / He is never late.'],
+     ['ADVERBS OF MANNER','after verb or object','She spoke clearly. / He completed the task efficiently.'],
+     ['ADJECTIVE ORDER','Opinion→Size→Age→Shape→Colour→Origin→Material','a beautiful small old round red Italian leather bag'],
+     ['INVERSION (emphasis)','after negative adverbials: Never, Rarely, Not only...','Never have I seen such dedication. / Not only did she win...'],
+   ].map(([t,r,e])=>'<div class="card2 mb8"><div class="fp f12 b mb4" style="color:var(--vi)">'+t+'</div><div class="f11 c2 mb2">'+r+'</div><div class="f11 c3 it">"'+e+'"</div></div>').join('')}`,
+   exercises:[
+     {q:'She ___ arrives late.',opts:['always late arrives','always arrives','arrives always','arrives always late'],a:'always arrives',exp:"Adverb of frequency (always) → before main verb"},
+     {q:'They finished ___ the project.',opts:['efficiently yesterday','yesterday efficiently','efficiently the project yesterday','the project efficiently yesterday'],a:'the project efficiently yesterday',exp:"S→V→O→Manner→Time: V + Object + Manner + Time"},
+     {q:'It was ___ .',opts:['old beautiful Italian car','Italian old beautiful car','a beautiful old Italian car','a Italian beautiful old car'],a:'a beautiful old Italian car',exp:"Adjective order: Opinion (beautiful) → Age (old) → Origin (Italian)"},
+     {q:'___ have I heard such a compelling speech.',opts:['Never','Rarely ever','Not','Seldom have'],a:'Never',exp:"After 'Never' at start → inversion: Never + auxiliary + subject"},
+     {q:'He speaks English ___ .',opts:['fluently very','very fluently','very fluent','fluent very'],a:'very fluently',exp:"very + adverb of manner: very fluently (not 'very fluent' after verb)"},
+   ]},
 ];
 
 let GST={topic:null,ea:{},es:false,esc:null};
@@ -1436,6 +1681,14 @@ const WRITING=[
 ];
 
 let WST={topic:null,tab:'structure'};
+const EMAIL_TEMPLATES=[
+  {id:'et1',title:'Asking for Information',level:'B1',lines:['Dear Sir or Madam,','','I am writing to enquire about [TOPIC]. I would be grateful if you could provide me with further information regarding [SPECIFIC ASPECT].','','In particular, I would like to know:','• [QUESTION 1]','• [QUESTION 2]','','I look forward to hearing from you at your earliest convenience.','','Yours faithfully,','[YOUR NAME]']},
+  {id:'et2',title:'Making a Complaint',level:'B1-B2',lines:['Dear [NAME/Sir or Madam],','','I am writing to express my dissatisfaction with [PRODUCT/SERVICE] that I received on [DATE].','','The problem is as follows: [DESCRIBE THE PROBLEM CLEARLY].','','I would therefore request that you [DESIRED OUTCOME: refund/replacement/apology].','','I look forward to a prompt resolution of this matter.','','Yours sincerely,','[YOUR NAME]']},
+  {id:'et3',title:'Applying for a Job',level:'B2',lines:['Dear [NAME],','','I am writing to apply for the position of [JOB TITLE], as advertised on [SOURCE] on [DATE].','','I have [X years] of experience in [FIELD], during which I developed strong skills in [SKILL 1] and [SKILL 2].','','In my current role as [ROLE] at [COMPANY], I have [ACHIEVEMENT].','','I have attached my CV for your consideration and would welcome the opportunity to discuss my application.','','Yours sincerely,','[YOUR NAME]']},
+  {id:'et4',title:'Following Up After a Meeting',level:'B2',lines:['Dear [NAME],','','Thank you for taking the time to meet with me on [DATE]. It was a pleasure to discuss [TOPIC].','','As agreed, I will [YOUR ACTION] by [DATE]. Please could you confirm that you will [THEIR ACTION] by [DATE].','','Please do not hesitate to contact me should you have any further questions.','','Kind regards,','[YOUR NAME]']},
+  {id:'et5',title:'Declining Politely',level:'B1-B2',lines:['Dear [NAME],','','Thank you very much for your kind invitation to [EVENT] on [DATE].','','Unfortunately, I am unable to attend on this occasion due to a prior commitment. I am sorry for any inconvenience.','','I hope the event is a great success, and I look forward to meeting at a future occasion.','','Kind regards,','[YOUR NAME]']},
+];
+
 function rWriting(){
   unlockAch('wr1');
   const el=document.getElementById('writing');
@@ -1463,8 +1716,8 @@ function rWriting(){
 function rWTopic(){
   const el=document.getElementById('writing');
   const t=WRITING.find(x=>x.id===WST.topic);if(!t)return;
-  const tabs=['structure','phrases','practice'].map(id=>{
-    const ls={structure:'Δομή',phrases:'Φράσεις',practice:'Εξάσκηση'};
+  const tabs=['structure','phrases','templates','practice'].map(id=>{
+    const ls={structure:'Δομή',phrases:'Φράσεις',templates:'📧 Templates',practice:'Εξάσκηση'};
     return `<button class="ttab ${WST.tab===id?'on':''}" onclick="WST.tab='${id}';rWTopic()" style="--tc:${t.col}">${ls[id]}</button>`;
   }).join('');
   let body='';
@@ -1485,20 +1738,60 @@ function rWTopic(){
         <span class="f9 c3">📋</span>
       </div>`).join('')}
     </div>`).join('');
+  } else if(WST.tab==='templates'){
+    body=`<div class="fu">
+      <div class="f12 c2 mb16" style="line-height:1.6">Έτοιμα email templates — αντιγραφή με ένα κλικ και προσαρμογή!</div>
+      ${EMAIL_TEMPLATES.map(et=>`<div class="card mb10">
+        <div class="fx ac jb mb8">
+          <div><div class="fp f13 b mb1" style="color:${t.col}">${et.title}</div>
+          <span class="tag f9" style="background:${t.col}1a;border:1px solid ${t.col}33;color:${t.col}">${et.level}</span></div>
+          <button onclick="copyTxt('${et.lines.join('\\n').replace(/'/g,"\\'")}')  " class="btn bgh bsm">📋 Αντιγραφή</button>
+        </div>
+        <div style="background:var(--s2);border-radius:8px;padding:12px;font-family:monospace;font-size:11px;color:var(--t2);line-height:1.8;white-space:pre-wrap">${et.lines.join('\n')}</div>
+      </div>`).join('')}
+    </div>`;
   } else {
     const saved=DB.get('wp_'+t.id,'');
-    body=`<div class="card fu">
-      <div class="sl mb8" style="color:${t.col}">ΕΞΑΣΚΗΣΗ — ${t.t.toUpperCase()}</div>
-      <div class="f12 c2 mb12" style="line-height:1.7">Χρησιμοποίησε τη δομή και τις φράσεις για να γράψεις δικό σου κείμενο.</div>
-      <textarea id="wptx" rows="12" placeholder="Γράψε εδώ...
-
-Βήματα:
-1. Δες τη Δομή → επίλεξε τη σωστή δομή
-2. Χρησιμοποίησε φράσεις από την καρτέλα Φράσεις
-3. Μη φοβάσαι τα λάθη — η εξάσκηση είναι το κλειδί!" style="width:100%;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px;padding:12px;font-family:var(--f);line-height:1.7;resize:vertical">${saved}</textarea>
-      <div class="fx jb ac mt10">
-        <div class="f11 c3">Αυτόματη αποθήκευση ✓</div>
-        <button onclick="document.getElementById('wptx').value='';DB.set('wp_${t.id}','')" class="btn bgh bsm">Καθαρισμός</button>
+        const checklist=[
+      {id:'c1',label:'Χρησιμοποίησα connectors (however, therefore, although...)'},
+      {id:'c2',label:'Έγραψα τουλάχιστον 2 παραγράφους'},
+      {id:'c3',label:'Χρησιμοποίησα ποικιλία χρόνων'},
+      {id:'c4',label:'Ξεκινώ προτάσεις διαφορετικά'},
+      {id:'c5',label:'Έχω opening και closing phrase'},
+      {id:'c6',label:'Δεν επανέλαβα ίδιες λέξεις'},
+    ];
+    const savedChecks=DB.get('wpc_'+WST.topic,{});
+    const checkScore=Object.values(savedChecks).filter(Boolean).length;
+    body=`<div class="g2 fu" style="align-items:start;gap:14px">
+      <div class="card">
+        <div class="sl mb8" style="color:${t.col}">ΕΞΑΣΚΗΣΗ</div>
+        <div class="f12 c2 mb12" style="line-height:1.7">Χρησιμοποίησε τη δομή και τις φράσεις. Τσέκαρε το checklist μετά!</div>
+        <textarea id="wptx" rows="14" placeholder="Γράψε εδώ..." style="width:100%;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px;padding:12px;font-family:var(--f);line-height:1.7;resize:vertical">${saved}</textarea>
+        <div class="fx jb ac mt10">
+          <div class="f11 c3">Αυτόματη αποθήκευση ✓</div>
+          <button onclick="document.getElementById('wptx').value='';DB.set('wp_'+WST.topic,'')" class="btn bgh bsm">Καθαρισμός</button>
+        </div>
+      </div>
+      <div>
+        <div class="card mb12">
+          <div class="sl mb10" style="color:${t.col}">✅ CHECKLIST ΠΟΙΟΤΗΤΑΣ</div>
+          ${checklist.map(item=>'<div onclick="toggleWriteCheck(\''+WST.topic+'\',\''+item.id+'\')" style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:7px;cursor:pointer;margin-bottom:4px;background:'+(savedChecks[item.id]?'#051a0a':'var(--s2)')+';border:1px solid '+(savedChecks[item.id]?'#22c77a33':'var(--ln)')+';transition:all .15s"><div style="width:18px;height:18px;border-radius:4px;border:2px solid '+(savedChecks[item.id]?'var(--gr)':'var(--t3)')+';background:'+(savedChecks[item.id]?'var(--gr)':'transparent')+';display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;color:#051a0a">'+(savedChecks[item.id]?'✓':'')+'</div><span class="f11" style="color:'+(savedChecks[item.id]?'var(--gr)':'var(--t2)')+'">'+item.label+'</span></div>').join('')}
+          <div class="mt10 pt10" style="border-top:1px solid var(--ln)">
+            <div class="sl mb4">ΑΥΤΟΑΞΙΟΛΟΓΗΣΗ</div>
+            <div class="fp f22 b" style="color:${checkScore>=5?'var(--gr)':checkScore>=3?'var(--am)':'var(--ro)'}">${checkScore}/6</div>
+            <div class="f10 c3 mt4">${checkScore>=5?'Εξαιρετικό!':checkScore>=3?'Καλά — συνέχισε!':'Χρειάζεται δουλειά'}</div>
+          </div>
+        </div>
+        <div class="card c-info">
+          <div class="sl mb8 cbl">💡 ΑΝΑΒΑΘΜΙΣΕ ΤΟ ΛΕΞΙΛΟΓΙΟ</div>
+          <div class="f11 c2" style="line-height:1.9">
+            ✗ very good → ✓ <strong>excellent / outstanding</strong><br>
+            ✗ very bad → ✓ <strong>problematic / detrimental</strong><br>
+            ✗ very important → ✓ <strong>crucial / essential</strong><br>
+            ✗ a lot of → ✓ <strong>numerous / a great deal of</strong><br>
+            ✗ I think → ✓ <strong>I believe / In my opinion</strong>
+          </div>
+        </div>
       </div>
     </div>`;
   }
@@ -1515,6 +1808,14 @@ function rWTopic(){
     if(ta)ta.addEventListener('input',()=>DB.set('wp_'+WST.topic,ta.value));
   }
 }
+
+function toggleWriteCheck(topicId,checkId){
+  const checks=DB.get('wpc_'+topicId,{});
+  checks[checkId]=!checks[checkId];
+  DB.set('wpc_'+topicId,checks);
+  rWTopic();
+}
+
 function copyTxt(txt){navigator.clipboard?.writeText(txt).then(()=>toast('Αντιγράφτηκε ✓','var(--gr)')).catch(()=>toast('"'+txt+'"'))}
 
 /* ══ READING ══ */
@@ -1578,6 +1879,43 @@ const READINGS=[
      {q:'How many key competencies does EI comprise?',opts:['Two','Three','Four','Five'],a:'Four',ex:'"emotional intelligence comprises four key competencies: self-awareness, self-regulation, social awareness and relationship management"'},
      {q:'What does "empathy" allow us to do?',opts:['Control other people','Understand the emotional states of others','Avoid conflict','Make better decisions'],a:'Understand the emotional states of others',ex:'"Social awareness — often described as empathy — allows us to understand the emotional states of those around us"'},
      {q:'What makes EI different from IQ according to the text?',opts:['EI decreases with age','EI cannot be measured','EI can be developed through practice','EI is only relevant for some professions'],a:'EI can be developed through practice',ex:'"unlike IQ, emotional intelligence can be significantly developed through deliberate practice"'},
+   ]},
+
+  {id:'r6',t:'The Future of Remote Work',lv:'B1-B2',col:'var(--tl)',time:'3 min',
+   text:`<p>The COVID-19 pandemic <em>fundamentally</em> changed how millions of people around the world work. What began as a temporary emergency measure has <em>evolved</em> into a permanent shift in workplace culture. Remote work, once considered a privilege, has become a standard expectation for many employees.</p>
+   <p>The benefits are <em>undeniable</em>. Employees report higher levels of job satisfaction, better work-life balance, and reduced commuting costs. For employers, remote work opens access to a global talent pool and can significantly reduce office overhead costs. Studies show that productivity often <em>increases</em> when people work from home, particularly for tasks requiring deep concentration.</p>
+   <p>However, remote work is not without its <em>drawbacks</em>. Many workers struggle with feelings of isolation and find it difficult to separate professional and personal life. Collaboration and creativity can suffer when teams are not physically together. Junior employees, in particular, may miss out on the informal mentoring that naturally occurs in office environments.</p>
+   <p>Most companies are now <em>adopting</em> a hybrid model — a combination of office and remote work. This approach attempts to capture the benefits of both arrangements while minimising the drawbacks. The key to success lies in clear communication, trust between managers and employees, and the right technological infrastructure.</p>`,
+   vocab:['fundamentally','evolved','undeniable','drawbacks','adopting'],
+   qs:[
+     {q:'What does the text say about productivity when working from home?',opts:['It always decreases','It often increases for tasks needing concentration','It stays exactly the same','It depends on the company'],a:'It often increases for tasks needing concentration',ex:'"productivity often increases when people work from home, particularly for tasks requiring deep concentration"'},
+     {q:'What is a major drawback of remote work mentioned in the text?',opts:['Higher costs','Isolation and difficulty separating work from personal life','Lower salaries','Longer working hours'],a:'Isolation and difficulty separating work from personal life',ex:'"Many workers struggle with feelings of isolation and find it difficult to separate professional and personal life"'},
+     {q:'Who may particularly miss out due to remote work?',opts:['Senior managers','Experienced employees','Junior employees','Part-time workers'],a:'Junior employees',ex:'"Junior employees, in particular, may miss out on the informal mentoring that naturally occurs in office environments"'},
+     {q:'What is a hybrid model?',opts:['Fully remote work','Only office work','A combination of office and remote work','Working from different countries'],a:'A combination of office and remote work',ex:'"Most companies are now adopting a hybrid model — a combination of office and remote work"'},
+   ]},
+  {id:'r7',t:'The Importance of Financial Literacy',lv:'B2',col:'var(--gr)',time:'3 min',
+   text:`<p>Financial literacy — the ability to understand and manage personal finances effectively — is one of the most valuable yet <em>neglected</em> skills in modern education. Despite its critical importance, many people reach adulthood without a solid understanding of <em>fundamental</em> concepts such as budgeting, saving, investing, and managing debt.</p>
+   <p>The consequences of financial <em>illiteracy</em> are significant. People who lack financial knowledge are more likely to accumulate debt, make poor investment decisions, and struggle to save for retirement. They are also more vulnerable to financial scams and predatory lending practices that can have devastating long-term effects.</p>
+   <p>Fortunately, developing financial literacy does not require a degree in economics. Understanding a few key principles can make a substantial difference. These include: living within your means, building an emergency fund, avoiding high-interest debt, and <em>consistently</em> setting aside money for long-term goals.</p>
+   <p>Governments and organisations around the world are increasingly recognising the importance of financial education. Some countries have introduced financial literacy programmes into school <em>curricula</em>, while banks and employers are offering workshops and resources to help people make better financial decisions. The evidence is clear: financially literate individuals are better equipped to navigate economic challenges and achieve lasting financial stability.</p>`,
+   vocab:['neglected','fundamental','illiteracy','consistently','curricula'],
+   qs:[
+     {q:'What is financial literacy?',opts:['The ability to count money','Understanding and managing personal finances effectively','A university degree in finance','The ability to earn a high salary'],a:'Understanding and managing personal finances effectively',ex:'"Financial literacy — the ability to understand and manage personal finances effectively"'},
+     {q:'According to the text, what are financially illiterate people more vulnerable to?',opts:['Unemployment','Financial scams and predatory lending','Health problems','Poor education'],a:'Financial scams and predatory lending',ex:'"They are also more vulnerable to financial scams and predatory lending practices"'},
+     {q:'Which principle is NOT mentioned as key to financial literacy?',opts:['Living within your means','Building an emergency fund','Investing in property','Avoiding high-interest debt'],a:'Investing in property',ex:'The text mentions: living within means, emergency fund, avoiding high-interest debt, saving for long-term goals'},
+     {q:'How are governments responding to this issue?',opts:['By reducing taxes','Introducing financial literacy into school curricula','Printing more money','Offering free loans'],a:'Introducing financial literacy into school curricula',ex:'"Some countries have introduced financial literacy programmes into school curricula"'},
+   ]},
+  {id:'r8',t:'Social Media and Mental Health',lv:'B2-C1',col:'var(--ro)',time:'4 min',
+   text:`<p>The relationship between social media use and mental health has become one of the most <em>scrutinised</em> topics in contemporary psychology. As platforms such as Instagram, TikTok and Twitter have become central to daily life — particularly for younger generations — researchers have been working to understand their psychological impact.</p>
+   <p>The evidence presents a nuanced picture. On the one hand, social media enables people to maintain connections, access support communities, and express their identity. For individuals in isolated circumstances, online communities can provide a vital sense of belonging. Furthermore, platforms have been used effectively to raise awareness about mental health issues and <em>destigmatise</em> seeking help.</p>
+   <p>On the other hand, research consistently links heavy social media use — particularly passive scrolling — with increased rates of anxiety, loneliness, and depression. The mechanism appears to involve <em>unfavourable</em> social comparisons: seeing carefully curated images of others' lives can generate feelings of <em>inadequacy</em> and low self-worth. Cyberbullying presents an additional and serious risk, particularly for adolescents.</p>
+   <p>Experts recommend a mindful approach rather than complete abstinence. Setting clear time limits, being selective about the accounts you follow, and actively engaging rather than passively consuming content are all <em>strategies</em> shown to mitigate negative effects. The goal is not to eliminate social media but to develop a healthier, more intentional relationship with it.</p>`,
+   vocab:['scrutinised','destigmatise','unfavourable','inadequacy','strategies'],
+   qs:[
+     {q:'What does "passive scrolling" refer to in this context?',opts:['Actively creating content','Reading content without engaging or interacting','Scrolling quickly through pages','Using social media for work'],a:'Reading content without engaging or interacting',ex:'Passive scrolling = consuming content without active engagement, linked to anxiety and depression'},
+     {q:'What mechanism links social media to negative mental health outcomes?',opts:['Addiction to notifications','Unfavourable social comparisons from curated images','Too much screen time generally','Lack of real-life friends'],a:'Unfavourable social comparisons from curated images',ex:'"seeing carefully curated images of others lives can generate feelings of inadequacy and low self-worth"'},
+     {q:'What is the positive aspect of social media for isolated individuals?',opts:['It replaces real friendships','It provides entertainment','It provides a vital sense of belonging','It improves physical health'],a:'It provides a vital sense of belonging',ex:'"For individuals in isolated circumstances, online communities can provide a vital sense of belonging"'},
+     {q:'What approach do experts recommend?',opts:['Complete avoidance of social media','Mindful use with clear limits and active engagement','Using only one platform','Only using social media for work'],a:'Mindful use with clear limits and active engagement',ex:'"Experts recommend a mindful approach rather than complete abstinence. Setting clear time limits... actively engaging rather than passively consuming"'},
    ]},
 ];
 
@@ -1747,11 +2085,186 @@ const SPEAKING_DATA={
   }
 };
 
+const CONVERSATIONS=[
+  {id:'cv1',title:'Job Interview',level:'B2',ic:'💼',
+   turns:[
+     {speaker:'Interviewer',text:"Good morning. Please take a seat. Can you start by telling me a little about yourself?",
+      options:["Thank you. I have been working in my current role for five years, where I have developed strong skills in...",
+               "Sure. I'm from Athens and I like working with people.",
+               "Well, I don't know where to start really.",
+               "I have a degree and some experience."],correct:0,
+      feedback:"✓ Professional opening — states experience clearly and uses 'have been working' (Present Perfect Continuous)."},
+     {speaker:'Interviewer',text:"What would you say is your greatest strength?",
+      options:["I'm good at everything.",
+               "I believe my greatest strength is my ability to work effectively under pressure while maintaining attention to detail.",
+               "I don't really have weaknesses so my strength is everything.",
+               "I work hard, I suppose."],correct:1,
+      feedback:"✓ Uses 'I believe' (opinion phrase) + specific, professional description."},
+     {speaker:'Interviewer',text:"Where do you see yourself in five years?",
+      options:["I haven't really thought about it.",
+               "In five years, I hope to have developed my skills further and taken on greater responsibilities within the organisation.",
+               "Probably doing the same thing.",
+               "I want your job!"],correct:1,
+      feedback:"✓ 'I hope to have + past participle' = Future Perfect ambition. Shows commitment."},
+     {speaker:'Interviewer',text:"Do you have any questions for us?",
+      options:["No, I'm fine.",
+               "Yes, actually. Could you tell me more about the team I would be working with and the opportunities for professional development?",
+               "How much will I get paid?",
+               "When do I start?"],correct:1,
+      feedback:"✓ Asking about team and development shows genuine interest. Salary questions come after an offer!"},
+   ]},
+  {id:'cv2',title:'Making a Complaint',level:'B1-B2',ic:'📞',
+   turns:[
+     {speaker:'Staff',text:"Good afternoon, customer services. How can I help you today?",
+      options:["This is absolutely terrible! I'm furious!",
+               "Good afternoon. I'm calling because I have a problem with an order I placed last week.",
+               "Give me your manager now.",
+               "Hello, yes, I want to complain."],correct:1,
+      feedback:"✓ Calm, polite opening — states purpose clearly. 'I'm calling because...' = professional formula."},
+     {speaker:'Staff',text:"I'm sorry to hear that. Could you give me your order number?",
+      options:["I don't remember it.",
+               "Of course. My order number is 12345, placed on 15th May.",
+               "Why do you need that?",
+               "It's somewhere in my email."],correct:1,
+      feedback:"✓ 'Of course' = cooperative. Provides all relevant details immediately."},
+     {speaker:'Staff',text:"I can see the issue. The item was delayed due to stock problems. I apologise for the inconvenience.",
+      options:["That's not good enough! I want a refund!",
+               "I see. I understand these things can happen. However, could you tell me when I can expect delivery?",
+               "I already knew that.",
+               "Whatever."],correct:1,
+      feedback:"✓ Acknowledges the situation, shows understanding, then politely asks the KEY question."},
+     {speaker:'Staff',text:"It should arrive within three to five business days. Can I offer you a 10% discount on your next order?",
+      options:["That's not enough.",
+               "That is very kind of you. I would appreciate that. Could I have confirmation of the new delivery date by email?",
+               "Fine.",
+               "I'll think about it."],correct:1,
+      feedback:"✓ Accepts graciously + asks for written confirmation = professional and thorough."},
+   ]},
+  {id:'cv3',title:'Business Meeting',level:'B2',ic:'📊',
+   turns:[
+     {speaker:'Chair',text:"Right, shall we make a start? The first item on the agenda is the Q3 results. John, would you like to present?",
+      options:["OK, so basically, the results were not great.",
+               "Certainly. As you can see from the figures, Q3 showed a 12% increase in revenue compared to the same period last year.",
+               "Yes, but first I want to say something about Q2.",
+               "Sure. The numbers are here somewhere."],correct:1,
+      feedback:"✓ 'As you can see from the figures' = professional presentation language. Gives key data immediately."},
+     {speaker:'Colleague',text:"That's impressive. To what do you attribute this growth?",
+      options:["Luck, I think.",
+               "I believe there are several contributing factors. Primarily, our new marketing strategy and the expansion into European markets.",
+               "We just worked harder.",
+               "It's complicated."],correct:1,
+      feedback:"✓ 'I believe there are several contributing factors' = analytical language. 'Primarily' = strong connector."},
+     {speaker:'Chair',text:"Are there any concerns we should address before moving forward?",
+      options:["No concerns.",
+               "I would like to raise one point, if I may. Our supply chain costs have increased significantly, which could affect Q4 margins.",
+               "Everything is fine.",
+               "Well, it's not my department."],correct:1,
+      feedback:"✓ 'I would like to raise one point, if I may' = polite, formal way to introduce a concern."},
+     {speaker:'Chair',text:"Good point. What would you suggest?",
+      options:["I don't know, it's not my problem.",
+               "I would propose that we conduct a thorough review of our supplier contracts and explore alternative sourcing options.",
+               "We should do something about it.",
+               "Maybe cut costs somewhere?"],correct:1,
+      feedback:"✓ 'I would propose that we...' = formal suggestion. Specific and actionable."},
+   ]},
+];
+
+let SIMST={conv:null,turn:0,sel:null,done:false,score:0};
+
+function rSimulator(el){
+  if(!SIMST.conv){
+    el.innerHTML=`<div class="fp f13 b mb16">Conversation Simulator — Επίλεξε σενάριο</div>
+      <p class="f12 c2 mb16" style="line-height:1.6">Διάλεξε τη σωστή απάντηση σε πραγματικές συνομιλίες. Μάθε φυσικές εκφράσεις στο context.</p>
+      <div class="g3">
+        ${CONVERSATIONS.map(cv=>`<div class="scard" onclick="SIMST.conv='${cv.id}';SIMST.turn=0;SIMST.sel=null;SIMST.done=false;SIMST.score=0;rSpeaking()">
+          <div style="font-size:28px;margin-bottom:8px">${cv.ic}</div>
+          <div class="fp f13 b mb4" style="color:var(--gr)">${cv.title}</div>
+          <div class="tag f9" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr)">${cv.level}</div>
+          <div class="f10 c3 mt8">${cv.turns.length} turns</div>
+        </div>`).join('')}
+      </div>`;
+    return;
+  }
+
+  const cv=CONVERSATIONS.find(x=>x.id===SIMST.conv);
+  const turn=cv.turns[SIMST.turn];
+  const isLast=SIMST.turn>=cv.turns.length-1;
+  const pct=Math.round((SIMST.turn/cv.turns.length)*100);
+
+  if(SIMST.done){
+    el.innerHTML=`<div style="text-align:center;padding:20px" class="fu">
+      <div style="font-size:48px;margin-bottom:12px" class="pop">${SIMST.score===cv.turns.length?'🏆':'🎯'}</div>
+      <div class="fp f18 b mb4" style="color:${SIMST.score===cv.turns.length?'var(--am)':'var(--gr)'}">${SIMST.score===cv.turns.length?'Τέλειο!':'Καλό!'}</div>
+      <div class="fp f24 b mb8">${SIMST.score}/${cv.turns.length}</div>
+      <div class="f12 c2 mb16">${Math.round((SIMST.score/cv.turns.length)*100)}% σωστές απαντήσεις</div>
+      <div class="fx jc g10">
+        <button onclick="SIMST.conv='${cv.id}';SIMST.turn=0;SIMST.sel=null;SIMST.done=false;SIMST.score=0;rSpeaking()" class="btn bp">↺ Ξανά</button>
+        <button onclick="SIMST.conv=null;rSpeaking()" class="btn bgh">← Επιστροφή</button>
+      </div>
+    </div>`;
+    addXP(SIMST.score*10);
+    return;
+  }
+
+  el.innerHTML=`<div style="max-width:640px;margin:0 auto">
+    <div class="fx ac jb mb12">
+      <button onclick="SIMST.conv=null;rSpeaking()" style="color:var(--t3);font-size:11px;background:none;border:none;cursor:pointer">← Πίσω</button>
+      <span class="tag f9" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr)">${cv.ic} ${cv.title}</span>
+      <span class="f11 c3">${SIMST.turn+1}/${cv.turns.length}</span>
+    </div>
+    <div class="pb mb16" style="height:4px"><div class="pf" style="width:${pct}%;background:linear-gradient(90deg,var(--gr),var(--tl))"></div></div>
+
+    <!-- Interviewer/Speaker bubble -->
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${cv.ic}</div>
+      <div style="background:var(--s2);border:1px solid var(--ln);border-radius:0 12px 12px 12px;padding:12px 14px;max-width:85%">
+        <div class="f10 b c3 mb4">${turn.speaker}</div>
+        <div class="f13" style="line-height:1.6">${turn.text}</div>
+      </div>
+    </div>
+
+    <!-- Options -->
+    <div class="f11 c3 mb8">Επίλεξε την καλύτερη απάντηση:</div>
+    ${turn.options.map((opt,i)=>{
+      let bg='var(--s2)',br='var(--ln)',col='var(--t2)',prefix='';
+      if(SIMST.sel===i&&SIMST.sel!==null){
+        if(i===turn.correct){bg='#051a0a';br='#22c77a44';col='var(--gr)';prefix='✓ ';}
+        else{bg='#1a0508';br='#f0387044';col='var(--ro)';prefix='✗ ';}
+      } else if(SIMST.sel!==null&&i===turn.correct){
+        bg='#051a0a';br='#22c77a44';col='var(--gr)';prefix='✓ ';
+      }
+      return `<div onclick="${SIMST.sel===null?'simSelect('+i+')':''}" style="padding:10px 14px;border-radius:8px;margin-bottom:8px;cursor:${SIMST.sel===null?'pointer':'default'};background:${bg};border:1px solid ${br};color:${col};transition:all .15s;font-size:13px;line-height:1.5">${prefix}${opt}</div>`;
+    }).join('')}
+
+    <!-- Feedback -->
+    ${SIMST.sel!==null?`<div style="padding:10px 14px;background:${SIMST.sel===turn.correct?'#051a0a':'#1a0508'};border:1px solid ${SIMST.sel===turn.correct?'#22c77a44':'#f0387044'};border-radius:8px;margin-bottom:12px">
+      <div class="f12" style="color:${SIMST.sel===turn.correct?'var(--gr)':'var(--ro)'}">💡 ${turn.feedback}</div>
+    </div>
+    <button onclick="simNext(${isLast})" class="btn bp">${isLast?'Τέλος ✓':'Επόμενο →'}</button>`:''}
+  </div>`;
+}
+
+function simSelect(i){
+  if(SIMST.sel!==null)return;
+  const cv=CONVERSATIONS.find(x=>x.id===SIMST.conv);
+  const turn=cv.turns[SIMST.turn];
+  SIMST.sel=i;
+  if(i===turn.correct)SIMST.score++;
+  rSpeaking();
+}
+
+function simNext(isLast){
+  if(isLast){SIMST.done=true;}
+  else{SIMST.turn++;SIMST.sel=null;}
+  rSpeaking();
+}
+
+
 let SPST={tab:'conversations',convIdx:null};
 function rSpeaking(){
   unlockAch('sp1');
   const el=document.getElementById('speaking');
-  const tabs=[['conversations','💬 Συνομιλίες'],['pronunciation','🗣 Προφορά'],['shadowing','🎧 Shadowing']].map(([id,lb])=>
+  const tabs=[['conversations','💬 Συνομιλίες'],['simulator','🎭 Simulator'],['pronunciation','🗣 Προφορά'],['shadowing','🎧 Shadowing']].map(([id,lb])=>
     `<button class="ttab ${SPST.tab===id?'on':''}" onclick="SPST.tab='${id}';SPST.convIdx=null;rSpeaking()" style="--tc:var(--gr)">${lb}</button>`
   ).join('');
 
@@ -1783,6 +2296,24 @@ function rSpeaking(){
           <span class="f10 c3" style="flex-shrink:0">📋</span>
         </div>`).join('')}`;
     }
+  } else if(SPST.tab==='simulator'){
+    rSimulator(document.createElement('div'));
+    body=''; // rendered directly
+    // Actually render inline
+    const simDiv=document.createElement('div');
+    rSimulator(simDiv);
+    el.innerHTML=`<div class="sec fu" style="max-width:840px">
+      <div class="sl mb4" style="color:var(--gr)">SPEAKING</div>
+      <div class="fp f16 b mb16">Ομιλία & Προφορά</div>
+      <div class="fx mb16" style="border-bottom:1px solid var(--ln)">${tabs}</div>
+    </div>`;
+    el.querySelector('.sec').appendChild(simDiv);
+    return;
+  } else if(SPST.tab==='simulator'){
+    const simD=document.createElement('div');rSimulator(simD);
+    el.innerHTML=`<div class="sec fu" style="max-width:840px"><div class="sl mb4 cgr">SPEAKING</div><div class="fp f16 b mb16">Ομιλία & Προφορά</div><div class="fx mb16" style="border-bottom:1px solid var(--ln)">${tabs}</div></div>`;
+    el.querySelector('.fp').parentElement.appendChild(simD);
+    return;
   } else if(SPST.tab==='pronunciation'){
     body=`<div class="fp f13 b mb16">Προφορά — Κοινές Παγίδες για Έλληνες</div>
       <div class="card c-info mb16">
@@ -1842,6 +2373,443 @@ function rSpeaking(){
     ${body}
   </div>`;
 }
+
+/* ══ DAILY LESSONS ══ */
+const LESSON_TEMPLATES=[
+  {type:'word',xp:20,label:'Νέα Λέξη'},
+  {type:'grammar',xp:25,label:'Γραμματική'},
+  {type:'sentence',xp:30,label:'Πρόταση'},
+  {type:'quiz',xp:15,label:'Quick Quiz'},
+];
+
+function getTodayLesson(){
+  const tk=todayK();
+  const saved=DB.get('lesson_'+tk,null);
+  if(saved)return saved;
+  // Build today's lesson from words and grammar
+  const allW=getAllW();
+  const sorted=sortedW('all').slice(0,3);
+  const gramTopics=GRAM.map(g=>g.id);
+  const gramIdx=new Date().getDate()%gramTopics.length;
+  const lesson={
+    date:tk,
+    word:sorted[0]||allW[0],
+    gramTopic:gramTopics[gramIdx],
+    steps:[
+      {id:'learn',label:'Μάθε τη λέξη',desc:'',done:false,xp:10},
+      {id:'context',label:'Δες παραδείγματα',desc:'',done:false,xp:10},
+      {id:'grammar',label:'Grammar tip',desc:'',done:false,xp:15},
+      {id:'quiz',label:'Mini Quiz',desc:'',done:false,xp:20},
+      {id:'write',label:'Γράψε πρόταση',desc:'',done:false,xp:25},
+    ],
+    quizQ:null,
+    userSentence:'',
+  };
+  DB.set('lesson_'+tk,lesson);
+  return lesson;
+}
+
+function saveTodayLesson(lesson){
+  DB.set('lesson_'+todayK(),lesson);
+}
+
+function rLessons(){
+  const el=document.getElementById('lessons');
+  const lesson=getTodayLesson();
+  const word=lesson.word;
+  const cat=VCATS[word?.cat]||VCATS.b1_daily;
+  const gram=GRAM.find(g=>g.id===lesson.gramTopic)||GRAM[0];
+  const donePct=Math.round((lesson.steps.filter(s=>s.done).length/lesson.steps.length)*100);
+  const totalXP=lesson.steps.filter(s=>s.done).reduce((sum,s)=>sum+s.xp,0);
+  const allDone=lesson.steps.every(s=>s.done);
+
+  // Generate quiz question from word
+  if(!lesson.quizQ&&word){
+    const opts=[...getAllW().filter(x=>x.id!==word.id).sort(()=>Math.random()-.5).slice(0,3).map(x=>x.g),word.g].sort(()=>Math.random()-.5);
+    lesson.quizQ={opts,sel:null,done:false};
+    saveTodayLesson(lesson);
+  }
+
+  el.innerHTML=`<div class="sec fu" style="max-width:740px">
+    <div class="sl mb4 cbl">DAILY LESSON</div>
+    <div class="fp f16 b mb4">Μάθημα Σήμερα — ${lesson.date}</div>
+    <div class="fx ac jb mb16">
+      <div class="f12 c2">Ολοκλήρωσε όλα τα βήματα για να πάρεις XP!</div>
+      <div class="fx ac g8">
+        <span class="xp-pill">⭐ ${totalXP} XP</span>
+        <span class="f11 c3">${lesson.steps.filter(s=>s.done).length}/${lesson.steps.length}</span>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="pb mb16" style="height:6px">
+      <div class="pf" style="width:${donePct}%;background:linear-gradient(90deg,var(--bl),var(--gr))"></div>
+    </div>
+
+    ${allDone?`<div class="card c-ok mb16 tc">
+      <div style="font-size:36px;margin-bottom:8px" class="pop">🎉</div>
+      <div class="fp f16 b cgr mb4">Μάθημα Ολοκληρώθηκε!</div>
+      <div class="f12 c2 mb8">Κέρδισες <strong class="cam">${totalXP} XP</strong> σήμερα!</div>
+      <button onclick="go('vocab')" class="btn bp bsm">📚 Συνέχισε με Vocabulary</button>
+    </div>`:''}
+
+    <!-- STEP 1: Learn the word -->
+    <div class="lesson-step ${lesson.steps[0].done?'done':''}" style="cursor:default">
+      <div class="step-num">${lesson.steps[0].done?'✓':'1'}</div>
+      <div style="flex:1">
+        <div class="fp f12 b mb2" style="color:${lesson.steps[0].done?'var(--gr)':'var(--t1)'}">Νέα Λέξη</div>
+        ${word?`<div style="background:var(--s3);border-radius:8px;padding:12px;margin-top:8px">
+          <div class="fp f20 b mb4">${word.w}</div>
+          <div class="fx ac g8 mb6">
+            <span class="tag f9" style="background:${cat.col}1a;border:1px solid ${cat.col}33;color:${cat.col}">${cat.ic} ${word.p}</span>
+            <span class="tag f9" style="background:var(--s4);border:1px solid var(--ln2);color:var(--t2)">${cat.lv}</span>
+          </div>
+          <div class="f13 b mb4" style="color:${cat.col}">${word.g}</div>
+          <div class="f12 c3 it">"${word.e}"</div>
+          ${word.f&&word.f.length?`<div class="f10 c3 mt6">Family: ${word.f.map(f=>`<span style="color:var(--vi)">${f}</span>`).join(' · ')}</div>`:''}
+        </div>`:''}
+      </div>
+      <div class="fx col ac g4">
+        <span class="xp-pill">+${lesson.steps[0].xp} XP</span>
+        ${!lesson.steps[0].done?`<button onclick="markStep(0)" class="btn bp bsm mt4" style="font-size:10px">Εμαθα ✓</button>`:''}
+      </div>
+    </div>
+
+    <!-- STEP 2: Context examples -->
+    <div class="lesson-step ${lesson.steps[1].done?'done':''}">
+      <div class="step-num">${lesson.steps[1].done?'✓':'2'}</div>
+      <div style="flex:1">
+        <div class="fp f12 b mb2" style="color:${lesson.steps[1].done?'var(--gr)':'var(--t1)'}">3 Παραδείγματα στο Context</div>
+        <div class="f11 c3 mb8">Διάβασε πώς χρησιμοποιείται σε πραγματικές προτάσεις:</div>
+        ${word?[
+          word.e,
+          genContextSentence(word,1),
+          genContextSentence(word,2)
+        ].map((ex,i)=>`<div class="f12 c2 mb6" style="padding:6px 10px;background:var(--s3);border-left:2px solid ${cat.col}44;border-radius:0 6px 6px 0">
+          <span class="f10 b" style="color:${cat.col};margin-right:6px">${i+1}.</span>${ex}
+        </div>`).join(''):''}
+      </div>
+      <div class="fx col ac g4">
+        <span class="xp-pill">+${lesson.steps[1].xp} XP</span>
+        ${!lesson.steps[1].done?`<button onclick="markStep(1)" class="btn bp bsm mt4" style="font-size:10px">Διαβασα ✓</button>`:''}
+      </div>
+    </div>
+
+    <!-- STEP 3: Grammar tip -->
+    <div class="lesson-step ${lesson.steps[2].done?'done':''}">
+      <div class="step-num">${lesson.steps[2].done?'✓':'3'}</div>
+      <div style="flex:1">
+        <div class="fp f12 b mb2" style="color:${lesson.steps[2].done?'var(--gr)':'var(--t1)'}">Grammar Tip — ${gram.t}</div>
+        <div class="f11 c3 mb8">Σύντομη υπενθύμιση:</div>
+        <div class="f12 c2" style="padding:10px;background:var(--s3);border-radius:8px;line-height:1.7">
+          ${gram.exercises[0]?`<span class="f11 b" style="color:var(--bl)">Παράδειγμα: </span>${gram.exercises[0].q.replace('___',`<span style="color:var(--gr);font-weight:700">${gram.exercises[0].a}</span>`)}`:gram.desc}
+        </div>
+        <button onclick="go('grammar');GST.topic='${gram.id}'" class="btn bgh bsm mt8" style="font-size:10px">📖 Δες πλήρη θεωρία →</button>
+      </div>
+      <div class="fx col ac g4">
+        <span class="xp-pill">+${lesson.steps[2].xp} XP</span>
+        ${!lesson.steps[2].done?`<button onclick="markStep(2)" class="btn bp bsm mt4" style="font-size:10px">Εμαθα ✓</button>`:''}
+      </div>
+    </div>
+
+    <!-- STEP 4: Mini Quiz -->
+    <div class="lesson-step ${lesson.steps[3].done?'done':''}">
+      <div class="step-num">${lesson.steps[3].done?'✓':'4'}</div>
+      <div style="flex:1">
+        <div class="fp f12 b mb8" style="color:${lesson.steps[3].done?'var(--gr)':'var(--t1)'}">Mini Quiz — Τι σημαίνει: <span style="color:var(--bl)">${word?.w||''}</span>?</div>
+        ${lesson.quizQ?lesson.quizQ.opts.map((opt,i)=>{
+          let bg='var(--s3)',br='var(--ln)',col='var(--t2)';
+          if(lesson.quizQ.sel===i&&!lesson.quizQ.done){bg='var(--s4)';br='var(--bl)';col='var(--bl)';}
+          if(lesson.quizQ.done){
+            if(opt===word.g){bg='#051a0a';br='#22c77a44';col='var(--gr)';}
+            else if(lesson.quizQ.sel===i){bg='#1a0508';br='#f0387044';col='var(--ro)';}
+          }
+          return `<button onclick="lessonQuizSel(${i})" style="width:100%;padding:8px 12px;border-radius:7px;text-align:left;font-size:12px;margin-bottom:6px;cursor:pointer;background:${bg};border:1px solid ${br};color:${col};transition:all .12s">${opt}</button>`;
+        }).join(''):''}
+      </div>
+      <div class="fx col ac g4">
+        <span class="xp-pill">+${lesson.steps[3].xp} XP</span>
+      </div>
+    </div>
+
+    <!-- STEP 5: Write a sentence -->
+    <div class="lesson-step ${lesson.steps[4].done?'done':''}">
+      <div class="step-num">${lesson.steps[4].done?'✓':'5'}</div>
+      <div style="flex:1">
+        <div class="fp f12 b mb4" style="color:${lesson.steps[4].done?'var(--gr)':'var(--t1)'}">Γράψε τη Δική σου Πρόταση</div>
+        <div class="f11 c3 mb8">Χρησιμοποίησε τη λέξη <strong class="cbl">${word?.w||''}</strong> σε δική σου πρόταση:</div>
+        <textarea id="lesson-sentence" rows="2" ${lesson.steps[4].done?'disabled':''} placeholder="Write your sentence here..." style="width:100%;background:var(--s3);border:1px solid var(--ln);border-radius:7px;color:var(--t1);font-size:13px;padding:9px;font-family:var(--f);line-height:1.5;resize:none" oninput="updateLessonSentence(this.value)">${lesson.userSentence||''}</textarea>
+        ${lesson.steps[4].done?`<div class="c-ok" style="padding:8px 12px;border-radius:7px;margin-top:8px;font-size:12px;color:var(--gr)">✓ Αποθηκεύτηκε: "${lesson.userSentence}"</div>`:''}
+        ${!lesson.steps[4].done?`<button onclick="markStep(4)" class="btn bp bsm mt8" style="font-size:10px" id="submit-sentence">Υποβολή ✓</button>`:''}
+      </div>
+      <div class="fx col ac g4">
+        <span class="xp-pill">+${lesson.steps[4].xp} XP</span>
+      </div>
+    </div>
+
+  </div>`;
+}
+
+function genContextSentence(word,variant){
+  // Generate alternative context sentences
+  const templates=[
+    [
+      `It is important to ${word.w} in professional settings.`,
+      `She decided to ${word.w} as soon as possible.`,
+      `The ability to ${word.w} is highly valued.`,
+    ],
+    [
+      `Many experts ${word.w} that communication is key.`,
+      `You should ${word.w} carefully before deciding.`,
+      `Learning to ${word.w} takes time and practice.`,
+    ]
+  ];
+  // For nouns/adj use different templates
+  const nounTemplates=[
+    [
+      `The ${word.w} of the situation was clear to everyone.`,
+      `Good ${word.w} leads to better outcomes.`,
+      `There is a strong connection between ${word.w} and success.`,
+    ],
+    [
+      `A high level of ${word.w} is required for this role.`,
+      `The team showed great ${word.w} throughout the project.`,
+      `Without ${word.w}, progress is difficult.`,
+    ]
+  ];
+  const pool=word.p==='verb'?templates:nounTemplates;
+  return pool[variant-1]?.[Math.floor(Math.random()*3)]||word.e;
+}
+
+function markStep(idx){
+  const lesson=getTodayLesson();
+  if(lesson.steps[idx].done)return;
+  lesson.steps[idx].done=true;
+  saveTodayLesson(lesson);
+  addXP(lesson.steps[idx].xp);
+  // Check achievements
+  if(lesson.steps.every(s=>s.done)){
+    toast('🎉 Μάθημα ολοκληρώθηκε! +80 XP συνολικά','var(--gr)');
+    unlockAch('w10');
+  }
+  rLessons();
+}
+
+function lessonQuizSel(i){
+  const lesson=getTodayLesson();
+  if(!lesson.quizQ||lesson.quizQ.done)return;
+  lesson.quizQ.sel=i;
+  const correct=lesson.quizQ.opts[i]===lesson.word.g;
+  lesson.quizQ.done=true;
+  if(correct){
+    lesson.steps[3].done=true;
+    toast('✓ Σωστό! +'+lesson.steps[3].xp+' XP','var(--gr)');
+    addXP(lesson.steps[3].xp);
+    setWS(lesson.word.id,true);
+  } else {
+    toast('✗ Λάθος — η σωστή: "'+lesson.word.g+'"','var(--ro)');
+    setWS(lesson.word.id,false);
+    trackError(lesson.word.id,'quiz');
+  }
+  saveTodayLesson(lesson);
+  rLessons();
+}
+
+function updateLessonSentence(val){
+  const lesson=getTodayLesson();
+  lesson.userSentence=val;
+  saveTodayLesson(lesson);
+}
+
+/* ══ ERROR TRACKER ══ */
+function trackError(wordId,type){
+  const errors=DB.get('errors',{});
+  if(!errors[wordId])errors[wordId]={count:0,types:[],lastErr:null};
+  errors[wordId].count++;
+  errors[wordId].types.push(type);
+  errors[wordId].lastErr=todayK();
+  DB.set('errors',errors);
+}
+
+function getTopErrors(n=10){
+  const errors=DB.get('errors',{});
+  return Object.entries(errors)
+    .sort(([,a],[,b])=>b.count-a.count)
+    .slice(0,n)
+    .map(([id,e])=>({word:getAllW().find(w=>w.id===id),errors:e}))
+    .filter(x=>x.word);
+}
+
+// Hook into setWS to track errors
+const _origSetWS=setWS;
+// We'll add error tracking inside vocab quiz directly
+
+
+/* ══ SENTENCE BUILDER ══ */
+const BUILDER_SENTENCES=[
+  // B1 level
+  {id:'sb1',lv:'B1',words:['She','always','prepares','carefully','before','meetings'],answer:'She always prepares carefully before meetings',tip:'always = signal word for Simple Present'},
+  {id:'sb2',lv:'B1',words:['Did','you','manage','to','finish','the','report'],answer:'Did you manage to finish the report',tip:'Simple Past question: Did + subject + base verb'},
+  {id:'sb3',lv:'B1',words:['I','am','looking','forward','to','hearing','from','you'],answer:'I am looking forward to hearing from you',tip:'look forward to + -ing (not infinitive!)'},
+  {id:'sb4',lv:'B1',words:['He','has','been','working','here','since','2020'],answer:'He has been working here since 2020',tip:'since + point in time → Present Perfect Continuous'},
+  {id:'sb5',lv:'B1',words:['Would','you','mind','explaining','that','again'],answer:'Would you mind explaining that again',tip:'Would you mind + -ing = ευγενής αίτηση'},
+  {id:'sb6',lv:'B1',words:['It','depends','on','the','situation','and','the','context'],answer:'It depends on the situation and the context',tip:'depend ON (όχι depend of/from)'},
+  {id:'sb7',lv:'B1',words:['I','was','wondering','if','you','could','help','me'],answer:'I was wondering if you could help me',tip:'was wondering = ευγενής, πιο έμμεσος τρόπος'},
+  {id:'sb8',lv:'B1',words:['She','gave','up','trying','to','solve','the','problem'],answer:'She gave up trying to solve the problem',tip:'give up + -ing (gerund, not infinitive)'},
+  // B2 level  
+  {id:'sb9',lv:'B2',words:['Despite','the','difficulties','they','managed','to','succeed'],answer:'Despite the difficulties they managed to succeed',tip:'despite + noun/gerund (not despite that/although)'},
+  {id:'sb10',lv:'B2',words:['By','the','time','I','arrived','she','had','already','left'],answer:'By the time I arrived she had already left',tip:'by the time + Simple Past → Past Perfect'},
+  {id:'sb11',lv:'B2',words:['The','report','must','be','submitted','by','Friday'],answer:'The report must be submitted by Friday',tip:'Passive Modal: must + be + past participle'},
+  {id:'sb12',lv:'B2',words:['I','would','have','helped','if','you','had','asked','me'],answer:'I would have helped if you had asked me',tip:'Third Conditional: would have + pp / had + pp'},
+  {id:'sb13',lv:'B2',words:['Not','only','did','she','finish','on','time','but','also','early'],answer:'Not only did she finish on time but also early',tip:'Not only... but also: inverted word order after Not only'},
+  {id:'sb14',lv:'B2',words:['The','colleague','whose','report','won','is','very','talented'],answer:'The colleague whose report won is very talented',tip:'whose = relative pronoun for possession'},
+  {id:'sb15',lv:'B2',words:['I','have','been','trying','to','contact','him','since','Monday'],answer:'I have been trying to contact him since Monday',tip:'since + start point → Present Perfect Continuous'},
+  {id:'sb16',lv:'B2',words:['It','is','widely','believed','that','consistency','is','key'],answer:'It is widely believed that consistency is key',tip:'It is believed that... = formal passive construction'},
+  // B2-C1
+  {id:'sb17',lv:'C1',words:['Notwithstanding','the','challenges','the','project','succeeded'],answer:'Notwithstanding the challenges the project succeeded',tip:'notwithstanding = παρά (formal, = despite)'},
+  {id:'sb18',lv:'C1',words:['She','said','she','had','already','submitted','the','documents'],answer:'She said she had already submitted the documents',tip:'Reported Speech: said + had + pp (backshift)'},
+  {id:'sb19',lv:'C1',words:['The','implications','of','this','decision','must','be','considered'],answer:'The implications of this decision must be considered',tip:'implications of (όχι implications about)'},
+  {id:'sb20',lv:'C1',words:['It','goes','without','saying','that','integrity','is','essential'],answer:'It goes without saying that integrity is essential',tip:'Fixed phrase: it goes without saying that...'},
+];
+
+let BST={idx:0,placed:[],score:0,total:0,done:false,filter:'all',showResult:false};
+
+function rBuilder(){
+  const el=document.getElementById('builder');
+  const filtered=BST.filter==='all'?BUILDER_SENTENCES:BUILDER_SENTENCES.filter(s=>s.lv===BST.filter);
+  const sent=filtered[BST.idx%filtered.length];
+  if(!sent){el.innerHTML='<div class="sec">Δεν υπάρχουν προτάσεις.</div>';return;}
+
+  // Shuffle the words for display
+  const shuffled=[...sent.words].sort(()=>Math.random()-.5);
+  const placedWords=BST.placed;
+  const isCorrect=BST.showResult&&placedWords.join(' ').toLowerCase()===sent.answer.toLowerCase();
+  const isWrong=BST.showResult&&!isCorrect;
+
+  el.innerHTML=`<div class="sec fu" style="max-width:760px">
+    <div class="sl mb4" style="color:var(--tl)">SENTENCE BUILDER</div>
+    <div class="fp f16 b mb4">Κατασκεύασε Προτάσεις</div>
+    <p class="f12 c2 mb16" style="line-height:1.6">Κλικ στις λέξεις για να φτιάξεις σωστή πρόταση. Εξάσκηση word order και grammar.</p>
+
+    <!-- Filter & Progress -->
+    <div class="fx ac jb mb16">
+      <div class="fx g6">
+        ${['all','B1','B2','C1'].map(f=>`<button onclick="BST.filter='${f}';BST.idx=0;BST.placed=[];BST.done=false;BST.showResult=false;rBuilder()" style="padding:4px 12px;border-radius:20px;border:1px solid ${BST.filter===f?'var(--tl)':'var(--ln)'};background:${BST.filter===f?'var(--s3)':'transparent'};color:${BST.filter===f?'var(--tl)':'var(--t3)'};font-size:11px;cursor:pointer">${f==='all'?'Όλα':f}</button>`).join('')}
+      </div>
+      <div class="fx ac g8">
+        <span class="tag f9" style="background:var(--tl)1a;border:1px solid var(--tl)33;color:var(--tl)">${sent.lv}</span>
+        <span class="f11 c3">${(BST.idx%filtered.length)+1}/${filtered.length}</span>
+        <span class="xp-pill">✓ ${BST.score}/${BST.total}</span>
+      </div>
+    </div>
+
+    <!-- Drop zone -->
+    <div class="f11 c3 mb6">Η πρότασή σου:</div>
+    <div class="drop-zone ${placedWords.length?'has-words':''}" id="drop-zone" onclick="removeLastWord()">
+      ${placedWords.length
+        ?placedWords.map((w,i)=>`<span class="placed-word" onclick="removePlacedWord(${i},event)">${w} <span style="font-size:9px;opacity:.6">✕</span></span>`).join('')
+        :'<span class="f12 c3" style="padding:4px">Κλικ στις λέξεις παρακάτω για να φτιάξεις την πρόταση...</span>'
+      }
+    </div>
+
+    <!-- Result feedback -->
+    ${BST.showResult?`<div style="padding:12px;border-radius:8px;margin-bottom:12px;background:${isCorrect?'#051a0a':'#1a0508'};border:1px solid ${isCorrect?'#22c77a44':'#f0387044'}">
+      <div class="f13 b mb4" style="color:${isCorrect?'var(--gr)':'var(--ro)'}">${isCorrect?'✓ Σωστό!':'✗ Λάθος'}</div>
+      ${!isCorrect?`<div class="f12 c2 mb4">Σωστή πρόταση: <strong style="color:var(--gr)">${sent.answer}</strong></div>`:''}
+      <div class="f11 c3">💡 ${sent.tip}</div>
+    </div>`:''}
+
+    <!-- Action buttons -->
+    <div class="fx g8 mb16">
+      ${!BST.showResult
+        ?`<button onclick="checkBuilder()" class="btn bp" style="${!placedWords.length?'opacity:.4':''}"  ${!placedWords.length?'disabled':''}>✓ Έλεγχος</button>
+           <button onclick="clearBuilder()" class="btn bgh bsm">✕ Καθαρισμός</button>
+           <button onclick="showHint()" class="btn bgh bsm" style="margin-left:auto">💡 Βοήθεια</button>`
+        :`<button onclick="nextBuilder(${isCorrect})" class="btn bp">→ Επόμενη</button>
+           <button onclick="clearBuilder()" class="btn bgh bsm">↺ Ξανά</button>`
+      }
+    </div>
+
+    <!-- Word bank -->
+    <div class="f11 c3 mb8">Διαθέσιμες λέξεις:</div>
+    <div style="padding:12px;background:var(--s2);border:1px solid var(--ln);border-radius:var(--r)">
+      ${shuffled.map((word,i)=>{
+        const isPlaced=placedWords.filter(w=>w===word).length >= sent.words.filter(w=>w===word).length;
+        return `<span class="builder-word ${isPlaced?'used':''}" onclick="placeWord('${word.replace(/'/g,"\\'")}',${isPlaced})">${word}</span>`;
+      }).join('')}
+    </div>
+
+    <!-- Stats -->
+    <div class="card mt16" style="padding:12px">
+      <div class="sl mb8">ΣΤΑΤΙΣΤΙΚΑ SESSION</div>
+      <div class="fx g16">
+        <div class="tc"><div class="fp f18 b cgr">${BST.score}</div><div class="f9 c3 mt4">ΣΩΣΤΕΣ</div></div>
+        <div class="tc"><div class="fp f18 b cro">${BST.total-BST.score}</div><div class="f9 c3 mt4">ΛΑΘΗ</div></div>
+        <div class="tc"><div class="fp f18 b cam">${BST.total}</div><div class="f9 c3 mt4">ΣΥΝΟΛΟ</div></div>
+        <div class="tc"><div class="fp f18 b cbl">${BST.total?Math.round((BST.score/BST.total)*100)+'%':'—'}</div><div class="f9 c3 mt4">ΕΠΙΤΥΧΙΑ</div></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function placeWord(word,isUsed){
+  if(isUsed||BST.showResult)return;
+  BST.placed.push(word);
+  rBuilder();
+}
+
+function removePlacedWord(idx,e){
+  e.stopPropagation();
+  BST.placed.splice(idx,1);
+  rBuilder();
+}
+
+function removeLastWord(){
+  if(BST.placed.length&&!BST.showResult){
+    BST.placed.pop();
+    rBuilder();
+  }
+}
+
+function clearBuilder(){
+  BST.placed=[];BST.showResult=false;rBuilder();
+}
+
+function checkBuilder(){
+  if(!BST.placed.length)return;
+  BST.showResult=true;
+  BST.total++;
+  const filtered=BST.filter==='all'?BUILDER_SENTENCES:BUILDER_SENTENCES.filter(s=>s.lv===BST.filter);
+  const sent=filtered[BST.idx%filtered.length];
+  const correct=BST.placed.join(' ').toLowerCase()===sent.answer.toLowerCase();
+  if(correct){
+    BST.score++;
+    addXP(20);
+    toast('✓ Σωστό! +20 XP','var(--gr)');
+  } else {
+    addXP(5);
+    toast('✗ Λάθος — δες τη σωστή πρόταση','var(--ro)');
+  }
+  rBuilder();
+}
+
+function nextBuilder(wasCorrect){
+  BST.idx++;BST.placed=[];BST.showResult=false;rBuilder();
+}
+
+function showHint(){
+  const filtered=BST.filter==='all'?BUILDER_SENTENCES:BUILDER_SENTENCES.filter(s=>s.lv===BST.filter);
+  const sent=filtered[BST.idx%filtered.length];
+  const firstWord=sent.answer.split(' ')[0];
+  if(!BST.placed.length){
+    BST.placed=[firstWord];
+    toast('Hint: Αρχίζει με "'+firstWord+'"','var(--am)');
+    rBuilder();
+  } else {
+    toast('💡 '+sent.tip,'var(--am)');
+  }
+}
+
 
 /* ══ STUDY PLAN (PLAN) ══ */
 const PLAN=[
@@ -1913,6 +2881,60 @@ function rStats(){
     </div>
   </div>`;
 
+
+  // ── ROADMAP ──
+  const roadmap=[
+    {lv:'A2→B1',label:'Foundation',color:'#3dd68c',items:['50+ λέξεις εκμαθημένες','Simple Present & Past','Basic phrases']},
+    {lv:'B1',label:'Elementary',color:'#5b8def',items:['100+ λέξεις','Present Perfect & Continuous','Conditionals 1st & 2nd']},
+    {lv:'B1→B2',label:'Pre-Intermediate',color:'#7c5cf5',items:['150+ λέξεις','All 9 tenses','Passive Voice & Modals']},
+    {lv:'B2',label:'Intermediate',color:'#f5b722',items:['200+ λέξεις','Reported Speech & Relative Clauses','Gerunds vs Infinitives']},
+    {lv:'B2→C1',label:'Upper-Intermediate',color:'#f07830',items:['250+ λέξεις','Word Order & Quantifiers','Advanced connectors']},
+    {lv:'C1',label:'Advanced',color:'#f03870',items:['300+ λέξεις','All grammar mastered','Idiomatic expression']},
+  ];
+  const curLv=getLv(xp);
+
+  // ── ADAPTIVE SUGGESTIONS ──
+  const errors=DB.get('errors',{});
+  const topErrWords=Object.entries(errors).sort(([,a],[,b])=>b.count-a.count).slice(0,3)
+    .map(([id])=>getAllW().find(w=>w.id===id)?.w).filter(Boolean);
+  const tDone=DB.get('tDone',[]);
+  const weakTenses=TENSES.filter((_,i)=>!tDone.includes(i)).slice(0,2).map(t=>t.name);
+
+  document.getElementById('stats').innerHTML+=`
+    <div class="cbox mt4">
+      <div class="sl mb12">🗺 PROGRESS ROADMAP — B1 → C1</div>
+      <div style="position:relative;padding-left:20px">
+        <div style="position:absolute;left:9px;top:0;bottom:0;width:2px;background:var(--ln)"></div>
+        ${roadmap.map((r,i)=>{
+          const done=i<curLv;const active=i===curLv;
+          return `<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;opacity:${done||active?1:0.4}">
+            <div style="width:18px;height:18px;border-radius:50%;background:${done?r.color:active?r.color:'var(--s3)'};border:2px solid ${r.color};display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;color:#fff;margin-top:2px">${done?'✓':active?'●':''}</div>
+            <div style="flex:1;padding:8px 12px;background:${active?r.color+'1a':'var(--s2)'};border:1px solid ${active?r.color+'44':'var(--ln)'};border-radius:8px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                <span class="fp f11 b" style="color:${r.color}">${r.lv}</span>
+                <span class="f10 c3">${r.label}</span>
+                ${active?'<span class="tag f9" style="background:'+r.color+'1a;border:1px solid '+r.color+'33;color:'+r.color+'">← Εδώ είσαι</span>':''}
+                ${done?'<span class="tag f9" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr)">✓ Ολοκληρώθηκε</span>':''}
+              </div>
+              <div class="f10 c3">${r.items.map(item=>'• '+item).join(' · ')}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    ${topErrWords.length||weakTenses.length?`<div class="cbox"><div class="sl mb12">🎯 ADAPTIVE — ΤΙ ΝΑ ΚΑΝΕΙΣ ΤΩΡΑ</div>
+      ${topErrWords.length?`<div class="card c-warn mb10">
+        <div class="f12 b mb6 cam">⚠ Λέξεις που κάνεις λάθη:</div>
+        <div class="fx fw g6 mb8">${topErrWords.map(w=>`<span class="tag" style="background:var(--ro)1a;border:1px solid var(--ro)33;color:var(--ro)">${w}</span>`).join('')}</div>
+        <button onclick="VS.mode='errors';go('vocab')" class="btn br bsm" style="font-size:11px">⚡ Εξάσκηση Λαθών</button>
+      </div>`:''}
+      ${weakTenses.length?`<div class="card c-info mb10">
+        <div class="f12 b mb6 cbl">📚 Tenses που δεν έχεις ολοκληρώσει:</div>
+        <div class="fx fw g6 mb8">${weakTenses.map(t=>`<span class="tag" style="background:var(--bl)1a;border:1px solid var(--bl)33;color:var(--bl)">${t}</span>`).join('')}</div>
+        <button onclick="go('tenses')" class="btn bp bsm" style="font-size:11px">📖 Πήγαινε στα Tenses</button>
+      </div>`:''}
+    </div>`:''}
+  `;
   setTimeout(()=>{
     try{
       const isDark=!document.body.classList.contains('light');
@@ -2303,6 +3325,16 @@ function rHome(){
         <div class="hcard-ico">🗣</div><h3 style="color:var(--gr)">Speaking</h3>
         <p>Conversation Phrases · Προφορά · Shadowing Guide</p>
         <div class="mt8 f9 c3">7 κατηγορίες φράσεων · Listening resources</div>
+      </div>
+      <div class="hcard" onclick="go('lessons')" style="background:linear-gradient(135deg,#0a0518,#160828);border-color:#7c5cf522">
+        <div class="hcard-ico">🎯</div><h3 style="color:var(--vi)">Daily Lesson</h3>
+        <p>Νέα λέξη + Context + Grammar tip + Mini Quiz + Πρόταση</p>
+        <div class="mt8 f9 c3">5 βήματα · ${getTodayLesson().steps.filter(s=>s.done).length}/5 σήμερα</div>
+      </div>
+      <div class="hcard" onclick="go('builder')" style="background:linear-gradient(135deg,#051a1a,#081a1a);border-color:#20c8c822">
+        <div class="hcard-ico">🔤</div><h3 style="color:var(--tl)">Sentence Builder</h3>
+        <p>Φτιάξε προτάσεις από λέξεις · Word order · Grammar</p>
+        <div class="mt8 f9 c3">20 προτάσεις B1→C1 · Instant feedback</div>
       </div>
     </div>
 
