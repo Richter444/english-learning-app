@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0044)file:///C:/Users/air2/Downloads/index_4.html -->
+<!-- saved from url=(0044)file:///C:/Users/air2/Downloads/index_5.html -->
 <html lang="el"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -1120,7 +1120,7 @@ function rTM(){
     </div>`).join('')}</div>
     <div class="card mb12"><div class="sl mb8" style="color:var(--vi)">SIGNAL WORDS — ΛΕΞΕΙΣ-ΚΛΕΙΔΙΑ</div>
     <div class="fx fw g6">${t.kw.map(k=>`<span class="tag" style="background:var(--vi)1a;border:1px solid var(--vi)33;color:var(--vi)">${k}</span>`).join('')}</div></div>
-    (t.tips&&t.tips.length?('<div class="card c-ok"><button onclick="TST.tips=!TST.tips;rTM()" style="color:var(--gr);font-size:9px;font-weight:700;letter-spacing:2px;cursor:pointer">'+(TST.tips?'▾':'▸')+' TIPS & ΠΑΓΙΔΕΣ</button>'+(TST.tips?t.tips.map(tp=>'<div class="mt8 f12" style="color:var(--gr);line-height:1.6;padding-left:12px">💡 '+tp+'</div>').join(''):'')+'</div>'):'')}
+    ${t.tips&&t.tips.length?('<div class="card c-ok"><button onclick="TST.tips=!TST.tips;rTM()" style="color:var(--gr);font-size:9px;font-weight:700;letter-spacing:2px;cursor:pointer">'+(TST.tips?'▾':'▸')+' TIPS &amp; ΠΑΓΙΔΕΣ</button>'+(TST.tips?t.tips.map(tp=>'<div class="mt8 f12" style="color:var(--gr);line-height:1.6;padding-left:12px">💡 '+tp+'</div>').join(''):'')+'</div>'):''}
   </div>`;
   } else if(TST.tab==='forms'){
     body=t.forms.map(([l,v])=>`<div class="card mb8 fu"><div class="f10 b mb8" style="color:${t.col}">${l}</div><div class="mono f12 c2" style="line-height:1.7;padding-left:10px;border-left:2px solid ${t.col}44">${v}</div></div>`).join('');
