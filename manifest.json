@@ -1,0 +1,36 @@
+{
+  "name": "English Master — B1 to C1",
+  "short_name": "English Master",
+  "description": "Μάθε αγγλικά από B1 σε C1 — Vocabulary, Grammar, Tenses, Writing, Speaking, AI Feedback",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f1117",
+  "theme_color": "#5b8def",
+  "lang": "el",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%230f1117'/%3E%3Crect x='60' y='60' width='392' height='392' rx='60' fill='%235b8def' opacity='.15'/%3E%3Ctext x='256' y='300' text-anchor='middle' font-size='220' font-family='Georgia,serif' fill='%235b8def'%3E📗%3C/text%3E%3Ctext x='256' y='460' text-anchor='middle' font-size='60' font-family='Inter,sans-serif' font-weight='700' fill='%23f0eef8'%3EEN%3C/text%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Daily Lesson",
+      "short_name": "Lesson",
+      "description": "Ξεκίνα το σημερινό μάθημα",
+      "url": "./#lessons"
+    },
+    {
+      "name": "Vocabulary",
+      "short_name": "Vocab",
+      "description": "Εξάσκηση λεξιλογίου",
+      "url": "./#vocab"
+    }
+  ]
+}
