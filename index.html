@@ -1074,7 +1074,9 @@ let VS={mode:'home',cat:'all',search:'',q:{mode:'mixed',sess:[],idx:0,res:[],fl:
 function rVocab(){
   const el=document.getElementById('vocab');
   const lc=learnedW().length,due=dueW().length,all=getAllW().length;
-  el.innerHTML=`<div class="vsb" class="${!VS.sbOpen?'vsb-hidden':''}">
+  el.innerHTML=`
+  ${!VS.sbOpen?`<button onclick="VS.sbOpen=true;rVocab()" style="width:36px;flex-shrink:0;background:var(--s2);border:none;border-right:1px solid var(--ln);color:var(--t2);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:14px;gap:3px"><span>📚</span></button>`:''}
+  <div class="vsb ${!VS.sbOpen?'vsb-hidden':''}">
     <div class="vsb-h"><div class="fx ac jb mb4">
       <div class="sl">VOCABULAR</div>
       <button onclick="VS.sbOpen=false;rVocab()" style="padding:2px 8px;background:none;border:1px solid var(--ln);border-radius:20px;color:var(--t3);font-size:10px;cursor:pointer">✕</button>
