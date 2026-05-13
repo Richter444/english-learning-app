@@ -459,6 +459,11 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
   #chat-hist{max-height:220px}
 }
 
+@keyframes streakPop{0%{transform:scale(1)}30%{transform:scale(1.4) rotate(-5deg)}60%{transform:scale(1.2) rotate(3deg)}100%{transform:scale(1)}}
+@keyframes streakGlow{0%,100%{box-shadow:0 0 8px rgba(246,188,24,.4)}50%{box-shadow:0 0 24px rgba(246,188,24,.8),0 0 40px rgba(242,112,48,.3)}}
+.streak-fire{display:inline-block;animation:streakPop .6s ease,streakGlow 2s ease 0.6s infinite}
+@keyframes xpFloat{0%{transform:translateY(0);opacity:1}80%{transform:translateY(-50px);opacity:.4}100%{transform:translateY(-60px);opacity:0}}
+.xp-float{animation:xpFloat .9s ease forwards;position:fixed;font-size:14px;font-weight:700;color:var(--am);pointer-events:none;z-index:9999;text-shadow:0 2px 8px rgba(246,188,24,.5)}
 </style>
 </head>
 <body>
@@ -709,7 +714,17 @@ function getXP(){return DB.get('xp',0)}
 function addXP(n){
   const old=getXP(),nw=old+n;DB.set('xp',nw);
   if(getLv(nw)>getLv(old))showAch('🎉 Level Up! '+LVLS[getLv(nw)].n);
-  updXP()
+  updXP();
+  // Floating XP indicator for big gains
+  if(n>=8){
+    const fl=document.createElement('div');
+    fl.className='xp-float';
+    fl.textContent='+'+n+' XP ⭐';
+    fl.style.left=(window.innerWidth/2-36)+'px';
+    fl.style.top=(window.innerHeight*0.55)+'px';
+    document.body.appendChild(fl);
+    setTimeout(()=>fl.remove(),900);
+  }
 }
 function getLv(x){let l=0;for(let i=0;i<LVLS.length;i++)if(x>=LVLS[i].x)l=i;return l}
 function updXP(){
@@ -767,7 +782,95 @@ function hideDesktopMore(){
   if(m)m.style.display='none';
 }
 
+
+function getUnlocks(){
+  const lc=learnedW().length;
+  return {vocab:true,lessons:true,grammar:true,tenses:true,stats:true,tracker:true,settings:true,
+    writing:lc>=10,reading:lc>=15,speaking:lc>=20,builder:lc>=25,falsefriends:lc>=30};
+}
+function checkUnlock(id){const u=getUnlocks();return u[id]!==false;}
+function showLockedMessage(id){
+  const m={writing:{n:'Writing',req:10,ic:'✍'},reading:{n:'Reading',req:15,ic:'📄'},
+    speaking:{n:'Speaking',req:20,ic:'🗣'},builder:{n:'Sentence Builder',req:25,ic:'🔤'},falsefriends:{n:'False Friends',req:30,ic:'⚠'}}[id];
+  if(!m)return;
+  const lc=learnedW().length;
+  const pct=Math.min(100,Math.round(lc/m.req*100));
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px';modal.id='lock-modal';
+  modal.onclick=()=>modal.remove();
+  modal.innerHTML='<div style="background:var(--s1);border:1px solid var(--ln2);border-radius:var(--r2);padding:28px;max-width:360px;width:100%;text-align:center" onclick="event.stopPropagation()">'
+    +'<div style="font-size:36px;margin-bottom:12px">🔒</div>'
+    +'<div class="fp f18 b mb6">'+m.ic+' '+m.n+'</div>'
+    +'<div class="f13 mb12" style="color:var(--t3);line-height:1.6">Ξεκλειδώνεται με <strong style="color:var(--am)">'+m.req+' λέξεις</strong>. Τώρα: <strong style="color:var(--gr)">'+lc+'</strong></div>'
+    +'<div style="height:6px;background:var(--s3);border-radius:4px;margin-bottom:16px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,var(--bl),var(--gr));border-radius:4px"></div></div>'
+    +'<button onclick="document.getElementById(\'lock-modal\').remove();VS.mode=\'home\';go(\'vocab\')" class="btn bp" style="width:100%;justify-content:center">📚 Μάθε λέξεις τώρα →</button>'
+    +'</div>';
+  document.body.appendChild(modal);
+}
+
+
+function showStreakCelebration(streak){
+  if(streak<3)return;
+  const msgs={3:'3 μέρες στη σειρά!',7:'Ολόκληρη εβδομάδα! 🔥',14:'Δύο εβδομάδες!',30:'Ένας μήνας! Απίστευτο!',100:'3 ΜΗΝΕΣ! Θρύλος! 🏆'};
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.onclick=e=>{if(e.target===modal)modal.remove();};
+  modal.innerHTML='<div style="background:linear-gradient(135deg,var(--s1),rgba(246,188,24,.08));border:2px solid rgba(246,188,24,.4);border-radius:var(--r2);padding:32px;max-width:360px;width:100%;text-align:center;box-shadow:0 0 60px rgba(246,188,24,.2)">'
+    +'<div class="streak-fire" style="font-size:56px;margin-bottom:8px">🔥</div>'
+    +'<div class="fp f24 b mb6" style="color:var(--am)">'+streak+' Ημέρες!</div>'
+    +'<div class="f13 mb20" style="color:var(--t2)">'+(msgs[streak]||streak+' μέρες στη σειρά!')+'</div>'
+    +'<button onclick="closeTopModal()" class="btn" style="background:linear-gradient(135deg,var(--am),var(--or));color:#1a0d00;width:100%;justify-content:center;padding:13px;font-size:15px">Συνέχισε! 🚀</button>'
+    +'</div>';
+  document.body.appendChild(modal);
+}
+
+function checkStreakWarning(){
+  const streak=calcStreak();
+  if(streak<3)return;
+  const today=todayK();
+  const comp=DB.get('comp',{});
+  if((comp[today]||[]).length>0)return;
+  if(DB.get('streak_warned','')=== today)return;
+  DB.set('streak_warned',today);
+  setTimeout(()=>{
+    const banner=document.createElement('div');
+    banner.style.cssText='position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:9997;animation:fadeUp .3s ease;white-space:nowrap';
+    banner.innerHTML='<div style="background:var(--s1);border:1px solid rgba(246,188,24,.4);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.5)">'
+      +'<span style="font-size:22px">🔥</span>'
+      +'<div><div class="f12 b" style="color:var(--am)">'+streak+'-day streak σε κίνδυνο!</div><div class="f10" style="color:var(--t3)">Κάνε τουλάχιστον 1 task σήμερα</div></div>'
+      +'<button onclick="closeTopModal();go(\'lessons\')" class="btn bp bsm">Μάθαινε →</button>'
+      +'</div>';
+    document.body.appendChild(banner);
+    setTimeout(()=>{banner.style.opacity='0';banner.style.transition='.3s';setTimeout(()=>banner.remove(),300);},8000);
+  },2000);
+}
+
+
+let LIVES=3;const MAX_LIVES=3;
+function renderHearts(){return '<div class="fx ac g4" id="hd">'+Array.from({length:MAX_LIVES},(_,i)=>'<span style="font-size:18px;transition:all .3s'+(i>=LIVES?';opacity:.3;filter:grayscale(1)':'')+'">'+( i<LIVES?'❤️':'🖤')+'</span>').join('')+'</div>';}
+function loseHeart(){
+  if(LIVES<=0)return true;
+  LIVES--;
+  const hd=document.getElementById('hd');
+  if(hd)hd.innerHTML=Array.from({length:MAX_LIVES},(_,i)=>'<span style="font-size:18px'+(i>=LIVES?';opacity:.3;filter:grayscale(1)':'')+'">'+( i<LIVES?'❤️':'🖤')+'</span>').join('');
+  if(LIVES>0)return false;
+  setTimeout(()=>{
+    const vm=document.getElementById('vm');
+    if(!vm)return;
+    vm.innerHTML='<div style="text-align:center;padding:40px">'
+      +'<div style="font-size:48px;margin-bottom:12px">💔</div>'
+      +'<div class="fp f20 b mb8" style="color:var(--ro)">Έχασες όλες τις ζωές!</div>'
+      +'<div class="f13 mb20" style="color:var(--t3);line-height:1.6">Η εξάσκηση κάνει τον δάσκαλο! Δοκίμασε ξανά.</div>'
+      +'<div class="fx jc g10">'
+      +'<button onclick="LIVES=MAX_LIVES;VS.q=null;VS.mode=\'home\';rVocab()" class="btn bgh">← Πίσω</button>'
+      +'<button onclick="LIVES=MAX_LIVES;startQ(document.getElementById(\'vm\'),VS.q?.mode||\'mc\')" class="btn bp">🔄 Ξανά!</button>'
+      +'</div></div>';
+  },600);
+  return true;
+}
+
 function go(id){
+  if(['writing','reading','speaking','builder','falsefriends'].includes(id)&&!checkUnlock(id)){showLockedMessage(id);return;}
   document.querySelectorAll('.pnl,.fpnl').forEach(p=>{p.style.display='none'});
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   const p=document.getElementById(id);
@@ -1338,7 +1441,7 @@ function rVAll(el){
           ${s.sc<3?`<button onclick="setWS('${w.id}',true);toast('✓ +${w.w} στις εμαθημένες!','var(--gr)');rVAll(document.getElementById('vm'))" class="tag f9 bxs" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr);cursor:pointer">Εμαθα ✓</button>`:''}
         </div>
       </div>`;
-    }).join('')||`<div class="card tc c3" style="padding:20px">Δεν υπάρχουν λέξεις.</div>`}
+    }).join('')||`<div class="card tc c3" style="padding:20px">Ξεκίνα να μαθαίνεις λέξεις!</div>`}
   </div>`;
 }
 
@@ -1375,8 +1478,8 @@ function startQ(el,mode){
   // Build session: prioritize due → weak → new
   const sess=[...duePool.slice(0,4),...weakPool.slice(0,3),...newPool.slice(0,3)].slice(0,10);
   const finalSess=sess.length>=5?sess:allPool.slice(0,10);
-  VS.q={mode,cat,sess:finalSess,idx:0,res:[],fl:false,opts:[],sel:-1,fill:'',fd:false};
-  if(!VS.q.sess.length){el.innerHTML=`<div style="text-align:center;padding:40px"><div class="f16 c2">Δεν υπάρχουν λέξεις. <button class="btn bp bsm" onclick="VS.mode='add';rVocab()">Προσθήκη</button></div></div>`;return;}
+  LIVES=MAX_LIVES;VS.q={mode,cat,sess:finalSess,idx:0,res:[],fl:false,opts:[],sel:-1,fill:'',fd:false};
+  if(!VS.q.sess.length){el.innerHTML=`<div style="text-align:center;padding:40px"><div class="f16 c2">Ξεκίνα να μαθαίνεις λέξεις! <button class="btn bp bsm" onclick="VS.mode='add';rVocab()">Προσθήκη</button></div></div>`;return;}
   DB.set('quiz_session',{mode,cat,sess:VS.q.sess,idx:0,res:[],fl:false,opts:[],sel:-1,fill:'',fd:false});
   rQCard(el);
 }
@@ -1478,7 +1581,7 @@ function vMCQ(i){
 function vRec(correct){
   const cw=VS.q.sess[VS.q.idx];
   setWS(cw.id,correct);
-  if(!correct)trackError(cw.id,VS.q.mode);
+  if(!correct){trackError(cw.id,VS.q.mode);if(loseHeart())return;}
   VS.q.res.push({word:cw,correct});
   const lc=learnedW().length;
   if(VS.q.res.length===1&&getWS(cw.id).seen===1)unlockAch('w1');
@@ -2095,7 +2198,7 @@ function rTM(){
   const tPct=Math.round(sc/TENSES[TST.idx].quiz.length*100);
   if(tPct===100){setTimeout(()=>showCelebration('🏆 '+TENSES[TST.idx].name+'!','Τέλειο σκορ! '+sc+'/'+TENSES[TST.idx].quiz.length+' απαντήσεις.',sc*5,'TST.idx=(TST.idx+1)%TENSES.length;TST.tab=\'theory\';resetTQ();rTM()','Επόμενος χρόνος'),400);}
   else if(tPct>=60){setTimeout(()=>showCelebration(TENSES[TST.idx].name+' — Καλά!',sc+'/'+TENSES[TST.idx].quiz.length+' σωστές. Καλή πρόοδος!',sc*5,null,null),400);}
-  else{toast('Quiz: '+sc+'/'+TENSES[TST.idx].quiz.length+' — +'+sc*5+' XP','var(--bl)');}const tKey=['present_simple','present_continuous','simple_past','past_continuous','present_perfect','pp_continuous','past_perfect','future_will','future_going_to'][TST.idx]||'present_simple';if(sc>=Math.ceil(TENSES[TST.idx].quiz.length*0.6))setTimeout(()=>showForcedOutput(tKey,'tense'),1200);rTM()}" style="padding:10px 22px;background:${t.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${allA?1:0.4}">ΥΠΟΒΟΛΗ</button>`
+  else{toast('Quiz: '+sc+'/'+TENSES[TST.idx].quiz.length+' — +'+sc*5+' XP','var(--bl)');}const tKey=['present_simple','present_continuous','simple_past','past_continuous','present_perfect','pp_continuous','past_perfect','future_will','future_going_to'][TST.idx]||'present_simple';if(sc>=Math.ceil(TENSES[TST.idx].quiz.length*0.6))setTimeout(()=>showForcedOutput(tKey,'tense'),1200);rTM()}" style="padding:10px 22px;background:${t.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${allA?1:0.4}">Ελέγξτε →</button>`
       :`<div class="fx ac g12"><div class="card" style="border:2px solid ${TST.qsc===t.quiz.length?'var(--am)':TST.qsc>=Math.ceil(t.quiz.length*.6)?'var(--gr)':'var(--bl)'}">
          <span class="f11 c3">Αποτέλεσμα: </span><span class="fp f20 b" style="color:${TST.qsc===t.quiz.length?'var(--am)':TST.qsc>=Math.ceil(t.quiz.length*.6)?'var(--gr)':'var(--bl)'}">${TST.qsc}/${t.quiz.length}</span>
          </div><button onclick="resetTQ();rTM()" style="padding:9px 16px;border:1px solid ${t.col};border-radius:7px;color:${t.col};background:transparent;cursor:pointer;font-size:10px;font-weight:700">ΕΠΑΝΑΛΗΨΗ</button></div>`);
@@ -2462,9 +2565,9 @@ function rGTopic(){
     }).join('')}
     ${!GST.es
       ?`<button onclick="const allA=Object.keys(GST.ea).length>=${t.exercises.length};if(allA){let sc=0;GRAM.find(x=>x.id===GST.topic).exercises.forEach((ex,i)=>{if(GST.ea[i]===ex.a)sc++;else{const ge=DB.get('gramErr',{});if(!ge[GST.topic])ge[GST.topic]={count:0,last:null};ge[GST.topic].count++;ge[GST.topic].last=todayK();DB.set('gramErr',ge);}});GST.esc=sc;GST.es=true;addXP(sc*8);const pct=Math.round(sc/${t.exercises.length}*100);const gramMsg=pct>=80?'Εξαιρετικά! Εξαιρετικά!':pct>=50?'Καλά — συνέχισε!':'Συνέχισε την εξάσκηση!';
-if(pct>=80){setTimeout(()=>showCelebration('✓ '+t.t+' — Ολοκληρώθηκε!',gramMsg+' '+sc+'/'+t.exercises.length+' σωστές.',sc*8,'GST.topic=null;rGrammar()','Επόμενο κεφάλαιο'),400);}
+if(pct>=80){setTimeout(()=>showCelebration('✓ '+t.t+' — Τέλεια! ✓!',gramMsg+' '+sc+'/'+t.exercises.length+' σωστές.',sc*8,'GST.topic=null;rGrammar()','Επόμενο κεφάλαιο'),400);}
 else{toast((pct>=50?'👍 ':'📖 ')+sc+'/${t.exercises.length} σωστές — '+gramMsg,'var(--'+(pct>=50?'bl':'ro')+')');if(pct>=60)setTimeout(()=>showForcedOutput(GST.topic,'grammar'),1200);}
-rGTopic()}" style="padding:10px 22px;background:${t.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${Object.keys(GST.ea).length>=t.exercises.length?1:0.4}">ΥΠΟΒΟΛΗ</button>`
+rGTopic()}" style="padding:10px 22px;background:${t.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${Object.keys(GST.ea).length>=t.exercises.length?1:0.4}">Ελέγξτε →</button>`
       :`<div class="fx ac g12"><div class="card" style="border:2px solid ${GST.esc===t.exercises.length?'var(--am)':'var(--gr)'}">
          <span class="f11 c3">Αποτέλεσμα: </span><span class="fp f20 b" style="color:${GST.esc===t.exercises.length?'var(--am)':'var(--gr)'}">${GST.esc}/${t.exercises.length}</span>
          </div><button onclick="GST.ea={};GST.es=false;GST.esc=null;rGTopic()" style="padding:9px 16px;border:1px solid ${t.col};border-radius:7px;color:${t.col};background:transparent;cursor:pointer;font-size:10px;font-weight:700">ΕΠΑΝΑΛΗΨΗ</button></div>`}
@@ -2615,10 +2718,10 @@ function rWTopic(){
         <div class="f12 c2 mb12" style="line-height:1.7">Χρησιμοποίησε τη δομή και τις φράσεις. Τσέκαρε το checklist μετά!</div>
         <textarea id="wptx" rows="14" placeholder="Γράψε εδώ..." style="width:100%;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px;padding:12px;font-family:var(--f);line-height:1.7;resize:vertical">${saved}</textarea>
         <div class="fx jb ac mt10">
-          <div class="f11 c3">Αυτόματη αποθήκευση ✓</div>
+          <div class="f11 c3">💾 Αποθηκεύεται αυτόματα</div>
           <div class="fx g8">
             <button onclick="getAIWritingFeedback()" class="btn bp bsm" id="ai-feedback-btn">🤖 AI Feedback</button>
-            <button onclick="document.getElementById('wptx').value='';DB.set('wp_'+WST.topic,'')" class="btn bgh bsm">Καθαρισμός</button>
+            <button onclick="document.getElementById('wptx').value='';DB.set('wp_'+WST.topic,'')" class="btn bgh bsm">Ξεκινήστε πάλι</button>
           </div>
         </div>
         <div id="ai-feedback-result" style="margin-top:12px"></div>
@@ -2823,7 +2926,7 @@ function rReading(){
   const rd=DB.get('rdDone',[]);if(!rd.includes(RST.art)){rd.push(RST.art);DB.set('rdDone',rd);}
   if(c===READINGS.find(x=>x.id===RST.art).qs.length)toast('✓ Τέλειο! +'+c*10+' XP','var(--gr)');
   else toast('Αποτέλεσμα: '+c+'/'+READINGS.find(x=>x.id===RST.art).qs.length+' — +'+c*10+' XP','var(--bl)');
-  rReading()}" style="padding:10px 22px;background:${a.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${allA?1:0.4}">ΥΠΟΒΟΛΗ</button>`
+  rReading()}" style="padding:10px 22px;background:${a.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${allA?1:0.4}">Ελέγξτε →</button>`
         :`<div class="fx ac g12"><div class="card" style="border:2px solid ${RST.rsc===a.qs.length?'var(--am)':'var(--gr)'}">
            <span class="f11 c3">Αποτέλεσμα: </span><span class="fp f20 b" style="color:${RST.rsc===a.qs.length?'var(--am)':'var(--gr)'}">${RST.rsc}/${a.qs.length}</span>
            </div><button onclick="RST.ra={};RST.rs=false;RST.rsc=null;rReading()" style="padding:9px 16px;border:1px solid ${a.col};border-radius:7px;color:${a.col};background:transparent;cursor:pointer;font-size:10px;font-weight:700">ΞΑΝΑ</button></div>`}
@@ -3204,7 +3307,7 @@ function rListeningEx(el){
         return '<div class="card mb10"><div class="f13 mb10" style="line-height:1.6"><span class="fp b" style="color:var(--tl);margin-right:7px">'+(i+1)+'.</span>'+q.q+'</div>'+opts+(LEST.done?'<div class="f11 mt4" style="color:'+(LEST.ans[i]===q.a?'var(--gr)':'var(--ro)')+'">'+( LEST.ans[i]===q.a?'✓ Σωστό!':'✗ Σωστό: "'+q.a+'"')+'</div>':'')+'</div>';
       }).join('')}
       ${!LEST.done
-        ?'<button onclick="if('+allA+'){let s=0;LISTENING_EX.find(x=>x.id===LEST.art).questions.forEach((q,i)=>{if(LEST.ans[i]===q.a)s++});LEST.score=s;LEST.done=true;addXP(s*10);rSpeaking()}" style="padding:10px 22px;background:var(--tl);border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:'+(allA?'1':'0.4')+'">ΥΠΟΒΟΛΗ</button>'
+        ?'<button onclick="if('+allA+'){let s=0;LISTENING_EX.find(x=>x.id===LEST.art).questions.forEach((q,i)=>{if(LEST.ans[i]===q.a)s++});LEST.score=s;LEST.done=true;addXP(s*10);rSpeaking()}" style="padding:10px 22px;background:var(--tl);border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:'+(allA?'1':'0.4')+'">Ελέγξτε →</button>'
         :'<div class="fx ac g12"><div class="card" style="border:2px solid '+(LEST.score===ex.questions.length?'var(--am)':'var(--gr)')+'"><span class="f11 c3">Αποτέλεσμα: </span><span class="fp f20 b" style="color:'+(LEST.score===ex.questions.length?'var(--am)':'var(--gr)')+'">'+LEST.score+'/'+ex.questions.length+'</span></div><button onclick="LEST.ans={};LEST.done=false;LEST.score=0;rSpeaking()" style="padding:9px 16px;border:1px solid var(--tl);border-radius:7px;color:var(--tl);background:transparent;cursor:pointer;font-size:10px;font-weight:700">ΞΑΝΑ</button></div>'}`;
   }
 }
@@ -3423,14 +3526,23 @@ function rLessons(){
       </div>
     </div>
 
-    <!-- Progress bar -->
-    <div class="pb mb16" style="height:6px">
-      <div class="pf" style="width:${donePct}%;background:linear-gradient(90deg,var(--bl),var(--gr))"></div>
+    <!-- Progress indicator -->
+    <div style="margin-bottom:20px">
+      <div class="fx ac jb mb6">
+        <div class="f11" style="color:var(--t3)">${lesson.steps.filter(s=>s.done).length} από ${lesson.steps.length} βήματα</div>
+        <div class="f11 b" style="color:${donePct===100?'var(--gr)':donePct>=60?'var(--am)':'var(--bl)'}">${donePct===100?'✓ Ολοκληρώθηκε!':donePct+'%'}</div>
+      </div>
+      <div style="height:8px;background:var(--s3);border-radius:8px;overflow:hidden;margin-bottom:10px">
+        <div style="height:100%;width:${donePct}%;background:linear-gradient(90deg,var(--bl),var(--vi),var(--gr));border-radius:8px;transition:width .5s ease"></div>
+      </div>
+      <div class="fx jb">
+        ${lesson.steps.map((s,i)=>{const isNext=i===lesson.steps.findIndex(x=>!x.done);return '<div style="width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;transition:all .3s;background:'+(s.done?'var(--gr)':isNext?'var(--bl)':'var(--s3)')+';color:'+(s.done?'#030f08':isNext?'#fff':'var(--t3)')+';box-shadow:'+(isNext&&!s.done?'0 0 12px rgba(79,142,247,.5)':'')+'">'+(s.done?'✓':(i+1))+'</div>';}).join('')}
+      </div>
     </div>
 
     ${allDone?`<div class="card c-ok mb16 tc">
       <div style="font-size:36px;margin-bottom:8px" class="pop">🎉</div>
-      <div class="fp f16 b cgr mb4">Μάθημα Ολοκληρώθηκε!</div>
+      <div class="fp f16 b cgr mb4">Μάθημα Τέλεια! ✓!</div>
       <div class="f12 c2 mb8">Κέρδισες <strong class="cam">${totalXP} XP</strong> σήμερα!</div>
       <button onclick="go('vocab')" class="btn bp bsm">📚 Συνέχισε με Vocabulary</button>
     </div>`:''}
@@ -3521,8 +3633,8 @@ function rLessons(){
         <div class="fp f12 b mb4" style="color:${lesson.steps[4].done?'var(--gr)':'var(--t1)'}">Γράψε τη Δική σου Πρόταση</div>
         <div class="f11 c3 mb8">Χρησιμοποίησε τη λέξη <strong class="cbl">${word?.w||''}</strong> σε δική σου πρόταση:</div>
         <textarea id="lesson-sentence" rows="2" ${lesson.steps[4].done?'disabled':''} placeholder="Write your sentence here..." style="width:100%;background:var(--s3);border:1px solid var(--ln);border-radius:7px;color:var(--t1);font-size:13px;padding:9px;font-family:var(--f);line-height:1.5;resize:none" oninput="updateLessonSentence(this.value)">${lesson.userSentence||''}</textarea>
-        ${lesson.steps[4].done?`<div class="c-ok" style="padding:8px 12px;border-radius:7px;margin-top:8px;font-size:12px;color:var(--gr)">✓ Αποθηκεύτηκε: "${lesson.userSentence}"</div>`:''}
-        ${!lesson.steps[4].done?`<button onclick="markStep(4)" class="btn bp bsm mt8" style="font-size:10px" id="submit-sentence">Υποβολή ✓</button>`:''}
+        ${lesson.steps[4].done?`<div class="c-ok" style="padding:8px 12px;border-radius:7px;margin-top:8px;font-size:12px;color:var(--gr)">✓ Αποθηκεύτηκε ✓: "${lesson.userSentence}"</div>`:''}
+        ${!lesson.steps[4].done?`<button onclick="markStep(4)" class="btn bp bsm mt8" style="font-size:10px" id="submit-sentence">Ελέγξτε → ✓</button>`:''}
       </div>
       <div class="fx col ac g4">
         <span class="xp-pill">+${lesson.steps[4].xp} XP</span>
@@ -3599,11 +3711,11 @@ function lessonQuizSel(i){
     lesson.steps[3].done=true;
     addXP(lesson.steps[3].xp);
     setWS(lesson.word.id,true);
-    toast('✓ Σωστό! +'+lesson.steps[3].xp+' XP','var(--gr)');
+    toast('🎯 Σωστά! +'+lesson.steps[3].xp+' XP','var(--gr)');
   } else {
     setWS(lesson.word.id,false);
     trackError(lesson.word.id,'lesson');
-    toast('✗ Λάθος — σωστό: "'+lesson.word.g+'"','var(--ro)');
+    toast('💡 Σωστό ήταν: "'+lesson.word.g+'"','var(--ro)');
   }
   saveTodayLesson(lesson);
   rLessons();
@@ -3717,7 +3829,7 @@ function rBuilder(){
     <div class="fx g8 mb16">
       ${!BST.showResult
         ?`<button onclick="checkBuilder()" class="btn bp" style="${!placedWords.length?'opacity:.4':''}"  ${!placedWords.length?'disabled':''}>✓ Έλεγχος</button>
-           <button onclick="clearBuilder()" class="btn bgh bsm">✕ Καθαρισμός</button>
+           <button onclick="clearBuilder()" class="btn bgh bsm">✕ Ξεκινήστε πάλι</button>
            <button onclick="showHint()" class="btn bgh bsm" style="margin-left:auto">💡 Βοήθεια</button>`
         :`<button onclick="nextBuilder(${isCorrect})" class="btn bp">→ Επόμενη</button>
            <button onclick="clearBuilder()" class="btn bgh bsm">↺ Ξανά</button>`
@@ -3779,7 +3891,7 @@ function checkBuilder(){
   if(correct){
     BST.score++;
     addXP(20);
-    toast('✓ Σωστό! +20 XP','var(--gr)');
+    toast('🎯 Σωστά! +20 XP','var(--gr)');
   } else {
     addXP(5);
     toast('✗ Λάθος — δες τη σωστή πρόταση','var(--ro)');
@@ -4164,7 +4276,7 @@ function rStats(){
                 <span class="fp f11 b" style="color:${r.color}">${r.lv}</span>
                 <span class="f10 c3">${r.label}</span>
                 ${active?'<span class="tag f9" style="background:'+r.color+'1a;border:1px solid '+r.color+'33;color:'+r.color+'">← Εδώ είσαι</span>':''}
-                ${done?'<span class="tag f9" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr)">✓ Ολοκληρώθηκε</span>':''}
+                ${done?'<span class="tag f9" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr)">✓ Τέλεια! ✓</span>':''}
               </div>
               <div class="f10 c3">${r.items.map(item=>'• '+item).join(' · ')}</div>
             </div>
@@ -4277,7 +4389,7 @@ function rTRContent(){
         <div class="fx ac jb">
           <div><div class="fp f13 b mb2" style="color:var(--vi)">🌙 Evening Recall</div>
           <div class="f11 c3">5 λεπτά ανάκλησης — 3x καλύτερη μνήμη</div></div>
-          ${DB.get('er_done_'+todayK(),false)?'<span class="tag f9" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr)">✓ Ολοκληρώθηκε</span>':'<span class="tag f9" style="background:var(--vi)1a;border:1px solid var(--vi)33;color:var(--vi)">Ξεκίνα →</span>'}
+          ${DB.get('er_done_'+todayK(),false)?'<span class="tag f9" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr)">✓ Τέλεια! ✓</span>':'<span class="tag f9" style="background:var(--vi)1a;border:1px solid var(--vi)33;color:var(--vi)">Ξεκίνα →</span>'}
         </div>
       </div>
       <div class="card" style="border-color:var(--vi)33">
@@ -4333,7 +4445,7 @@ function rTRContent(){
           const challenge=challenges[week];
           const done=DB.get('wchallenge_'+week,false);
           return '<div class="f12 c2 mb10" style="line-height:1.6"><strong>Αυτή την εβδομάδα:</strong><br>"'+challenge+'"</div>'+
-            (done?'<span class="tag f9" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr)">✓ Ολοκληρώθηκε αυτή την εβδομάδα!</span>':
+            (done?'<span class="tag f9" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr)">✓ Τέλεια! ✓ αυτή την εβδομάδα!</span>':
             '<button onclick="WST.topic=\'email_formal\';WST.tab=\'practice\';go(\'writing\')" class="btn bp bsm">Γράψε Τώρα →</button>');
         })()}
       </div>
@@ -4627,8 +4739,8 @@ function rHome(){
         <div class="f13" style="color:var(--t3)">${new Date().toLocaleDateString('el-GR',{weekday:'long',day:'numeric',month:'long'})}</div>
       </div>
       <div class="fx ac g12">
-        ${streak>0?`<div style="background:linear-gradient(135deg,var(--am),var(--or));border-radius:12px;padding:10px 16px;text-align:center">
-          <div class="fp f20 b" style="color:#1a0d00">${streak}</div>
+        ${streak>0?`<div class="${streak>=7?'streak-fire':''}" style="background:linear-gradient(135deg,var(--am),var(--or));border-radius:12px;padding:10px 16px;text-align:center;cursor:pointer" onclick="showStreakCelebration(${streak})">
+          <div class="fp f20 b" style="color:#1a0d00">${streak>=7?'🔥':''} ${streak}</div>
           <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#1a0d00;opacity:.8">STREAK</div>
         </div>`:''}
         <div style="background:var(--s2);border:1px solid var(--ln);border-radius:12px;padding:10px 16px;text-align:center">
@@ -4648,7 +4760,7 @@ function rHome(){
           <span style="font-size:28px">🎯</span>
           <div>
             <div class="fp f16 b mb2" style="color:var(--t1)">Σημερινό Μάθημα</div>
-            <div class="f12" style="color:var(--t3)">${lessonDone===0?'Δεν έχεις ξεκινήσει ακόμα':lessonDone===lesson.steps.length?'✓ Ολοκληρώθηκε!':lessonDone+'/'+lesson.steps.length+' βήματα'}</div>
+            <div class="f12" style="color:var(--t3)">${lessonDone===0?'Δεν έχεις ξεκινήσει ακόμα':lessonDone===lesson.steps.length?'✓ Τέλεια! ✓!':lessonDone+'/'+lesson.steps.length+' βήματα'}</div>
           </div>
         </div>
         <div class="fx ac g8">
@@ -4864,7 +4976,7 @@ function showWeeklySummary(){
     
     ${s.due>0?`<div style="background:var(--s2);border:1px solid var(--am)33;border-radius:var(--r);padding:12px;margin-bottom:12px">
       <div class="f12 b cam mb4">⏰ ${s.due} λέξεις για επανάληψη</div>
-      <div class="f11 c3">Άνοιξε το Vocabular → Ημερήσια Επανάληψη για να τις επαναλάβεις.</div>
+      <div class="f11 c3">Άνοιξε το Vocabular → 🔁 Επανάληψη σήμερα για να τις επαναλάβεις.</div>
     </div>`:'<div style="background:#051a0a;border:1px solid var(--gr)33;border-radius:var(--r);padding:12px;margin-bottom:12px"><div class="f12 b cgr">✓ Καμία λέξη για επανάληψη — εξαιρετικά!</div></div>'}
     
     ${s.topErrors.length?`<div style="background:var(--s2);border:1px solid var(--ro)33;border-radius:var(--r);padding:12px;margin-bottom:12px">
@@ -4882,7 +4994,7 @@ function showWeeklySummary(){
     </div>
     
     <div style="display:flex;gap:10px">
-      <button onclick="document.getElementById('weekly-modal').remove()" class="btn bp" style="flex:1;justify-content:center">Κλείσιμο</button>
+      <button onclick="document.getElementById('weekly-modal').remove()" class="btn bp" style="flex:1;justify-content:center">Εντάξει! ✓</button>
       <button onclick="document.getElementById('weekly-modal').remove();VS.mode='review';go('vocab')" class="btn bgh" style="flex:1;justify-content:center">Επανάληψη →</button>
     </div>
   </div>`;
@@ -5204,7 +5316,7 @@ function renderILModal(){
       </div>
       <div class="fx jc g10">
         <button onclick="ILST.done=false;startInterleaved()" class="btn bp">Νέο Session</button>
-        <button onclick="document.getElementById('il-modal').remove()" class="btn bgh">Κλείσιμο</button>
+        <button onclick="document.getElementById('il-modal').remove()" class="btn bgh">Εντάξει! ✓</button>
       </div>
     </div>`;
     addXP(ILST.score*8);
@@ -5299,7 +5411,7 @@ function renderERModal(){
           </div>
         </div>`).join('')}
       </div>
-      <button onclick="document.getElementById('er-modal').remove();ERST.active=false" class="btn bp w100" style="justify-content:center">Κλείσιμο</button>
+      <button onclick="document.getElementById('er-modal').remove();ERST.active=false" class="btn bp w100" style="justify-content:center">Εντάξει! ✓</button>
     </div>`;
     addXP(scored*8);
     DB.set('er_done_'+todayK(),true);
@@ -5495,7 +5607,7 @@ function rClozeTest(){
           <span class="f11 c3">Αποτέλεσμα: </span>
           <span class="fp f20 b" style="color:${CLST.score===cl.blanks.length?'var(--am)':'var(--gr)'}">${CLST.score}/${cl.blanks.length}</span>
         </div>
-        <button onclick="CLST.answers={};CLST.checked=false;rClozeTest()" class="btn bgh">Ξανά</button>
+        <button onclick="CLST.answers={};CLST.checked=false;rClozeTest()" class="btn bgh">Δοκίμασε ξανά</button>
         <button onclick="CLST.art=null;rClozeTest()" class="btn bgh">Πίσω</button>
       </div>`}
     </div>`;
@@ -5611,7 +5723,7 @@ Analyse the patterns and provide diagnosis.`,
     
   }catch(e){
     const m=document.getElementById('ea-modal');
-    if(m)m.innerHTML=`<div style="padding:24px;text-align:center"><div class="f12 cro">Σφάλμα σύνδεσης. Δοκίμασε ξανά.</div><button onclick="document.getElementById('ea-modal').remove()" class="btn bgh mt12">Κλείσιμο</button></div>`;
+    if(m)m.innerHTML=`<div style="padding:24px;text-align:center"><div class="f12 cro">Σφάλμα σύνδεσης. Δοκίμασε ξανά.</div><button onclick="document.getElementById('ea-modal').remove()" class="btn bgh mt12">Εντάξει! ✓</button></div>`;
   }
 }
 
@@ -5885,8 +5997,8 @@ function renderCEFRModal(){
       </div>
       
       <div class="fx jc g10">
-        <button onclick="document.getElementById('cefr-modal').remove()" class="btn bp">Κλείσιμο</button>
-        <button onclick="CEFRST={active:true,idx:0,answers:{},done:false,score:0};renderCEFRModal()" class="btn bgh">Ξανά</button>
+        <button onclick="document.getElementById('cefr-modal').remove()" class="btn bp">Εντάξει! ✓</button>
+        <button onclick="CEFRST={active:true,idx:0,answers:{},done:false,score:0};renderCEFRModal()" class="btn bgh">Δοκίμασε ξανά</button>
       </div>
     </div>`;
     addXP(CEFRST.score*5);
@@ -6006,7 +6118,7 @@ function showCelebration(title, subtitle, xp, nextAction, nextLabel){
         <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--am);opacity:.7">ΚΕΡΔΙΣΕΣ</div>
       </div>
       <div class="fx jc g10">
-        <button onclick="document.getElementById('celeb-modal').remove()" class="btn bgh bsm">Κλείσιμο</button>
+        <button onclick="document.getElementById('celeb-modal').remove()" class="btn bgh bsm">Εντάξει! ✓</button>
         ${nextAction?`<button onclick="document.getElementById('celeb-modal').remove();${nextAction}" class="btn bp">${nextLabel} →</button>`:''}
       </div>
     </div>`;
@@ -6046,6 +6158,9 @@ function showFirstTimeTip(){
   },500);
 }
 
+
+function closeModal(id){var m=document.getElementById(id);if(m)m.remove();}
+function closeTopModal(){var ms=document.querySelectorAll('[id$="-modal"]');if(ms.length)ms[ms.length-1].remove();}
 document.addEventListener('DOMContentLoaded',()=>{
   if(DB.get('lm',false))document.body.classList.add('light');
   updXP();
@@ -6066,6 +6181,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(td>=10)unlockAch('st10');
   // Daily notification
   showOnboarding();
+  checkStreakWarning();
   checkWeeklySummary();
   if(DB.get('nf',false)&&DB.get('lastR','')!==todayK()&&Notification.permission==='granted'){
     DB.set('lastR',todayK());
