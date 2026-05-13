@@ -162,7 +162,7 @@ a{text-decoration:none;color:inherit}
 .hcard{border-radius:var(--r2);padding:20px;cursor:pointer;transition:all .22s ease;border:1px solid var(--ln);background:var(--s1)}
 .hcard:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--ln2)}
 .hcard-ico{font-size:28px;margin-bottom:10px}
-.hstats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px}
+.hstats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px}
 .hs{background:var(--s1);border:1px solid var(--ln);border-radius:var(--r);padding:14px 8px;text-align:center;transition:all .15s}
 .hs:hover{border-color:var(--ln2);background:var(--s2)}
 .hs-v{font-family:var(--fp);font-size:22px;font-weight:600;margin-bottom:2px}
@@ -486,6 +486,7 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
     <span class="lv-b" id="xp-lv">Lv 1</span>
     <div class="xpw"><div class="xpt" id="xp-txt">0 XP</div><div class="xpb"><div class="xpf" id="xp-f" style="width:0%"></div></div></div>
     <button id="pwab" onclick="doPWA()" title="Εγκατάσταση εφαρμογής">📲 Εγκατάσταση</button>
+  <button id="timer-btn" onclick="toggleTimer()" title="Χρονόμετρο μελέτης" style="padding:4px 10px;border:1px solid var(--ln);border-radius:20px;color:var(--t3);font-size:12px;margin-left:8px;transition:all .2s">⏱</button>
   </div>
 </nav>
 <div id="cnt">
@@ -1304,6 +1305,7 @@ function rVocab(){
   else if(VS.mode==='all')rVAll(vm);
   else if(['fc','mc','fi','mx'].includes(VS.mode))startQ(vm,VS.mode);
   else if(VS.mode==='errors')rVErrors(vm);
+  else if(VS.mode==='new'){showAddWordModal();VS.mode='home';rVocab();}
   else if(VS.mode==='collocations')rCollocations();
   else if(VS.mode==='learned')rVLearned(vm);
   else if(VS.mode==='add')rVAdd(vm);
@@ -1433,6 +1435,8 @@ function rVAll(el){
           <span class="f9 c3">${s.sc}/5</span>
           <button onclick="speak('${w.w.split(' → ')[0]}')" class="tag f9" style="background:var(--tl)1a;border:1px solid var(--tl)33;color:var(--tl);cursor:pointer">🔊</button>
           <a href="https://youglish.com/pronounce/${encodeURIComponent(w.w.split(' ')[0])}/english" target="_blank" class="tag f9" style="background:var(--bl)1a;border:1px solid var(--bl)33;color:var(--bl);text-decoration:none">YG</a>
+          ${speechSupported()?`<button onclick="showPronunciationInListeningState(document.createElement('div'),'${w.w.replace(/'/g,"\'")}','${w.g.replace(/'/g,"\'")}',null);let m=document.createElement('div');m.id='pron-modal';m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px';document.body.appendChild(m);showPronunciationInListeningState(m,'${w.w.replace(/'/g,"\'")}','${w.g.replace(/'/g,"\'")}',null)" class="tag f9" style="background:var(--ro)1a;border:1px solid var(--ro)33;color:var(--ro);cursor:pointer">🎤</button>`:''}
+          ${getWordNetwork(w.w)?'<button onclick="showWordNetwork(\''+w.w.split(' ')[0]+'\')" class="tag f9" style="background:var(--vi)1a;border:1px solid var(--vi)33;color:var(--vi);cursor:pointer">🕸</button>':''}
         </div>
         <div class="fx ac jb mt8">
           <span class="tag f9" style="background:${s.seen===0?'var(--s3)':s.sc>=3?'var(--gr)1a':s.nr<=Date.now()&&s.seen>0?'var(--bl)1a':'var(--am)1a'};border:1px solid ${s.seen===0?'var(--ln)':s.sc>=3?'var(--gr)33':s.nr<=Date.now()&&s.seen>0?'var(--bl)33':'var(--am)33'};color:${s.seen===0?'var(--t3)':s.sc>=3?'var(--gr)':s.nr<=Date.now()&&s.seen>0?'var(--bl)':'var(--am)'}">
@@ -1503,7 +1507,7 @@ function rQCard(el){
 
   if(em==='fc'){
     body=!q.fl
-      ?`<div class="tc mb16"><div class="fp f24 b mb8" style="color:#f0eef8">${cw.w}</div><button onclick="speak('${cw.w.split(' → ')[0]}')" style="background:none;border:1px solid var(--tl)44;border-radius:20px;padding:3px 10px;color:var(--tl);font-size:11px;cursor:pointer;margin-bottom:8px">🔊 Άκουσε</button><div class="f12 c3 it">"${cw.e}"</div></div>
+      ?`<div class="tc mb16"><div class="fp f24 b mb8" style="color:#f0eef8">${cw.w}</div><div class="fx jc g8 mb8"><button onclick="speak('${cw.w.split(' → ')[0]}')" style="background:none;border:1px solid var(--tl)44;border-radius:20px;padding:3px 10px;color:var(--tl);font-size:11px;cursor:pointer">🔊 Άκουσε</button>${getWordNetwork(cw.w)?'<button onclick="showWordNetwork(\''+cw.w.split(' ')[0]+'\')" style="background:none;border:1px solid var(--vi)44;border-radius:20px;padding:3px 10px;color:var(--vi);font-size:11px;cursor:pointer">🕸</button>':''}</div><div class="f12 c3 it">"${cw.e}"</div></div>
          <button class="btn bp w100" style="justify-content:center;letter-spacing:.5px" onclick="VS.q.fl=true;document.getElementById('vm')&&rQCard(document.getElementById('vm'))">ΑΠΟΚΑΛΥΨΗ <span style="opacity:.5;font-size:10px">[Space]</span></button>`
       :`<div class="tc mb12"><div class="fp f22 b mb8" style="color:#f0eef8">${cw.w}</div></div>
         <div class="tc mb12" style="background:var(--s3);border-radius:var(--r);padding:12px">
@@ -3781,7 +3785,7 @@ const BUILDER_SENTENCES=[
 let BST={idx:0,placed:[],score:0,total:0,done:false,filter:'all',showResult:false};
 
 function rBuilder(){
-  const el=document.getElementById('builder');
+  const el=document.getElementById('builder')||document.getElementById('vocab')||document.body;
   const filtered=BST.filter==='all'?BUILDER_SENTENCES:BUILDER_SENTENCES.filter(s=>s.lv===BST.filter);
   const sent=filtered[BST.idx%filtered.length];
   if(!sent){el.innerHTML='<div class="sec">Δεν υπάρχουν προτάσεις.</div>';return;}
@@ -3794,7 +3798,9 @@ function rBuilder(){
 
   el.innerHTML=`<div class="sec fu" style="max-width:760px">
     <div class="sl mb4" style="color:var(--tl)">SENTENCE BUILDER</div>
-    <div class="fp f16 b mb4">Κατασκεύασε Προτάσεις</div>
+    <div class="fx ac jb mb4"><div class="fp f16 b">Κατασκεύασε Προτάσεις</div>
+      <button onclick="rSentenceMining()" style="padding:4px 12px;background:var(--vi)1a;border:1px solid var(--vi)33;border-radius:20px;color:var(--vi);font-size:11px;cursor:pointer">📝 Sentence Mining</button>
+    </div>
     <p class="f12 c2 mb16" style="line-height:1.6">Κλικ στις λέξεις για να φτιάξεις σωστή πρόταση. Εξάσκηση word order και grammar.</p>
 
     <!-- Filter & Progress -->
@@ -4205,9 +4211,11 @@ function rStats(){
   document.getElementById('stats').innerHTML=`<div class="sec fu" style="max-width:900px">
     <div class="fx ac jb mb20">
       <div><div class="sl mb4 cvi">ANALYTICS & PROGRESS</div><div class="fp f16 b">Στατιστικά Προόδου</div></div>
-      <div class="fx g8">
+      <div class="fx g8 fw">
         <button onclick="showWeeklySummary()" class="btn bgh bsm">📊 Εβδομαδιαία Σύνοψη</button>
         <button onclick="startCEFRTest()" class="btn bp bsm">🎓 CEFR Test</button>
+        <button onclick="exportVocabCSV()" class="btn bgh bsm">📥 Export CSV</button>
+        <button onclick="exportLearnedCSV()" class="btn bgh bsm">🃏 Export Anki</button>
       </div>
     </div>
 
@@ -4717,128 +4725,177 @@ function buildWOTD(){
 }
 
 
+
+let TIMER={active:false,secs:0,total:0,interval:null,mode:'study'};
+
+function startTimer(){
+  if(TIMER.active)return;
+  TIMER.active=true;
+  TIMER.secs=0;
+  TIMER.mode='study';
+  updateTimerDisplay();
+  TIMER.interval=setInterval(()=>{
+    TIMER.secs++;
+    TIMER.total++;
+    // Save every minute
+    if(TIMER.secs%60===0){
+      const mins=DB.get('study_mins_'+todayK(),0)+1;
+      DB.set('study_mins_'+todayK(),mins);
+    }
+    // Pomodoro: 25 min study → 5 min break
+    if(TIMER.secs===25*60){
+      clearInterval(TIMER.interval);
+      TIMER.active=false;
+      showCelebration('⏱ 25 Λεπτά Μελέτης!','Εξαιρετικό! Κάνε 5 λεπτά διάλειμμα.',20,null,null);
+      addXP(20);
+      TIMER.secs=0;
+    }
+    updateTimerDisplay();
+  },1000);
+  document.getElementById('timer-btn').style.color='var(--gr)';
+  toast('⏱ Ξεκίνησε ο χρονόμετρος μελέτης!','var(--gr)');
+}
+
+function stopTimer(){
+  if(!TIMER.active)return;
+  clearInterval(TIMER.interval);
+  TIMER.active=false;
+  const mins=Math.floor(TIMER.secs/60);
+  const secs=TIMER.secs%60;
+  toast(`⏱ Μελέτησες ${mins}:${String(secs).padStart(2,'0')} — καλή δουλειά!`,'var(--am)');
+  TIMER.secs=0;
+  updateTimerDisplay();
+  document.getElementById('timer-btn').style.color='';
+}
+
+function toggleTimer(){
+  TIMER.active?stopTimer():startTimer();
+}
+
+function updateTimerDisplay(){
+  const btn=document.getElementById('timer-btn');
+  if(!btn)return;
+  if(TIMER.active){
+    const mins=Math.floor(TIMER.secs/60);
+    const secs=TIMER.secs%60;
+    btn.textContent=`⏱ ${mins}:${String(secs).padStart(2,'0')}`;
+  } else {
+    btn.textContent='⏱';
+  }
+}
+
 function rHome(){
   unlockAch('start');
   const el=document.getElementById('home');
-  const xp=getXP(),lv=getLv(xp),streak=calcStreak();
-  const lc=learnedW().length,due=dueW().length,all=getAllW().length;
-  const comp=DB.get('comp',{}),today=todayK();
-  const todayComp=(comp[today]||[]).length;
-  const todayTotal=PLAN.length;
-  const todayPct=Math.round(todayComp/todayTotal*100);
-  const lesson=getTodayLesson();
-  const lessonDone=lesson.steps.filter(s=>s.done).length;
-  const lessonPct=Math.round(lessonDone/lesson.steps.length*100);
+  try{
+    const xp=getXP(),lv=getLv(xp),streak=calcStreak();
+    const lc=learnedW().length,due=dueW().length,all=getAllW().length;
+    const comp=DB.get('comp',{}),today=todayK();
+    const todayDone=(comp[today]||[]).length;
+    const todayTotal=PLAN.length;
+    const todayPct=Math.round(todayDone/todayTotal*100);
+    const lesson=getTodayLesson();
+    const lessonDone=lesson.steps.filter(s=>s.done).length;
+    const lessonTotal=lesson.steps.length;
+    const lessonPct=Math.round(lessonDone/lessonTotal*100);
+    const timerObj=typeof TIMER!=='undefined'?TIMER:{active:false,secs:0};
+    const studyMins=DB.get('study_mins_'+today,0)+(timerObj.active?Math.floor(timerObj.secs/60):0);
 
-  el.innerHTML=`<div style="max-width:900px;margin:0 auto;padding:24px" class="fu">
+    el.innerHTML=`<div style="max-width:900px;margin:0 auto;padding:20px">
 
-    <!-- TOP: Greeting + Streak -->
-    <div class="fx ac jb mb20">
-      <div>
-        <div class="fp f22 b mb4" style="color:var(--t1)">Καλώς ήρθες! 👋</div>
-        <div class="f13" style="color:var(--t3)">${new Date().toLocaleDateString('el-GR',{weekday:'long',day:'numeric',month:'long'})}</div>
-      </div>
-      <div class="fx ac g12">
-        ${streak>0?`<div class="${streak>=7?'streak-fire':''}" style="background:linear-gradient(135deg,var(--am),var(--or));border-radius:12px;padding:10px 16px;text-align:center;cursor:pointer" onclick="showStreakCelebration(${streak})">
-          <div class="fp f20 b" style="color:#1a0d00">${streak>=7?'🔥':''} ${streak}</div>
-          <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#1a0d00;opacity:.8">STREAK</div>
-        </div>`:''}
-        <div style="background:var(--s2);border:1px solid var(--ln);border-radius:12px;padding:10px 16px;text-align:center">
-          <div class="fp f20 b" style="color:var(--bl)">${lv.name}</div>
-          <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--t3)">ΕΠΙΠΕΔΟ</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- WORD OF THE DAY -->
-    ${buildWOTD()}
-
-    <!-- PRIMARY ACTION: Today's Lesson -->
-    <div style="background:linear-gradient(135deg,rgba(124,92,245,.15),rgba(79,142,247,.1));border:1px solid rgba(124,92,245,.3);border-radius:var(--r2);padding:20px;margin-bottom:16px;cursor:pointer" onclick="go('lessons')">
-      <div class="fx ac jb mb12">
-        <div class="fx ac g10">
-          <span style="font-size:28px">🎯</span>
-          <div>
-            <div class="fp f16 b mb2" style="color:var(--t1)">Σημερινό Μάθημα</div>
-            <div class="f12" style="color:var(--t3)">${lessonDone===0?'Δεν έχεις ξεκινήσει ακόμα':lessonDone===lesson.steps.length?'✓ Τέλεια! ✓!':lessonDone+'/'+lesson.steps.length+' βήματα'}</div>
-          </div>
-        </div>
-        <div class="fx ac g8">
-          <div style="text-align:right">
-            <div class="fp f18 b" style="color:${lessonPct===100?'var(--gr)':'var(--vi)'}">${lessonPct}%</div>
-            <div style="font-size:9px;color:var(--t3)">ΠΡΟΟΔΟΣ</div>
-          </div>
-          <span style="color:var(--vi);font-size:18px">→</span>
-        </div>
-      </div>
-      <div style="background:rgba(255,255,255,.06);border-radius:6px;height:6px;overflow:hidden">
-        <div style="height:100%;width:${lessonPct}%;background:linear-gradient(90deg,var(--vi),var(--bl));border-radius:6px;transition:width .4s"></div>
-      </div>
-    </div>
-
-    <!-- STATS ROW -->
-    <div class="hstats mb20">
-      ${[
-        [lc,'Εκμαθημένες','var(--gr)','📚'],
-        [due,'Επανάληψη','var(--bl)','📅'],
-        [streak,'Streak','var(--am)','🔥'],
-        [todayComp+'/'+todayTotal,'Σήμερα','var(--vi)','✅'],
-        [xp,'XP','var(--or)','⭐'],
-      ].map(([v,l,col,ic])=>`<div class="hs" onclick="${l==='Επανάληψη'?'go(\'vocab\')':l==='Εκμαθημένες'?'go(\'vocab\')':''}" style="${l==='Επανάληψη'&&due>0?'border-color:rgba(79,142,247,.3);cursor:pointer':''}" >
-        <div style="font-size:18px;margin-bottom:4px">${ic}</div>
-        <div class="hs-v" style="color:${col};font-size:18px">${v}</div>
-        <div class="hs-l">${l}</div>
-      </div>`).join('')}
-    </div>
-
-    <!-- TODAY'S TASKS -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
-      <div class="today-box">
-        <div class="sl mb12">ΣΤΟΧΟΙ ΣΗΜΕΡΑ</div>
-        ${PLAN.map(t=>{
-          const done=(comp[today]||[]).includes(t.id);
-          return `<div class="td-t ${done?'done':''}" onclick="toggleTask('${t.id}')">
-            <div class="tck">${done?'✓':''}</div>
-            <div style="flex:1">
-              <div class="f12 ${done?'':'b'}" style="${done?'color:var(--t3);text-decoration:line-through':'color:var(--t1)'}">${t.label}</div>
-              <div class="f10" style="color:var(--t3)">${t.mins} λεπτά</div>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-
-      <!-- QUICK ACCESS -->
-      <div>
-        <div class="sl mb12">ΓΡΗΓΟΡΗ ΠΡΟΣΒΑΣΗ</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          ${[
-            ['vocab','📚','Vocabulary',due>0?due+' due':''],
-            ['tenses','⏱','Tenses',''],
-            ['grammar','✏','Grammar',''],
-            ['writing','✍','Writing',''],
-            ['reading','📄','Reading',''],
-            ['speaking','🗣','Speaking',''],
-          ].map(([id,ic,lb,badge])=>`<button onclick="go('${id}')" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;color:var(--t2);font-size:12px;cursor:pointer;transition:all .15s;text-align:left" class="quick-btn">
-            <span style="font-size:16px">${ic}</span>
-            <span style="flex:1;font-weight:500">${lb}</span>
-            ${badge?`<span style="padding:1px 6px;background:var(--bl)1a;border:1px solid var(--bl)33;color:var(--bl);border-radius:20px;font-size:9px;font-weight:700">${badge}</span>`:''}
-          </button>`).join('')}
-        </div>
-      </div>
-    </div>
-
-    <!-- BOTTOM: Review alert if due words exist -->
-    ${due>0?`<div style="background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.25);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="VS.mode='review';go('vocab')">
-      <div class="fx ac g10">
-        <span style="font-size:20px">📅</span>
+      <!-- Header -->
+      <div class="fx ac jb mb16">
         <div>
-          <div class="f13 b" style="color:var(--bl)">${due} λέξεις για επανάληψη</div>
-          <div class="f11" style="color:var(--t3)">Κάνε review τώρα για καλύτερη μνήμη</div>
+          <div class="fp f20 b mb2">Καλώς ήρθες! 👋</div>
+          <div class="f11" style="color:var(--t3)">${new Date().toLocaleDateString('el-GR',{weekday:'long',day:'numeric',month:'long'})}</div>
+        </div>
+        <div class="fx ac g10">
+          ${streak>0?`<div class="${streak>=7?'streak-fire':''}" onclick="showStreakCelebration(${streak})" style="background:linear-gradient(135deg,var(--am),var(--or));border-radius:12px;padding:8px 14px;text-align:center;cursor:pointer">
+            <div class="fp f18 b" style="color:#1a0d00">${streak>=7?'🔥 ':''} ${streak}</div>
+            <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#1a0d00;opacity:.8">STREAK</div>
+          </div>`:''}
+          <div style="background:var(--s2);border:1px solid var(--ln);border-radius:12px;padding:8px 14px;text-align:center">
+            <div class="fp f18 b" style="color:var(--bl)">${lv.name}</div>
+            <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--t3)">ΕΠΙΠΕΔΟ</div>
+          </div>
         </div>
       </div>
-      <button class="btn bp bsm">Επανάληψη →</button>
-    </div>`:''}
-  </div>`;
+
+      <!-- Word of the Day -->
+      ${buildWOTD()}
+
+      <!-- Primary: Today's Lesson -->
+      <div style="background:linear-gradient(135deg,rgba(124,92,245,.12),rgba(79,142,247,.08));border:1px solid rgba(124,92,245,.25);border-radius:var(--r2);padding:18px;margin-bottom:14px;cursor:pointer" onclick="go('lessons')">
+        <div class="fx ac jb mb10">
+          <div class="fx ac g10">
+            <span style="font-size:26px">🎯</span>
+            <div>
+              <div class="fp f15 b mb1">Σημερινό Μάθημα</div>
+              <div class="f11" style="color:var(--t3)">${lessonDone===0?'Ξεκίνα εδώ →':lessonDone===lessonTotal?'✓ Ολοκληρώθηκε!':lessonDone+'/'+lessonTotal+' βήματα'}</div>
+            </div>
+          </div>
+          <div class="fp f20 b" style="color:${lessonPct===100?'var(--gr)':'var(--vi)'}">${lessonPct}%</div>
+        </div>
+        <div style="height:6px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden">
+          <div style="height:100%;width:${lessonPct}%;background:linear-gradient(90deg,var(--vi),var(--bl));border-radius:6px;transition:width .4s"></div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="hstats mb14">
+        ${[
+          [lc,'Έμαθα','var(--gr)','📚'],
+          [due||0,'Επανάληψη','var(--bl)','📅'],
+          [streak,'Streak','var(--am)','🔥'],
+          [todayDone+'/'+todayTotal,'Σήμερα','var(--vi)','✅'],
+          [xp,'XP','var(--or)','⭐'],
+          [studyMins+'m','Μελέτη','var(--tl)','⏱'],
+        ].map(([v,l,col])=>`<div class="hs"><div class="fp f16 b" style="color:${col}">${v}</div><div class="hs-l">${l}</div></div>`).join('')}
+      </div>
+
+      <!-- Two columns: Tasks + Quick Access -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div class="card">
+          <div class="sl mb10">🎯 ΣΗΜΕΡΑ</div>
+          ${PLAN.map(t=>{
+            const done=(comp[today]||[]).includes(t.id);
+            return `<div class="td-t ${done?'done':''}" onclick="toggleTask('${t.id}')">
+              <div class="tck">${done?'✓':''}</div>
+              <div><div class="f12 ${done?'':'b'}" style="${done?'color:var(--t3);text-decoration:line-through':'color:var(--t1)'}">${t.label}</div>
+              <div class="f10" style="color:var(--t3)">${t.mins} λεπτά</div></div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div>
+          <div class="sl mb10">⚡ ΓΡΗΓΟΡΗ ΠΡΟΣΒΑΣΗ</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+            ${[['vocab','📚','Vocab'],['tenses','⏱','Tenses'],['grammar','✏','Grammar'],['writing','✍','Writing'],['reading','📄','Reading'],['speaking','🗣','Speaking']].map(([id,ic,lb])=>`<button onclick="go('${id}')" class="quick-btn" style="padding:9px 8px;background:var(--s2);border:1px solid var(--ln);border-radius:9px;color:var(--t2);font-size:11px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px"><span>${ic}</span>${lb}</button>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- Adaptive recommendation -->
+      ${(()=>{
+        const top=getAdaptiveRecommendation()[0];
+        if(!top||due>0)return '';
+        return '<div style="background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.2);border-radius:var(--r);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;cursor:pointer" onclick="'+top.action+'">'
+          +'<div class="f12 b" style="color:var(--bl)">🧠 '+top.msg+'</div>'
+          +'<span style="color:var(--bl)">→</span>'
+          +'</div>';
+      })()}
+      <!-- Review alert -->
+      ${due>0?`<div style="background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.2);border-radius:var(--r);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="VS.mode='review';go('vocab')">
+        <div class="fx ac g8"><span>📅</span>
+          <div><div class="f12 b" style="color:var(--bl)">${due} λέξεις για επανάληψη</div>
+          <div class="f10" style="color:var(--t3)">Κάνε review τώρα</div></div>
+        </div>
+        <button class="btn bp bsm">→</button>
+      </div>`:''}
+    </div>`;
+  }catch(e){
+    el.innerHTML='<div style="padding:40px;text-align:center"><div class="fp f16 mb8">Φορτώνει...</div><button onclick="rHome()" class="btn bp">🔄 Ανανέωση</button></div>';
+    console.error('rHome error:',e);
+  }
 }
 
 /* ══ INIT ══ */
@@ -6161,6 +6218,510 @@ function showFirstTimeTip(){
 
 function closeModal(id){var m=document.getElementById(id);if(m)m.remove();}
 function closeTopModal(){var ms=document.querySelectorAll('[id$="-modal"]');if(ms.length)ms[ms.length-1].remove();}
+
+/* ══ SESSION TIMER ══ */
+/* ══ WORD NETWORK ══ */
+const WORD_NETWORKS={
+  'achieve':     {syn:['accomplish','attain','reach','fulfil'],ant:['fail','lose'],col:['achieve a goal','achieve results','achieve success'],fam:['achievement','achievable','achiever']},
+  'consider':    {syn:['think about','reflect on','contemplate','evaluate'],ant:['ignore','disregard'],col:['consider options','consider carefully','all things considered'],fam:['consideration','considerable','considerate']},
+  'maintain':    {syn:['keep','preserve','sustain','uphold'],ant:['neglect','abandon'],col:['maintain standards','maintain contact','maintain balance'],fam:['maintenance','maintainable']},
+  'improve':     {syn:['enhance','develop','progress','advance'],ant:['worsen','deteriorate'],col:['improve skills','improve performance','room for improvement'],fam:['improvement','improved','improv able']},
+  'develop':     {syn:['grow','build','expand','advance'],ant:['decline','shrink'],col:['develop skills','develop a strategy','develop relationships'],fam:['development','developer','developing']},
+  'significant': {syn:['important','considerable','notable','substantial'],ant:['insignificant','minor','trivial'],col:['significant change','significant impact','significant progress'],fam:['significantly','insignificant']},
+  'effective':   {syn:['successful','efficient','productive','capable'],ant:['ineffective','useless','futile'],col:['effective communication','effective strategy','cost-effective'],fam:['effectively','effectiveness','ineffective']},
+  'responsible': {syn:['accountable','reliable','dependable','trustworthy'],ant:['irresponsible','unreliable'],col:['responsible for','take responsibility','socially responsible'],fam:['responsibility','responsibly','irresponsible']},
+  'communicate': {syn:['convey','express','share','transmit'],ant:[],col:['communicate clearly','communicate effectively','communicate with'],fam:['communication','communicator','communicative']},
+  'resolve':     {syn:['solve','settle','address','fix'],ant:['create','cause','ignore'],col:['resolve a conflict','resolve an issue','resolve quickly'],fam:['resolution','resolute','unresolved']},
+  'establish':   {syn:['set up','create','found','build'],ant:['abolish','destroy','end'],col:['establish contact','establish a system','establish trust'],fam:['establishment','established','re-establish']},
+  'demonstrate': {syn:['show','prove','illustrate','display'],ant:['hide','conceal'],col:['demonstrate skills','demonstrate commitment','clearly demonstrate'],fam:['demonstration','demonstrable','demonstrator']},
+};
+
+function getWordNetwork(word){
+  const w=word.toLowerCase().split(' ')[0];
+  return WORD_NETWORKS[w]||null;
+}
+
+function showWordNetwork(wordText){
+  const net=getWordNetwork(wordText);
+  if(!net){toast('Δεν υπάρχει word network για αυτή τη λέξη ακόμα','var(--t3)');return;}
+  
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.onclick=e=>{if(e.target===modal)modal.remove();};
+  
+  modal.innerHTML=`<div style="background:var(--s1);border:1px solid var(--ln2);border-radius:var(--r2);padding:24px;max-width:500px;width:100%;max-height:85vh;overflow-y:auto">
+    <div class="fx ac jb mb16">
+      <div class="fp f18 b">🕸 Word Network: <span style="color:var(--bl)">${wordText}</span></div>
+      <button onclick="this.closest('[style*=fixed]')?.[Symbol.toPrimitive]||document.querySelectorAll('[style*=fixed]').forEach(m=>m.remove())" style="color:var(--t3);font-size:18px;background:none;border:none;cursor:pointer" onclick="this.closest('[id]').remove()">✕</button>
+    </div>
+    
+    ${net.syn.length?`<div class="card mb10" style="border-color:var(--gr)22">
+      <div class="sl mb8 cgr">✓ SYNONYMS (λέξεις με παρόμοια σημασία)</div>
+      <div class="fx fw g6">${net.syn.map(w=>`<span onclick="speak('${w}')" class="tag" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr);cursor:pointer">${w}</span>`).join('')}</div>
+    </div>`:''}
+    
+    ${net.ant.length?`<div class="card mb10" style="border-color:var(--ro)22">
+      <div class="sl mb8 cro">✕ ANTONYMS (αντίθετα)</div>
+      <div class="fx fw g6">${net.ant.map(w=>`<span onclick="speak('${w}')" class="tag" style="background:var(--ro)1a;border:1px solid var(--ro)33;color:var(--ro);cursor:pointer">${w}</span>`).join('')}</div>
+    </div>`:''}
+    
+    ${net.col.length?`<div class="card mb10" style="border-color:var(--am)22">
+      <div class="sl mb8 cam">🔗 COLLOCATIONS (φυσικοί συνδυασμοί)</div>
+      ${net.col.map(ph=>`<div onclick="speak('${ph}')" class="f12 c2 mb6" style="padding:6px 10px;background:var(--s2);border-radius:6px;cursor:pointer;transition:.15s" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">"${ph}" <span style="color:var(--t3);font-size:10px">🔊</span></div>`).join('')}
+    </div>`:''}
+    
+    ${net.fam.length?`<div class="card" style="border-color:var(--vi)22">
+      <div class="sl mb8 cvi">👨‍👩‍👧 WORD FAMILY (οικογένεια λέξης)</div>
+      <div class="fx fw g6">${net.fam.map(w=>`<span onclick="speak('${w}')" class="tag" style="background:var(--vi)1a;border:1px solid var(--vi)33;color:var(--vi);cursor:pointer">${w}</span>`).join('')}</div>
+    </div>`:''}
+    
+    <button onclick="closeTopModal()" class="btn bgh mt14" style="width:100%;justify-content:center">Κλείσιμο</button>
+  </div>`;
+  
+  document.body.appendChild(modal);
+}
+
+/* ══ VOCAB EXPORT ══ */
+function exportVocabCSV(){
+  const allW=getAllW();
+  const wb=getWB();
+  const header='Word,Translation,PartOfSpeech,Level,Score,Seen,Example\n';
+  const rows=allW.map(w=>{
+    const s=wb[w.id]||{sc:0,seen:0};
+    const clean=str=>'"'+(str||'').replace(/"/g,'""')+'"';
+    return [clean(w.w),clean(w.g),clean(w.p),clean(w.cat),s.sc,s.seen,clean(w.e)].join(',');
+  }).join('\n');
+  
+  const blob=new Blob(['\uFEFF'+header+rows],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='english_master_vocabulary.csv';
+  a.click();URL.revokeObjectURL(url);
+  toast('✓ CSV εξήχθη! '+allW.length+' λέξεις','var(--gr)');
+}
+
+function exportLearnedCSV(){
+  const allW=getAllW();
+  const wb=getWB();
+  const learned=allW.filter(w=>(wb[w.id]?.sc||0)>=3);
+  const header='Word,Translation,Front,Back\n';
+  // Anki-compatible format
+  const rows=learned.map(w=>{
+    const clean=str=>'"'+(str||'').replace(/"/g,'""')+'"';
+    return [clean(w.w),clean(w.g),clean(w.w+' ('+w.p+')'),clean(w.g+'\\n\\n'+w.e)].join(',');
+  }).join('\n');
+  
+  const blob=new Blob(['\uFEFF'+header+rows],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='anki_import.csv';
+  a.click();URL.revokeObjectURL(url);
+  toast('✓ Anki CSV! '+learned.length+' εκμαθημένες λέξεις','var(--gr)');
+}
+
+/* ══ SPEECH RECOGNITION ══ */
+let SR={active:false,rec:null,onResult:null,onError:null};
+
+function speechSupported(){
+  return !!(window.SpeechRecognition||window.webkitSpeechRecognition);
+}
+
+function startSpeech(expectedText, onResult, onError){
+  if(!speechSupported()){
+    if(onError)onError('not_supported');
+    return;
+  }
+  if(SR.active){SR.rec?.stop();SR.active=false;}
+  
+  const Rec=window.SpeechRecognition||window.webkitSpeechRecognition;
+  SR.rec=new Rec();
+  SR.rec.lang='en-GB';
+  SR.rec.interimResults=false;
+  SR.rec.maxAlternatives=3;
+  SR.active=true;
+  SR.onResult=onResult;
+  SR.onError=onError;
+  
+  SR.rec.onresult=(e)=>{
+    SR.active=false;
+    const results=Array.from(e.results[0]).map(r=>r.transcript.toLowerCase().trim());
+    const expected=expectedText.toLowerCase().trim();
+    
+    // Score: exact match=100, close=50-90, wrong=0-40
+    let score=0;
+    let bestMatch='';
+    for(const res of results){
+      const s=pronunciationScore(expected,res);
+      if(s>score){score=s;bestMatch=res;}
+    }
+    if(onResult)onResult({score,said:bestMatch,expected});
+  };
+  
+  SR.rec.onerror=(e)=>{
+    SR.active=false;
+    if(onError)onError(e.error);
+  };
+  
+  SR.rec.onend=()=>{SR.active=false;};
+  SR.rec.start();
+}
+
+function pronunciationScore(expected, said){
+  if(!said)return 0;
+  if(said===expected)return 100;
+  // Word-level similarity
+  const expWords=expected.split(' ');
+  const saidWords=said.split(' ');
+  let matched=0;
+  for(const w of expWords){
+    if(saidWords.some(s=>levenshtein(s,w)<=1))matched++;
+  }
+  const wordScore=Math.round((matched/expWords.length)*100);
+  // Character similarity bonus
+  const charScore=Math.round((1-levenshtein(expected,said)/Math.max(expected.length,said.length))*100);
+  return Math.round((wordScore*0.7)+(charScore*0.3));
+}
+
+function levenshtein(a,b){
+  const m=a.length,n=b.length;
+  const dp=Array.from({length:m+1},(_,i)=>Array.from({length:n+1},(_,j)=>i===0?j:j===0?i:0));
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)
+    dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+function showPronunciationQuiz(word, translation, onDone){
+  const modal=document.createElement('div');
+  modal.id='pron-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px';
+  
+  function render(state){
+    const isListening=state==='listening';
+    const isDone=typeof state==='object';
+    const score=isDone?state.score:null;
+    const scoreCol=score>=80?'var(--gr)':score>=50?'var(--am)':'var(--ro)';
+    
+    modal.innerHTML=`<div style="background:var(--s1);border:1px solid var(--ln2);border-radius:var(--r2);padding:28px;max-width:420px;width:100%;text-align:center">
+      <div class="sl mb8">ΠΡΟΦΟΡΑ</div>
+      <div class="fp f28 b mb4" style="color:var(--t1)">${word}</div>
+      <div class="f13 mb4" style="color:var(--t3)">${translation}</div>
+      <button onclick="speak('${word.replace(/'/g,"\\'")}','en-GB')" style="background:none;border:1px solid var(--tl)44;border-radius:20px;padding:4px 14px;color:var(--tl);font-size:12px;cursor:pointer;margin-bottom:20px">🔊 Άκουσε</button>
+      
+      ${isDone?`
+        <div style="margin-bottom:16px">
+          <div class="fp f48 b" style="color:${scoreCol};line-height:1">${score}</div>
+          <div class="f11" style="color:${scoreCol}">/100</div>
+          <div class="f12 mt8" style="color:var(--t2)">Είπες: "${state.said}"</div>
+          ${score>=80?'<div class="f12 mt4" style="color:var(--gr)">✓ Εξαιρετικά! Πολύ καθαρή προφορά.</div>':
+            score>=50?'<div class="f12 mt4" style="color:var(--am)">Καλά — λίγο ακόμα εξάσκηση!</div>':
+            '<div class="f12 mt4" style="color:var(--ro)">Δοκίμασε ξανά — άκουσε πρώτα.</div>'}
+        </div>
+        <div class="fx jc g10">
+          <button onclick="document.getElementById('pron-modal').remove();${onDone?'('+onDone+')()':''}" class="btn bgh bsm">Κλείσιμο</button>
+          <button onclick="document.getElementById('pron-modal').querySelector('.retry-btn').click()" class="btn bp bsm">🎤 Ξανά</button>
+        </div>
+        <button class="retry-btn" style="display:none" onclick="${()=>{render('idle');}}"></button>
+      `:`
+        <div style="width:80px;height:80px;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:36px;transition:all .3s;background:${isListening?'rgba(240,56,112,.15)':'var(--s2)'};border:2px solid ${isListening?'var(--ro)':'var(--ln)'}${isListening?';animation:pulse 1s ease infinite':''}">
+          ${isListening?'🔴':'🎤'}
+        </div>
+        ${isListening?
+          '<div class="f13 mb16" style="color:var(--ro)">Ακούω... Μίλησε τώρα!</div>'+
+          '<button onclick="SR.rec?.stop();document.getElementById(\'pron-modal\').remove()" class="btn bgh bsm">Ακύρωση</button>'
+          :
+          '<div class="f13 mb16" style="color:var(--t3)">Πάτησε και πες τη λέξη δυνατά</div>'+
+          '<div class="fx jc g10">'+
+          '<button onclick="document.getElementById(\'pron-modal\').remove()" class="btn bgh bsm">Κλείσιμο</button>'+
+          '<button onclick="startSpeechInModal(\''+word.replace(/'/g,"\\'")+'\',\''+translation.replace(/'/g,"\\'")+'\','+onDone+')" class="btn bp">🎤 Μίλησε</button>'+
+          '</div>'
+        }
+      `}
+    </div>`;
+  }
+  
+  render('idle');
+  document.body.appendChild(modal);
+}
+
+function startSpeechInModal(word, translation, onDone){
+  const modal=document.getElementById('pron-modal');
+  if(!modal)return;
+  
+  // Show listening state
+  modal.querySelector('div[style*="border-radius:50%"]').style.background='rgba(240,56,112,.15)';
+  modal.querySelector('div[style*="border-radius:50%"]').style.borderColor='var(--ro)';
+  modal.querySelector('div[style*="border-radius:50%"]').innerHTML='🔴';
+  
+  // Rebuild with listening state
+  showPronunciationInListeningState(modal, word, translation, onDone);
+}
+
+function showPronunciationInListeningState(modal, word, translation, onDone){
+  modal.innerHTML=`<div style="background:var(--s1);border:1px solid var(--ln2);border-radius:var(--r2);padding:28px;max-width:420px;width:100%;text-align:center">
+    <div class="sl mb8">ΠΡΟΦΟΡΑ</div>
+    <div class="fp f28 b mb4">${word}</div>
+    <div class="f13 mb20" style="color:var(--t3)">${translation}</div>
+    <div style="width:80px;height:80px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:36px;background:rgba(240,56,112,.15);border:2px solid var(--ro);animation:pulse 1s ease infinite">🔴</div>
+    <div class="f13 mb16" style="color:var(--ro)">Ακούω... Μίλησε τώρα!</div>
+    <button onclick="SR.rec?.stop();document.getElementById('pron-modal').remove()" class="btn bgh bsm">Ακύρωση</button>
+  </div>`;
+  
+  startSpeech(word, (result)=>{
+    // Show result
+    const scoreCol=result.score>=80?'var(--gr)':result.score>=50?'var(--am)':'var(--ro)';
+    const xpGain=result.score>=80?15:result.score>=50?8:0;
+    if(xpGain>0)addXP(xpGain);
+    
+    // Save pronunciation score
+    const pScores=DB.get('pron_scores',{});
+    pScores[word]=(pScores[word]||[]);
+    pScores[word].push(result.score);
+    if(pScores[word].length>5)pScores[word].shift();
+    DB.set('pron_scores',pScores);
+    
+    modal.innerHTML=`<div style="background:var(--s1);border:1px solid var(--ln2);border-radius:var(--r2);padding:28px;max-width:420px;width:100%;text-align:center">
+      <div class="sl mb8">ΑΠΟΤΕΛΕΣΜΑ ΠΡΟΦΟΡΑΣ</div>
+      <div class="fp f28 b mb4">${word}</div>
+      <div class="fp f56 b mb4" style="color:${scoreCol};line-height:1">${result.score}</div>
+      <div class="f11 mb8" style="color:${scoreCol}">/100 ${result.score>=80?'🌟':result.score>=50?'👍':'💪'}</div>
+      <div class="f12 mb4" style="color:var(--t3)">Άκουσα: "<span style="color:var(--t1)">${result.said}</span>"</div>
+      <div class="f12 mb16" style="color:${scoreCol}">${result.score>=80?'Εξαιρετικά! Πολύ καθαρή προφορά.':result.score>=50?'Καλά — λίγη εξάσκηση ακόμα!':'Δοκίμασε ξανά — άκουσε πρώτα.'}</div>
+      <div class="fx jc g10">
+        <button onclick="document.getElementById('pron-modal').remove()" class="btn bgh bsm">Κλείσιμο</button>
+        <button onclick="showPronunciationInListeningState(document.getElementById('pron-modal'),'${word.replace(/'/g,"\\'")}','${translation.replace(/'/g,"\\'")}',null)" class="btn bp bsm">🎤 Ξανά</button>
+      </div>
+    </div>`;
+  }, (err)=>{
+    modal.innerHTML=`<div style="background:var(--s1);border:1px solid var(--ln2);border-radius:var(--r2);padding:24px;max-width:420px;width:100%;text-align:center">
+      <div style="font-size:36px;margin-bottom:12px">🎤</div>
+      <div class="fp f16 b mb8">${err==='not_supported'?'Speech Recognition δεν υποστηρίζεται':'Δεν άκουσα τίποτα'}</div>
+      <div class="f12 mb16" style="color:var(--t3)">${err==='not_supported'?'Χρησιμοποίησε Chrome ή Safari':'Δοκίμασε ξανά — μίλα πιο δυνατά'}</div>
+      <button onclick="document.getElementById('pron-modal').remove()" class="btn bgh">Κλείσιμο</button>
+    </div>`;
+  });
+}
+
+/* ══ CUSTOM VOCABULARY ══ */
+function getCustomWords(){
+  return DB.get('custom_words',[]);
+}
+
+function addCustomWord(word,translation,example,category){
+  if(!word||!translation){toast('Συμπλήρωσε λέξη και μετάφραση!','var(--am)');return false;}
+  const existing=getAllW().find(w=>w.w.toLowerCase()===word.toLowerCase());
+  if(existing){toast('Αυτή η λέξη υπάρχει ήδη!','var(--am)');return false;}
+  
+  const custom=getCustomWords();
+  const id='cust_'+Date.now();
+  const newWord={
+    id, w:word.trim(), g:translation.trim(),
+    e:example||'Custom word: '+word,
+    p:'custom', cat:category||'custom',
+    lv:'custom', custom:true
+  };
+  custom.push(newWord);
+  DB.set('custom_words',custom);
+  toast('✓ "'+word+'" προστέθηκε στο λεξιλόγιό σου!','var(--gr)');
+  return true;
+}
+
+function getAllW(){
+  const base=WORDS||[];
+  const custom=getCustomWords();
+  return [...base,...custom];
+}
+
+function showAddWordModal(prefillWord){
+  const modal=document.createElement('div');
+  modal.id='add-word-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML=`<div style="background:var(--s1);border:1px solid var(--ln2);border-radius:var(--r2);padding:24px;max-width:480px;width:100%">
+    <div class="fx ac jb mb16">
+      <div class="fp f16 b">➕ Προσθήκη Λέξης</div>
+      <button onclick="closeTopModal()" style="color:var(--t3);font-size:18px;background:none;border:none;cursor:pointer">✕</button>
+    </div>
+    <div class="card c-info mb14">
+      <div class="f11 c2" style="line-height:1.7">Πρόσθεσε δικές σου λέξεις — aviation terms, business vocabulary, ό,τι χρειάζεσαι. Μπαίνουν αυτόματα στο Spaced Repetition!</div>
+    </div>
+    <div class="mb10">
+      <div class="f11 b mb4">Λέξη / Φράση (English):</div>
+      <input id="cw-word" value="${prefillWord||''}" placeholder="π.χ. maintenance schedule" style="width:100%;padding:10px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px">
+    </div>
+    <div class="mb10">
+      <div class="f11 b mb4">Μετάφραση (Ελληνικά):</div>
+      <input id="cw-tr" placeholder="π.χ. πρόγραμμα συντήρησης" style="width:100%;padding:10px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px">
+    </div>
+    <div class="mb10">
+      <div class="f11 b mb4">Παράδειγμα (προαιρετικό):</div>
+      <input id="cw-ex" placeholder="π.χ. The maintenance schedule must be approved." style="width:100%;padding:10px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px">
+    </div>
+    <div class="mb16">
+      <div class="f11 b mb4">Κατηγορία:</div>
+      <select id="cw-cat" style="width:100%;padding:10px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px">
+        <option value="custom">Γενική</option>
+        <option value="aviation">Aviation / CAMO</option>
+        <option value="business">Business</option>
+        <option value="technical">Technical</option>
+        <option value="phrases">Φράσεις</option>
+      </select>
+    </div>
+    <div class="fx g10">
+      <button onclick="
+        const w=document.getElementById('cw-word').value;
+        const t=document.getElementById('cw-tr').value;
+        const e=document.getElementById('cw-ex').value;
+        const cat=document.getElementById('cw-cat').value;
+        if(addCustomWord(w,t,e,cat)){closeTopModal();VS.mode='home';rVocab();}" 
+        class="btn bp" style="flex:1;justify-content:center">✓ Προσθήκη</button>
+      <button onclick="closeTopModal()" class="btn bgh">Άκυρο</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  setTimeout(()=>document.getElementById('cw-word')?.focus(),100);
+}
+
+/* ══ SENTENCE MINING ══ */
+function getSavedSentences(){
+  return DB.get('saved_sentences',[]);
+}
+
+function saveSentence(sentence, source, targetWord){
+  const saved=getSavedSentences();
+  const id='sent_'+Date.now();
+  // Don't save duplicates
+  if(saved.some(s=>s.text===sentence)){
+    toast('Αυτή η πρόταση έχει ήδη αποθηκευτεί','var(--am)');return;
+  }
+  saved.push({id,text:sentence,source:source||'manual',word:targetWord||'',saved:todayK(),reviews:0,score:0});
+  DB.set('saved_sentences',saved);
+  toast('✓ Πρόταση αποθηκεύτηκε για εξάσκηση!','var(--gr)');
+  addXP(2);
+}
+
+function rSentenceMining(){
+  const saved=getSavedSentences();
+  const el=document.getElementById('builder');
+  
+  if(!saved.length){
+    el.innerHTML=`<div class="sec fu" style="max-width:700px;text-align:center;padding-top:40px">
+      <div style="font-size:48px;margin-bottom:16px">📝</div>
+      <div class="fp f18 b mb8">Sentence Mining</div>
+      <div class="f13 mb16" style="color:var(--t3);line-height:1.7">Αποθήκευσε προτάσεις από το Reading ή Grammar.<br>Γίνονται αυτόματα fill-in-blank ασκήσεις!</div>
+      <button onclick="go('reading')" class="btn bp">📄 Πήγαινε στο Reading →</button>
+    </div>`;
+    return;
+  }
+  
+  // Show saved sentences as practice
+  el.innerHTML=`<div class="sec fu" style="max-width:700px">
+    <div class="sl mb4">SENTENCE MINING</div>
+    <div class="fp f16 b mb4">Οι Προτάσεις μου</div>
+    <div class="f12 mb16" style="color:var(--t3)">${saved.length} αποθηκευμένες — κλικ για εξάσκηση</div>
+    ${saved.slice().reverse().map(s=>`<div class="card mb8" style="cursor:pointer" onclick="practiceSentence('${s.id}')">
+      <div class="f13 mb4" style="line-height:1.7;color:var(--t1)">${s.text}</div>
+      <div class="fx ac jb">
+        <div class="f10" style="color:var(--t3)">📚 ${s.source} · ${s.reviews} εξασκήσεις</div>
+        <button onclick="event.stopPropagation();const ss=DB.get('saved_sentences',[]);DB.set('saved_sentences',ss.filter(x=>x.id!=='${s.id}'));rSentenceMining()" style="background:none;border:none;color:var(--t3);font-size:11px;cursor:pointer">✕</button>
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function practiceSentence(id){
+  const saved=getSavedSentences();
+  const s=saved.find(x=>x.id===id);
+  if(!s)return;
+  
+  // Create fill-in-blank from sentence
+  const words=s.text.split(' ');
+  // Find a content word to blank (not articles, prepositions)
+  const skipWords=['a','an','the','is','are','was','were','be','been','to','of','in','at','for','on','with','by','from','as','and','or','but','if','that','this','it','he','she','we','they','i'];
+  const candidates=words.map((w,i)=>({w:w.replace(/[.,!?]/g,''),i})).filter(x=>x.w.length>3&&!skipWords.includes(x.w.toLowerCase()));
+  
+  if(!candidates.length){toast('Δεν βρέθηκε κατάλληλη λέξη για κενό','var(--t3)');return;}
+  const target=candidates[Math.floor(Math.random()*candidates.length)];
+  const blanked=s.text.split(' ').map((w,i)=>i===target.i?'_______':w).join(' ');
+  
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML=`<div style="background:var(--s1);border:1px solid var(--ln2);border-radius:var(--r2);padding:24px;max-width:500px;width:100%">
+    <div class="sl mb8">SENTENCE MINING — FILL IN BLANK</div>
+    <div class="fp f14 mb16" style="line-height:2;color:var(--t1)">${blanked}</div>
+    <input id="sm-input" placeholder="Συμπλήρωσε τη λέξη..." style="width:100%;padding:10px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:14px;margin-bottom:12px"
+      onkeydown="if(event.key==='Enter')checkSentence('${target.w}','${id}',this.closest('[style*=fixed]'))">
+    <div class="fx g10">
+      <button onclick="closeTopModal()" class="btn bgh">Παράλειψη</button>
+      <button onclick="checkSentence('${target.w}','${id}',this.closest('[style*=fixed]'))" class="btn bp" style="flex:1;justify-content:center">✓ Έλεγχος</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  setTimeout(()=>document.getElementById('sm-input')?.focus(),100);
+}
+
+function checkSentence(expected, sentId, modal){
+  const input=document.getElementById('sm-input');
+  if(!input)return;
+  const val=input.value.trim().toLowerCase();
+  const exp=expected.toLowerCase();
+  const correct=val===exp||levenshtein(val,exp)<=1;
+  
+  // Update review count
+  const saved=getSavedSentences();
+  const s=saved.find(x=>x.id===sentId);
+  if(s){s.reviews++;s.score=correct?Math.min(100,(s.score||0)+20):(s.score||0);DB.set('saved_sentences',saved);}
+  
+  input.style.borderColor=correct?'var(--gr)':'var(--ro)';
+  input.style.color=correct?'var(--gr)':'var(--ro)';
+  
+  if(correct){
+    addXP(8);
+    setTimeout(()=>{closeTopModal();toast('✓ Σωστά! +8 XP','var(--gr)');},500);
+  } else {
+    const hint=modal.querySelector('.hint-text')||document.createElement('div');
+    hint.className='hint-text f12 mt8';
+    hint.style.color='var(--ro)';
+    hint.textContent='✗ Σωστό: "'+expected+'"';
+    if(!modal.querySelector('.hint-text'))input.after(hint);
+  }
+}
+
+/* ══ ADAPTIVE STUDY RECOMMENDATION ══ */
+function getAdaptiveRecommendation(){
+  const gramErrors=DB.get('gramErr',{});
+  const wordErrors=DB.get('errors',{});
+  const wb=getWB();
+  const allW=getAllW();
+  const today=todayK();
+  const comp=DB.get('comp',{})[today]||[];
+  
+  const recs=[];
+  
+  // 1. Due words (highest priority)
+  const due=dueW().length;
+  if(due>5)recs.push({type:'vocab',priority:10,msg:`📅 ${due} λέξεις χρειάζονται επανάληψη τώρα`,action:"VS.mode='review';go('vocab')",icon:'📅'});
+  
+  // 2. Grammar chapter with most errors
+  const topGramErr=Object.entries(gramErrors).sort(([,a],[,b])=>b.count-a.count)[0];
+  if(topGramErr&&topGramErr[1].count>=2){
+    const g=GRAM?.find(x=>x.id===topGramErr[0]);
+    if(g)recs.push({type:'grammar',priority:8,msg:`⚠ "${g.t}" — ${topGramErr[1].count} λάθη. Επανάλαβε!`,action:`GST.topic='${g.id}';go('grammar')`,icon:'✏'});
+  }
+  
+  // 3. Unseen words
+  const unseen=allW.filter(w=>!wb[w.id]||wb[w.id].seen===0).length;
+  if(unseen>0&&due<3)recs.push({type:'vocab',priority:6,msg:`📚 ${unseen} νέες λέξεις περιμένουν!`,action:"VS.mode='fc';go('vocab')",icon:'📚'});
+  
+  // 4. Tenses not done yet
+  const tDone=DB.get('tDone',[]);
+  if(tDone.length<9)recs.push({type:'tenses',priority:5,msg:`⏱ ${9-tDone.length} χρόνοι ακόμα να εξερευνήσεις`,action:"go('tenses')",icon:'⏱'});
+  
+  // 5. Writing practice (every 3 days)
+  const lastWrite=DB.get('last_write','');
+  const daysSince=lastWrite?Math.floor((Date.now()-new Date(lastWrite).getTime())/86400000):99;
+  if(daysSince>=3)recs.push({type:'writing',priority:4,msg:`✍ ${daysSince} μέρες χωρίς Writing practice`,action:"go('writing')",icon:'✍'});
+  
+  return recs.sort((a,b)=>b.priority-a.priority).slice(0,3);
+}
 document.addEventListener('DOMContentLoaded',()=>{
   if(DB.get('lm',false))document.body.classList.add('light');
   updXP();
