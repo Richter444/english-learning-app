@@ -1879,7 +1879,6 @@ function buildTSB(){
 function resetTQ(){TST.qa={};TST.qs=false;TST.qsc=null;TST.ta={};TST.tc={};TST.tips=false;}
 function rTM(){
   const mn=document.getElementById('tmn');if(!mn)return;
-  buildTSB();
   if(TST.tab==='cmp'){rTCmp(mn);return;}
   const t=TENSES[TST.idx];
   document.documentElement.style.setProperty('--tc',t.col);
