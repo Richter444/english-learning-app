@@ -5,7 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="theme-color" content="#0f1117">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="English Master">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="English Master">
+<meta name="msapplication-TileColor" content="#0f1117">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%230f1117'/%3E%3Ctext x='256' y='320' text-anchor='middle' font-size='260' font-family='Georgia,serif'%3E📗%3C/text%3E%3C/svg%3E">
 <title>English Master — B1 to C1</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -223,6 +229,32 @@ body.light .c-info{background:#eef3ff;border-color:#a3b8e8}
 .err-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;margin-bottom:6px}
 .err-count{width:28px;height:28px;border-radius:50%;background:var(--ro)1a;border:1px solid var(--ro)33;color:var(--ro);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 
+
+/* ═══ PWA / MOBILE ═══ */
+@media(display-mode:standalone){
+  #nav{padding-top:env(safe-area-inset-top,0px)}
+  #cnt{padding-bottom:env(safe-area-inset-bottom,0px)}
+}
+/* Safe area for iPhone notch */
+@supports(padding:env(safe-area-inset-top)){
+  #nav{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+}
+/* Touch improvements */
+button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+/* Prevent text selection on tap */
+.tab,.btn,.vmb,.ttab,.trnbt{user-select:none;-webkit-user-select:none}
+/* Smooth scroll on iOS */
+.pnl,.fpnl,.vsb,.tsb{-webkit-overflow-scrolling:touch}
+/* Larger touch targets on mobile */
+@media(max-width:700px){
+  .tab{padding:8px 10px;font-size:10px}
+  .btn{padding:10px 16px}
+  .tck,.trck{width:26px;height:26px}
+  .hcard{padding:16px}
+  .hcard h3{font-size:14px}
+  input,textarea,select{font-size:16px!important} /* prevents iOS zoom */
+}
+
 @media(max-width:700px){.tsb{width:130px}.vsb{width:150px}.tabs{display:none}.hgrid{grid-template-columns:1fr}.hstats{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
@@ -251,7 +283,7 @@ body.light .c-info{background:#eef3ff;border-color:#a3b8e8}
   <div class="nav-r">
     <span class="lv-b" id="xp-lv">Lv 1</span>
     <div class="xpw"><div class="xpt" id="xp-txt">0 XP</div><div class="xpb"><div class="xpf" id="xp-f" style="width:0%"></div></div></div>
-    <button id="pwab" onclick="doPWA()">⬇ Install</button>
+    <button id="pwab" onclick="doPWA()" title="Εγκατάσταση εφαρμογής">📲 Εγκατάσταση</button>
   </div>
 </nav>
 <div id="cnt">
@@ -271,6 +303,9 @@ body.light .c-info{background:#eef3ff;border-color:#a3b8e8}
 </div>
 </div>
 <div id="toast"></div>
+<div id="offline-banner" style="display:none;position:fixed;top:52px;left:0;right:0;background:var(--am);color:#1a0d00;padding:6px;text-align:center;font-size:11px;font-weight:600;z-index:9990">
+  📡 Offline — Η εφαρμογή δουλεύει κανονικά (χωρίς AI features)
+</div>
 <div id="achpop"></div>
 <script>
 'use strict';
@@ -292,6 +327,115 @@ function speak(text,lang='en-GB'){
   const en=voices.find(v=>v.lang.startsWith('en-GB'))||voices.find(v=>v.lang.startsWith('en'));
   if(en)u.voice=en;
   window.speechSynthesis.speak(u);
+}
+
+
+/* ══ AI API HELPER ══ */
+function getAPIKey(){
+  return DB.get('anthropic_key','');
+}
+
+function hasAPIKey(){
+  return !!getAPIKey();
+}
+
+async function callAI(systemPrompt, userContent, maxTokens=800){
+  const key = getAPIKey();
+  if(!key){
+    showAPIKeyModal();
+    throw new Error('NO_API_KEY');
+  }
+  const response = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key': key,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body:JSON.stringify({
+      model:'claude-haiku-4-5-20251001',
+      max_tokens: maxTokens,
+      system: systemPrompt,
+      messages:[{role:'user',content: userContent}]
+    })
+  });
+
+  if(!response.ok){
+    const err = await response.json().catch(()=>({error:{message:'Unknown error'}}));
+    if(response.status===401){
+      DB.set('anthropic_key','');
+      showAPIKeyModal('invalid');
+      throw new Error('INVALID_KEY');
+    }
+    throw new Error(err.error?.message||'API error '+response.status);
+  }
+
+  const data = await response.json();
+  return data.content?.[0]?.text||'';
+}
+
+function showAPIKeyModal(reason){
+  let existing = document.getElementById('apikey-modal');
+  if(existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'apikey-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+
+  const isInvalid = reason==='invalid';
+  modal.innerHTML = `<div style="background:var(--s1);border:1px solid var(--ln2);border-radius:var(--r2);padding:28px;max-width:480px;width:100%">
+    <div class="fx ac g10 mb16">
+      <span style="font-size:28px">🤖</span>
+      <div>
+        <div class="fp f16 b">${isInvalid?'Λάθος API Key':'AI Features — Απαιτείται API Key'}</div>
+        <div class="f11 c3 mt4">${isInvalid?'Το key που έχεις είναι λάθος ή έχει λήξει.':'Για να χρησιμοποιήσεις τα AI features χρειάζεσαι Anthropic API key.'}</div>
+      </div>
+    </div>
+
+    <div class="card c-info mb14">
+      <div class="sl mb6 cbl">ΠΩΣ ΝΑ ΠΑΡΕΙΣ ΔΩΡΕΑΝ KEY</div>
+      <div class="f12 c2" style="line-height:1.8">
+        1. Πήγαινε στο <a href="https://console.anthropic.com" target="_blank" style="color:var(--bl)">console.anthropic.com</a><br>
+        2. Δημιούργησε δωρεάν λογαριασμό<br>
+        3. API Keys → Create Key<br>
+        4. Αντίγραψε το key (ξεκινά με <span class="mono" style="color:var(--am)">sk-ant-</span>)<br>
+        5. Επικόλλησε παρακάτω
+      </div>
+    </div>
+
+    <div class="card c-ok mb14">
+      <div class="sl mb4 cgr">🔒 ΑΣΦΑΛΕΙΑ</div>
+      <div class="f11 c2" style="line-height:1.6">Το key αποθηκεύεται <strong>μόνο στον browser σου</strong> (localStorage). Δεν αποστέλλεται πουθενά εκτός από το Anthropic API.</div>
+    </div>
+
+    <div class="mb12">
+      <div class="f11 c3 mb6">Anthropic API Key:</div>
+      <input id="api-key-input" type="password" placeholder="sk-ant-api03-..." 
+        style="width:100%;padding:10px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px;font-family:monospace"
+        oninput="document.getElementById('save-key-btn').style.opacity=this.value.startsWith('sk-ant')?1:0.4">
+    </div>
+
+    <div class="fx g8">
+      <button id="save-key-btn" onclick="saveAPIKey()" class="btn bp" style="flex:1;justify-content:center;opacity:0.4">💾 Αποθήκευση</button>
+      <button onclick="document.getElementById('apikey-modal').remove()" class="btn bgh">Άκυρο</button>
+    </div>
+    <div class="f10 c3 tc mt10">💡 Δωρεάν tier: ~$0.25 δωρεάν credits — αρκετά για εκατοντάδες AI sessions</div>
+  </div>`;
+
+  document.body.appendChild(modal);
+  setTimeout(()=>document.getElementById('api-key-input')?.focus(),100);
+}
+
+function saveAPIKey(){
+  const key = document.getElementById('api-key-input')?.value?.trim();
+  if(!key||!key.startsWith('sk-ant')){
+    toast('Το key πρέπει να αρχίζει με sk-ant-...','var(--ro)');
+    return;
+  }
+  DB.set('anthropic_key',key);
+  document.getElementById('apikey-modal')?.remove();
+  toast('✓ API Key αποθηκεύτηκε! Τώρα μπορείς να χρησιμοποιήσεις τα AI features.','var(--gr)');
 }
 
 /* ══ PWA ══ */
@@ -3678,6 +3822,22 @@ function rSettings(){
       ${[['📚',learnedW().length+'/'+getAllW().length,'Λέξεις','var(--bl)'],['⭐',getXP()+' XP','Σύνολο','var(--am)'],['🏆',getAchs().length+'/'+ACHS.length,'Ach.','var(--or)'],['🔥',calcStreak(),'Streak','var(--gr)']].map(([i,v,l,c])=>`<div class="ss"><div style="font-size:18px">${i}</div><div class="ss-v" style="color:${c};font-size:16px">${v}</div><div class="ss-l">${l}</div></div>`).join('')}
     </div>
 
+    <div class="sl mb10 c3">AI FEATURES — API KEY</div>
+    <div class="card mb16" style="border-color:${hasAPIKey()?'var(--gr)33':'var(--am)33'}">
+      <div class="fx ac jb mb10">
+        <div>
+          <div class="f12 b mb2">Anthropic API Key</div>
+          <div class="f11 c3">${hasAPIKey()?'✓ Key αποθηκευμένο':'⚠ Απαιτείται για AI features'}</div>
+        </div>
+        ${hasAPIKey()
+          ?'<button onclick="DB.set(\'anthropic_key\',\'\');rSettings()" class="btn br bsm" style="font-size:10px">Διαγραφή Key</button>'
+          :'<button onclick="showAPIKeyModal()" class="btn bp bsm" style="font-size:10px">➕ Προσθήκη Key</button>'}
+      </div>
+      ${hasAPIKey()
+        ?'<div class="f10 c3">Key: <span class="mono">sk-ant-...'+DB.get('anthropic_key','').slice(-4)+'</span></div>'
+        :'<div class="f11 c2" style="line-height:1.6">AI features: Writing Feedback · Error Analysis · Forced Output · AI Conversation<br><a href="https://console.anthropic.com" target="_blank" style="color:var(--bl)">Δωρεάν key στο console.anthropic.com →</a></div>'}
+    </div>
+
     <div class="sl mb10 c3">ΕΠΙΚΙΝΔΥΝΗ ΖΩΝΗ</div>
     <div class="card c-err">
       <div class="f12 c2 mb10">Διαγράφει ΟΛΕΣ τις πληροφορίες. Μη αναστρέψιμη ενέργεια!</div>
@@ -4053,13 +4213,8 @@ async function getAIWritingFeedback(){
   const level=topic?.lv||'B1-B2';
   
   try {
-    const response=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        system:`You are an expert English teacher helping a Greek speaker improve their English writing. 
+    const raw=await callAI(
+      `You are an expert English teacher helping a Greek speaker improve their English writing. 
 The student's level is ${level}. Analyze the text concisely and give feedback in Greek.
 Respond ONLY with valid JSON (no markdown, no backticks):
 {
@@ -4070,12 +4225,11 @@ Respond ONLY with valid JSON (no markdown, no backticks):
   "vocabulary_tips": ["<tip 1>","<tip 2>"],
   "better_phrases": [{"original":"<phrase from text>","better":"<improved version>"}]
 }`,
-        messages:[{role:'user',content:`Please analyze this English text:\n\n${text}`}]
-      })
-    });
-    
-    const data=await response.json();
-    const raw=data.content?.[0]?.text||'';
+      `Please analyze this English text:
+
+${text}`,
+      1000
+    );
     
     let feedback;
     try {
@@ -4222,13 +4376,10 @@ async function checkForcedOutput(){
   const prompt=FORCED_OUTPUT_PROMPTS[FOSTATE.topic]||'';
   
   try{
-    const response=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:800,
-        system:`You are an English teacher checking a Greek learner's writing exercise. 
+    let fb;
+    try{
+      const raw=await callAI(
+        `You are an English teacher checking a Greek learner's writing exercise. 
 Be encouraging but accurate. Respond ONLY in valid JSON (no markdown):
 {
   "score": <1-10>,
@@ -4237,13 +4388,17 @@ Be encouraging but accurate. Respond ONLY in valid JSON (no markdown):
   "tip": "<one key grammar tip in Greek>",
   "pass": <true if score>=6>
 }`,
-        messages:[{role:'user',content:`Task: ${prompt}\n\nStudent wrote:\n${text}`}]
-      })
-    });
-    const data=await response.json();
-    let fb;
-    try{fb=JSON.parse((data.content?.[0]?.text||'').replace(/```json|```/g,'').trim());}
-    catch(e){fb={score:7,correct:['Good effort!'],errors:[],tip:'Keep practising!',pass:true};}
+        `Task: ${prompt}
+
+Student wrote:
+${text}`,
+        800
+      );
+      fb=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    }catch(e){
+      if(e.message==='NO_API_KEY'||e.message==='INVALID_KEY'){FOSTATE.checking=false;renderFOModal(prompt);return;}
+      fb={score:7,correct:['Good effort!'],errors:[],tip:'Keep practising!',pass:true};
+    }
     
     const col=fb.score>=8?'var(--gr)':fb.score>=6?'var(--am)':'var(--ro)';
     FOSTATE.result=`<div style="padding:12px;background:var(--s2);border-radius:8px;border-left:3px solid ${col}">
@@ -4670,13 +4825,10 @@ async function runErrorAnalysis(){
     .filter(Boolean);
   
   try{
-    const response=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:900,
-        system:`You are an expert English teacher analyzing a Greek learner's error patterns.
+    let diag;
+    try{
+      const raw=await callAI(
+        `You are an expert English teacher analyzing a Greek learner's error patterns.
 Provide a precise, actionable diagnosis in Greek. Respond ONLY with valid JSON (no markdown):
 {
   "main_weakness": "<the single most important issue to address>",
@@ -4687,14 +4839,18 @@ Provide a precise, actionable diagnosis in Greek. Respond ONLY with valid JSON (
   "avoid": "<common mistake to stop making immediately>",
   "strength": "<something the learner is doing well>"
 }`,
-        messages:[{role:'user',content:`Vocabulary errors: ${topVocabErrors.join(', ')}\n\nGrammar errors: ${topGramErrors.join(', ')}\n\nAnalyse the patterns and provide diagnosis.`}]
-      })
-    });
-    
-    const data=await response.json();
-    let diag;
-    try{diag=JSON.parse((data.content?.[0]?.text||'').replace(/```json|```/g,'').trim());}
-    catch(e){diag={main_weakness:'Συνέχισε την εξάσκηση',vocabulary_pattern:'Χρειάζεται περισσότερα δεδομένα',grammar_pattern:'Κάνε περισσότερα grammar exercises',root_cause:'Φυσιολογικό στάδιο μάθησης',priority_actions:['Εξάσκηση vocabulary','Επανάληψη tenses','Daily Lesson'],avoid:'Μη μαντεύεις — σκέψου',strength:'Συνέπεια στη μελέτη'};}
+        `Vocabulary errors: ${topVocabErrors.join(', ')}
+
+Grammar errors: ${topGramErrors.join(', ')}
+
+Analyse the patterns and provide diagnosis.`,
+        900
+      );
+      diag=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    }catch(e){
+      if(e.message==='NO_API_KEY'||e.message==='INVALID_KEY'){modal.remove();return;}
+      diag={main_weakness:'Συνέχισε την εξάσκηση',vocabulary_pattern:'Χρειάζεται περισσότερα δεδομένα',grammar_pattern:'Κάνε περισσότερα grammar exercises',root_cause:'Φυσιολογικό στάδιο μάθησης',priority_actions:['Εξάσκηση vocabulary','Επανάληψη tenses','Daily Lesson'],avoid:'Μη μαντεύεις — σκέψου',strength:'Συνέπεια στη μελέτη'};
+    }
     
     const m=document.getElementById('ea-modal');
     if(m)m.innerHTML=`<div style="background:var(--s1);border:1px solid var(--ln2);border-radius:var(--r2);padding:24px;max-width:540px;width:100%;max-height:90vh;overflow-y:auto">
@@ -4888,17 +5044,29 @@ async function sendConvMsg(){
     const messages=CONVST.history.map(m=>({role:m.role,content:m.content}));
     const systemPrompt=sc.role+(isLast?'\n\nThis is the final exchange. After your response, provide JSON feedback as a separate code block:\n```json\n{"fluency":<1-10>,"vocabulary":<1-10>,"grammar":<1-10>,"good_phrases":["phrase1","phrase2"],"corrections":[{"said":"<wrong>","better":"<correct>","why":"<explanation in Greek>"}],"main_tip":"<key advice in Greek>"}\n```':'');
     
+    const convKey=getAPIKey();
+    if(!convKey){showAPIKeyModal();CONVST.loading=false;rAIConversation();return;}
     const response=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':convKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
       body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
+        model:'claude-haiku-4-5-20251001',
         max_tokens:600,
         system:systemPrompt,
         messages
       })
     });
-    
+    if(!response.ok){
+      if(response.status===401){DB.set('anthropic_key','');showAPIKeyModal('invalid');}
+      CONVST.loading=false;
+      CONVST.history.push({role:'assistant',content:'Connection error. Please check your API key in Settings.'});
+      rAIConversation();return;
+    }
     const data=await response.json();
     const fullText=data.content?.[0]?.text||'I see. Please continue.';
     
@@ -5055,10 +5223,45 @@ function cefrNext(){
   if(CEFRST.idx>=CEFR_QUESTIONS.length)CEFRST.done=true;
   renderCEFRModal();
 }
+
+/* ══ SERVICE WORKER REGISTRATION ══ */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg=>{
+        console.log('SW registered');
+        // Check for updates
+        reg.addEventListener('updatefound',()=>{
+          const newWorker=reg.installing;
+          newWorker.addEventListener('statechange',()=>{
+            if(newWorker.state==='installed'&&navigator.serviceWorker.controller){
+              // New version available
+              const banner=document.createElement('div');
+              banner.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bl);color:#fff;padding:10px 20px;border-radius:10px;z-index:9999;font-size:13px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.3)';
+              banner.innerHTML='🔄 Νέα έκδοση! <span style="text-decoration:underline">Ανανέωση</span>';
+              banner.onclick=()=>window.location.reload();
+              document.body.appendChild(banner);
+              setTimeout(()=>banner.remove(),8000);
+            }
+          });
+        });
+      })
+      .catch(err=>console.log('SW error:',err));
+  });
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
   if(DB.get('lm',false))document.body.classList.add('light');
   updXP();
   rHome();
+  // Offline detection
+  function updateOnlineStatus(){
+    const banner=document.getElementById('offline-banner');
+    if(banner) banner.style.display=navigator.onLine?'none':'block';
+  }
+  window.addEventListener('online',updateOnlineStatus);
+  window.addEventListener('offline',()=>{updateOnlineStatus();toast('📡 Offline — AI features μη διαθέσιμα','var(--am)');});
+  updateOnlineStatus();
   // Check achievements on load
   const lc=learnedW().length;
   if(lc>=10)unlockAch('w10');if(lc>=50)unlockAch('w50');if(lc>=100)unlockAch('w100');if(lc>=200)unlockAch('w200');
