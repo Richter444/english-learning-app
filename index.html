@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="theme-color" content="#0f1117">
+<meta name="app-version" content="2026.05.13-1138">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="English Master">
@@ -5716,24 +5717,37 @@ if('serviceWorker' in navigator){
     navigator.serviceWorker.register('./sw.js')
       .then(reg=>{
         console.log('SW registered');
-        // Check for updates
-        reg.addEventListener('updatefound',()=>{
-          const newWorker=reg.installing;
-          newWorker.addEventListener('statechange',()=>{
-            if(newWorker.state==='installed'&&navigator.serviceWorker.controller){
-              // New version available
-              const banner=document.createElement('div');
-              banner.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bl);color:#fff;padding:10px 20px;border-radius:10px;z-index:9999;font-size:13px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.3)';
-              banner.innerHTML='🔄 Νέα έκδοση! <span style="text-decoration:underline">Ανανέωση</span>';
-              banner.onclick=()=>window.location.reload();
-              document.body.appendChild(banner);
-              setTimeout(()=>banner.remove(),8000);
-            }
-          });
+        // Force check for updates every time
+        reg.update();
+        // Listen for new SW taking control = new version loaded
+        navigator.serviceWorker.addEventListener('controllerchange',()=>{
+          if(!sessionStorage.getItem('sw_reloaded')){
+            sessionStorage.setItem('sw_reloaded','1');
+            window.location.reload();
+          }
         });
       })
       .catch(err=>console.log('SW error:',err));
   });
+}
+
+// Version-based update check (most reliable method)
+const APP_VERSION='2026.05.13-1138';
+const storedVersion=localStorage.getItem('app_version');
+if(storedVersion&&storedVersion!==APP_VERSION){
+  // New version detected!
+  localStorage.setItem('app_version',APP_VERSION);
+  const banner=document.createElement('div');
+  banner.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--bl);color:#fff;padding:12px 20px;border-radius:10px;z-index:9999;font-size:13px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.4);white-space:nowrap;display:flex;align-items:center;gap:10px';
+  banner.innerHTML='🔄 Νέα έκδοση διαθέσιμη! <strong>Ανανέωση</strong>';
+  banner.onclick=()=>{window.location.href=window.location.href.split('?')[0]+'?v='+APP_VERSION;};
+  document.body.appendChild(banner);
+  // Auto-dismiss after 15 seconds
+  setTimeout(()=>banner.style.opacity='0',15000);
+  setTimeout(()=>banner.remove(),15500);
+} else if(!storedVersion){
+  // First visit - just store version
+  localStorage.setItem('app_version',APP_VERSION);
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
