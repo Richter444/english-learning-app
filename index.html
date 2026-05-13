@@ -138,7 +138,12 @@ a{text-decoration:none;color:inherit}
 .qopt:hover{border-color:var(--ln2)}
 
 /* TENSES */
-.tsb{width:185px;background:var(--s1);border-right:1px solid var(--ln);overflow-y:auto;flex-shrink:0;padding:8px 0}
+.tsb{width:185px;background:var(--s1);border-right:1px solid var(--ln);overflow-y:auto;flex-shrink:0;padding:8px 0;transition:width .2s ease}
+.tsb.collapsed,.vsb.collapsed{width:0!important;overflow:hidden!important;border-right:none!important;padding:0!important;min-width:0!important}
+.sb-toggle{position:absolute;top:10px;right:-14px;width:26px;height:26px;border-radius:50%;background:var(--s1);border:1px solid var(--ln);color:var(--t3);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.sb-toggle:hover{background:var(--s2);color:var(--t1)}
+.sb-open-btn{padding:8px 6px;background:var(--s2);border:none;border-right:1px solid var(--ln);color:var(--t3);font-size:10px;cursor:pointer;writing-mode:vertical-lr;letter-spacing:1px;flex-shrink:0;display:none}
+.sb-open-btn:hover{background:var(--s3);color:var(--t1)}
 .tsb-h{padding:12px 14px 10px;border-bottom:1px solid var(--ln);margin-bottom:6px}
 .tnb{display:block;width:100%;text-align:left;padding:7px 12px;border-left:3px solid transparent;font-size:11px;color:var(--t3);transition:all .12s}
 .tnb.on{background:var(--s2)}
@@ -1055,8 +1060,11 @@ let VS={mode:'home',cat:'all',search:'',q:{mode:'mixed',sess:[],idx:0,res:[],fl:
 function rVocab(){
   const el=document.getElementById('vocab');
   const lc=learnedW().length,due=dueW().length,all=getAllW().length;
-  el.innerHTML=`<div class="vsb">
-    <div class="vsb-h"><div class="sl mb4">VOCABULAR</div><div class="fp f14 b" style="color:#f0eef8;">Λεξιλόγιο</div><div class="f10 c3 mt4">${all} λέξεις · ${lc} εκμαθημένες</div></div>
+  el.innerHTML=`${!VS.sbOpen?`<button onclick="VS.sbOpen=true;rVocab()" class="sb-open-btn" style="display:flex">▶ Vocab</button>`:''}
+  <div class="vsb${!VS.sbOpen?' collapsed':''}">
+    <div class="vsb-h" style="position:relative"><div class="sl mb4">VOCABULAR</div><div class="fp f14 b" style="color:#f0eef8;">Λεξιλόγιο</div><div class="f10 c3 mt4">${all} λέξεις · ${lc} εκμαθημένες</div>
+    <button onclick="VS.sbOpen=false;rVocab()" class="sb-toggle" title="Κλείσε sidebar">◀</button>
+  </div>
     <div style="padding:6px 0">
     ${[['home','🏠','Dashboard'],['review','🔁','Ημ. Επανάληψη'],['all','📋','Όλες οι Λέξεις'],['fc','🃏','Flashcards'],['mc','✔','Multiple Choice'],['fi','✏','Fill in Blank'],['mx','⚡','Mixed Practice'],['errors','⚠','Τα Λάθη μου'],['collocations','🔗','Collocations'],['add','➕','Νέα Λέξη']].map(([m,i,l])=>`
     <button class="vmb ${VS.mode===m?'on':''}" onclick="VS.mode='${m}';rVocab()">
@@ -2215,8 +2223,9 @@ function rGrammar(){
     el.innerHTML=`<div class="sec fu">
       <div class="sl mb4 cgr">GRAMMAR</div>
       <div class="fp f16 b mb6">Γραμματική</div>
-      <p class="f12 c2 mb20" style="line-height:1.6">Ολοκληρωμένα κεφάλαια με θεωρία, παραδείγματα και ασκήσεις. Μαθαίνεις <em>γιατί</em>, όχι μόνο <em>τι</em>.</p>
-      <div class="g2 mb16">
+      <p class="f12 c2 mb12" style="line-height:1.6">Ολοκληρωμένα κεφάλαια με θεωρία, παραδείγματα και ασκήσεις. Μαθαίνεις <em>γιατί</em>, όχι μόνο <em>τι</em>.</p>
+      <button id="gram-toggle-btn" onclick="const ch=document.getElementById('gram-chapters');const isOpen=ch.style.display!=='none';ch.style.display=isOpen?'none':'grid';this.innerHTML=isOpen?'▼ Εμφάνισε Κεφάλαια':'▲ Κλείσε Κεφάλαια'" style="padding:5px 14px;background:var(--s2);border:1px solid var(--ln);border-radius:20px;color:var(--t3);font-size:11px;cursor:pointer;margin-bottom:12px">▲ Κλείσε Κεφάλαια</button>
+      <div id="gram-chapters" class="g2 mb16">
         ${GRAM.map(t=>`<div class="gch" onclick="GST.topic='${t.id}';GST.ea={};GST.es=false;GST.esc=null;rGTopic()">
           <div class="fx ac g10 mb6"><span style="font-size:22px">${t.ic}</span>
             <div><div class="fp f13 b mb1" style="color:${t.col}">${t.t}</div><div class="f10 c3">${t.desc}</div></div>
@@ -2228,6 +2237,7 @@ function rGrammar(){
         <div class="sl mb8 cbl">💡 ΟΔΗΓΟΣ ΜΕΛΕΤΗΣ ΓΡΑΜΜΑΤΙΚΗΣ</div>
         <div class="f12 c2" style="line-height:1.8">1. Διάβασε τη θεωρία — κατανόησε τον κανόνα<br>2. Δες τα παραδείγματα στο context<br>3. Κάνε τις ασκήσεις χωρίς να κοιτάς<br>4. Γράψε 3 δικές σου προτάσεις στο Writing<br>5. Επανέλαβε σε 3 μέρες</div>
       </div>
+      </div></div>
       ${(()=>{
         const ge=DB.get('gramErr',{});
         const due=Object.entries(ge).filter(([id,e])=>{
@@ -4026,9 +4036,16 @@ function rTracker(){
 
 function buildTRNav(){
   const nav=document.getElementById('trnav');if(!nav)return;
+  const trOpen=DB.get('trnav_open',true);
+  if(!trOpen){
+    nav.innerHTML=`<div style="display:flex;align-items:center;padding:4px 8px;border-bottom:1px solid var(--ln)">
+      <button onclick="DB.set('trnav_open',true);buildTRNav()" style="padding:5px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:20px;color:var(--t2);font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px">
+        ▼ <span>${['📅 Σήμερα','📋 Πλάνο','📊 Πρόοδος','🎧 Listening','🗣 Προφορά','📝 Word Log'][['today','plan','progress','listening','pron','wlog'].indexOf(TRSCR)]||'Tabs'}</span>
+      </button></div>`;return;
+  }
   nav.innerHTML=[['today','📅 Σήμερα'],['plan','📋 Πλάνο'],['progress','📊 Πρόοδος'],['listening','🎧 Listening'],['pron','🗣 Προφορά'],['wlog','📝 Word Log']].map(([id,lb])=>
     `<button class="trnbt ${TRSCR===id?'on':''}" onclick="TRSCR='${id}';buildTRNav();rTRContent()">${lb}</button>`
-  ).join('');
+  ).join('')+`<button onclick="DB.set('trnav_open',false);buildTRNav()" style="padding:4px 8px;background:none;border:none;color:var(--t3);font-size:10px;cursor:pointer;flex-shrink:0;margin-left:auto">▲</button>`;
 }
 
 const QUOTES=[
