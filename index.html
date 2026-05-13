@@ -578,7 +578,10 @@ function speak(text,lang='en-GB'){
 
 /* ══ AI API HELPER ══ */
 function getAPIKey(){
-  return DB.get('anthropic_key','');
+  const stored=DB.get('anthropic_key','');
+  if(stored)return stored;
+  // Default key (replace with your own in Settings)
+  return 'evangelos-onboarding-api-key';
 }
 
 function hasAPIKey(){
@@ -5436,6 +5439,7 @@ function rClozeTest(){
   const el=document.getElementById('reading');
   if(!CLST.art){
     el.innerHTML=`<div class="sec fu" style="max-width:840px">
+      <button onclick="RST.art=null;rReading()" style="color:var(--t3);font-size:11px;background:none;border:none;cursor:pointer;margin-bottom:12px;display:flex;align-items:center;gap:4px">← Πίσω στο Reading</button>
       <div class="sl mb4 cam">CLOZE TESTS</div>
       <div class="fp f16 b mb6">Vocabulary in Context</div>
       <p class="f12 c2 mb16" style="line-height:1.6">Συμπλήρωσε τα κενά με τη σωστή λέξη. Η γλώσσα μαθαίνεται μέσα από <em>context</em> — όχι μεμονωμένα.</p>
@@ -5470,7 +5474,7 @@ function rClozeTest(){
     const allFilled=cl.blanks.every(b=>CLST.answers[b.n]);
     
     el.innerHTML=`<div class="sec fu" style="max-width:840px">
-      <button onclick="CLST.art=null;rClozeTest()" style="color:var(--t3);font-size:11px;background:none;border:none;cursor:pointer;margin-bottom:16px">← Πίσω</button>
+      <button onclick="CLST.art=null;rClozeTest()" style="color:var(--t3);font-size:11px;background:none;border:none;cursor:pointer;margin-bottom:16px;display:flex;align-items:center;gap:4px">← Πίσω στα Cloze Tests</button>
       <div class="fp f16 b mb4" style="color:var(--am)">${cl.title}</div>
       <span class="tag f9 mb16" style="display:inline-block;background:var(--am)1a;border:1px solid var(--am)33;color:var(--am)">${cl.level}</span>
       
