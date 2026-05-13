@@ -1075,7 +1075,7 @@ function rVocab(){
   const el=document.getElementById('vocab');
   const lc=learnedW().length,due=dueW().length,all=getAllW().length;
   el.innerHTML=`
-  ${!VS.sbOpen?`<button onclick="VS.sbOpen=true;rVocab()" style="width:36px;flex-shrink:0;background:var(--s2);border:none;border-right:1px solid var(--ln);color:var(--t2);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:14px;gap:3px"><span>📚</span></button>`:''}
+  ${!VS.sbOpen?`<button onclick="VS.sbOpen=true;rVocab()" style="width:36px;flex-shrink:0;background:var(--s2);border:none;border-right:1px solid var(--ln);color:var(--t2);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;writing-mode:vertical-lr;letter-spacing:1px;padding:10px 4px">Μενού</button>`:''}
   <div class="vsb ${!VS.sbOpen?'vsb-hidden':''}">
     <div class="vsb-h"><div class="fx ac jb mb4">
       <div class="sl">VOCABULAR</div>
@@ -1857,37 +1857,23 @@ const TCMP=[
 let TST={idx:0,tab:'theory',qa:{},qs:false,qsc:null,ta:{},tc:{},tips:false,cmp:0};
 function rTenses(){
   const el=document.getElementById('tenses');
-  el.innerHTML=`<div class="tsb" id="tsb"></div><div class="tmain fu" id="tmn"></div>`;
-  buildTSB();rTM();
+  const isOpen=DB.get('tsb_open',true);
+  el.innerHTML=`
+    ${!isOpen?`<button onclick="DB.set('tsb_open',true);rTenses()" style="width:36px;flex-shrink:0;background:var(--s2);border:none;border-right:1px solid var(--ln);color:var(--t2);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;writing-mode:vertical-lr;letter-spacing:1px;padding:10px 4px">Μενού</button>`:''}
+    <div class="tsb ${isOpen?'':'tsb-hidden'}" id="tsb"></div>
+    <div class="tmain fu" id="tmn"></div>
+  `;
+  if(isOpen) buildTSB();
+  rTM();
 }
 function buildTSB(){
   const sb=document.getElementById('tsb');
   if(!sb)return;
-  const isOpen=DB.get('tsb_open',true);
-
-  if(!isOpen){
-    sb.classList.add('tsb-hidden');
-    sb.style.cssText='';
-    if(!document.getElementById('tsb-open-btn')){
-      const btn=document.createElement('button');
-      btn.id='tsb-open-btn';
-      btn.innerHTML='⏱';
-      btn.title='Εμφάνισε χρόνους';
-      btn.style.cssText='width:32px;flex-shrink:0;background:var(--s2);border:none;border-right:1px solid var(--ln);color:var(--t3);font-size:16px;cursor:pointer;display:flex;align-items:flex-start;justify-content:center;padding-top:14px';
-      btn.onclick=()=>{DB.set('tsb_open',true);btn.remove();buildTSB();};
-      sb.parentNode.insertBefore(btn,sb);
-    }
-    return;
-  }
-
-  document.getElementById('tsb-open-btn')?.remove();
-  sb.classList.remove('tsb-hidden');
-
   sb.innerHTML=
     `<div class="tsb-h">
       <div class="fx ac jb mb4">
         <div class="sl">TENSES</div>
-        <button onclick="DB.set('tsb_open',false);buildTSB()" style="padding:1px 7px;background:none;border:1px solid var(--ln2);border-radius:10px;color:var(--t3);font-size:10px;cursor:pointer">✕</button>
+        <button onclick="DB.set('tsb_open',false);rTenses()" style="padding:1px 7px;background:none;border:1px solid var(--ln2);border-radius:10px;color:var(--t3);font-size:10px;cursor:pointer">✕</button>
       </div>
       <div class="fp f13 b" style="color:#f0eef8">Επίλεξε χρόνο:</div>
     </div>`+
@@ -1908,7 +1894,7 @@ function rTM(){
   const t=TENSES[TST.idx];
   document.documentElement.style.setProperty('--tc',t.col);
   // Mobile collapse button for sidebar
-  const mobileToggleBtn=`<button onclick="DB.set('tsb_open',!DB.get('tsb_open',true));buildTSB()" 
+  const mobileToggleBtn=`<button onclick="DB.set('tsb_open',!DB.get('tsb_open',true));rTenses()" 
     class="mobile-tsb-toggle"
     style="padding:4px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:20px;color:var(--t3);font-size:10px;cursor:pointer;margin-bottom:8px">
     ${DB.get('tsb_open',true)?'▲ Κλείσε χρόνους':'▼ Επίλεξε χρόνο ('+TENSES[TST.idx].name+')'}
