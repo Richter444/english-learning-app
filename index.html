@@ -1060,11 +1060,13 @@ let VS={mode:'home',cat:'all',search:'',q:{mode:'mixed',sess:[],idx:0,res:[],fl:
 function rVocab(){
   const el=document.getElementById('vocab');
   const lc=learnedW().length,due=dueW().length,all=getAllW().length;
-  el.innerHTML=`${!VS.sbOpen?`<button onclick="VS.sbOpen=true;rVocab()" class="sb-open-btn" style="display:flex">▶ Vocab</button>`:''}
-  <div class="vsb${!VS.sbOpen?' collapsed':''}">
-    <div class="vsb-h" style="position:relative"><div class="sl mb4">VOCABULAR</div><div class="fp f14 b" style="color:#f0eef8;">Λεξιλόγιο</div><div class="f10 c3 mt4">${all} λέξεις · ${lc} εκμαθημένες</div>
-    <button onclick="VS.sbOpen=false;rVocab()" class="sb-toggle" title="Κλείσε sidebar">◀</button>
-  </div>
+  el.innerHTML=`<div class="vsb" style="${!VS.sbOpen?'width:0;overflow:hidden;border:none':''}">
+    <div class="vsb-h"><div class="fx ac jb mb4">
+      <div class="sl">VOCABULAR</div>
+      <button onclick="VS.sbOpen=false;rVocab()" style="padding:2px 8px;background:none;border:1px solid var(--ln);border-radius:20px;color:var(--t3);font-size:10px;cursor:pointer">✕</button>
+    </div>
+    <div class="fp f13 b" style="color:#f0eef8;">Λεξιλόγιο</div>
+    <div class="f10 c3 mt4">${all} λέξεις · ${lc} εκμαθημένες</div></div>
     <div style="padding:6px 0">
     ${[['home','🏠','Dashboard'],['review','🔁','Ημ. Επανάληψη'],['all','📋','Όλες οι Λέξεις'],['fc','🃏','Flashcards'],['mc','✔','Multiple Choice'],['fi','✏','Fill in Blank'],['mx','⚡','Mixed Practice'],['errors','⚠','Τα Λάθη μου'],['collocations','🔗','Collocations'],['add','➕','Νέα Λέξη']].map(([m,i,l])=>`
     <button class="vmb ${VS.mode===m?'on':''}" onclick="VS.mode='${m}';rVocab()">
@@ -1074,6 +1076,20 @@ function rVocab(){
     </div></div>
   <div class="vm fu" id="vm"></div>`;
   const vm=document.getElementById('vm');
+  if(!VS.sbOpen){
+    // Show open button in main area
+    const existBtn=document.getElementById('vsb-open-btn');
+    if(!existBtn){
+      const btn=document.createElement('button');
+      btn.id='vsb-open-btn';
+      btn.innerHTML='📚 Μενού';
+      btn.style.cssText='position:fixed;top:56px;left:0;padding:6px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:0 20px 20px 0;color:var(--t2);font-size:11px;cursor:pointer;z-index:100;box-shadow:2px 2px 8px rgba(0,0,0,.2)';
+      btn.onclick=()=>{VS.sbOpen=true;rVocab();};
+      document.body.appendChild(btn);
+    }
+  } else {
+    document.getElementById('vsb-open-btn')?.remove();
+  }
   if(VS.mode==='home')rVDash(vm);
   else if(VS.mode==='review')rVReview(vm);
   else if(VS.mode==='all')rVAll(vm);
@@ -1820,8 +1836,38 @@ function rTenses(){
 }
 function buildTSB(){
   const sb=document.getElementById('tsb');if(!sb)return;
-  sb.innerHTML=`<div class="tsb-h"><div class="sl mb2">ΓΡΑΜΜΑΤΙΚΗ</div><div class="fp f14 b" style="color:#f0eef8">Tenses</div></div>`+
+  const isOpen=DB.get('tsb_open',true);
+
+  if(!isOpen){
+    sb.style.cssText='width:0;overflow:hidden;border:none';
+    // Add open button if not there
+    if(!document.getElementById('tsb-open-btn')){
+      const btn=document.createElement('button');
+      btn.id='tsb-open-btn';
+      btn.innerHTML='⏱';
+      btn.title='Εμφάνισε χρόνους';
+      btn.style.cssText='width:32px;flex-shrink:0;background:var(--s2);border:none;border-right:1px solid var(--ln);color:var(--t3);font-size:16px;cursor:pointer;display:flex;align-items:flex-start;justify-content:center;padding-top:14px';
+      btn.onclick=()=>{DB.set('tsb_open',true);btn.remove();buildTSB();};
+      sb.parentNode.insertBefore(btn,sb);
+    }
+    return;
+  }
+
+  // Remove open button if exists
+  document.getElementById('tsb-open-btn')?.remove();
+  sb.style.cssText='';
+
+  sb.innerHTML=`<div class="tsb-h">
+    <div class="fx ac jb mb4">
+      <div class="sl">TENSES</div>
+      <button onclick="DB.set('tsb_open',false);buildTSB()" style="padding:1px 7px;background:none;border:1px solid var(--ln2);border-radius:10px;color:var(--t3);font-size:10px;cursor:pointer" title="Κλείσε">✕</button>
+    </div>
+    <div class="fp f13 b" style="color:#f0eef8">Επίλεξε χρόνο:</div>
+  </div>`+
   TENSES.map((t,i)=>`<button class="tnb ${TST.idx===i&&TST.tab!=='cmp'?'on':''}" onclick="TST.idx=${i};TST.tab='theory';resetTQ();rTM()" style="border-left-color:${TST.idx===i&&TST.tab!=='cmp'?t.col:'transparent'}">
+    <div class="f10 b" style="color:${TST.idx===i&&TST.tab!=='cmp'?t.col:'var(--t3)'}">${t.name}</div>
+    <div class="f9 c3 mono">${t.tag}</div>
+  </button>`).join('')+TENSES.map((t,i)=>`<button class="tnb ${TST.idx===i&&TST.tab!=='cmp'?'on':''}" onclick="TST.idx=${i};TST.tab='theory';resetTQ();rTM()" style="border-left-color:${TST.idx===i&&TST.tab!=='cmp'?t.col:'transparent'}">
     <div class="f10 b" style="color:${TST.idx===i&&TST.tab!=='cmp'?t.col:'var(--t3)'}">${t.name}</div>
     <div class="f9 c3 mono">${t.tag}</div>
   </button>`).join('')+
