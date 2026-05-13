@@ -1,4 +1,4 @@
-const CACHE = 'english-master-v1';
+const CACHE = 'english-master-2026.05.13-1138';
 const ASSETS = [
   './',
   './index.html',
