@@ -236,6 +236,17 @@ body.light .c-info{background:#eef3ff;border-color:#a3b8e8}
 .err-count{width:28px;height:28px;border-radius:50%;background:var(--ro)1a;border:1px solid var(--ro)33;color:var(--ro);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 
 
+/* ═══ COLLAPSIBLE SIDEBAR ═══ */
+@media(min-width:701px){
+  .tsb-hidden{width:0!important;overflow:hidden!important;border:none!important;padding:0!important;flex-shrink:0}
+  .vsb-hidden{width:0!important;overflow:hidden!important;border:none!important;padding:0!important;flex-shrink:0}
+}
+@media(max-width:700px){
+  .tsb-hidden{height:0!important;overflow:hidden!important;border:none!important;padding:0!important;min-height:0!important;margin:0!important}
+  .vsb-hidden{height:0!important;overflow:hidden!important;border:none!important;padding:0!important;min-height:0!important;margin:0!important}
+  .mobile-tsb-toggle,.mobile-vsb-toggle{display:inline-flex!important}
+}
+
 /* ═══ PWA / MOBILE ═══ */
 @media(display-mode:standalone){
   #nav{padding-top:env(safe-area-inset-top,0px)}
@@ -1063,7 +1074,7 @@ let VS={mode:'home',cat:'all',search:'',q:{mode:'mixed',sess:[],idx:0,res:[],fl:
 function rVocab(){
   const el=document.getElementById('vocab');
   const lc=learnedW().length,due=dueW().length,all=getAllW().length;
-  el.innerHTML=`<div class="vsb" style="${!VS.sbOpen?'width:0;overflow:hidden;border:none':''}">
+  el.innerHTML=`<div class="vsb" class="${!VS.sbOpen?'vsb-hidden':''}">
     <div class="vsb-h"><div class="fx ac jb mb4">
       <div class="sl">VOCABULAR</div>
       <button onclick="VS.sbOpen=false;rVocab()" style="padding:2px 8px;background:none;border:1px solid var(--ln);border-radius:20px;color:var(--t3);font-size:10px;cursor:pointer">✕</button>
@@ -1853,7 +1864,8 @@ function buildTSB(){
   const isOpen=DB.get('tsb_open',true);
 
   if(!isOpen){
-    sb.style.cssText='width:0;overflow:hidden;border:none;padding:0';
+    sb.classList.add('tsb-hidden');
+    sb.style.cssText='';
     if(!document.getElementById('tsb-open-btn')){
       const btn=document.createElement('button');
       btn.id='tsb-open-btn';
@@ -1867,7 +1879,7 @@ function buildTSB(){
   }
 
   document.getElementById('tsb-open-btn')?.remove();
-  sb.style.cssText='';
+  sb.classList.remove('tsb-hidden');
 
   sb.innerHTML=
     `<div class="tsb-h">
@@ -1896,7 +1908,7 @@ function rTM(){
   // Mobile collapse button for sidebar
   const mobileToggleBtn=`<button onclick="DB.set('tsb_open',!DB.get('tsb_open',true));buildTSB()" 
     class="mobile-tsb-toggle"
-    style="display:none;padding:4px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:20px;color:var(--t3);font-size:10px;cursor:pointer;margin-bottom:8px">
+    style="padding:4px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:20px;color:var(--t3);font-size:10px;cursor:pointer;margin-bottom:8px">
     ${DB.get('tsb_open',true)?'▲ Κλείσε χρόνους':'▼ Επίλεξε χρόνο ('+TENSES[TST.idx].name+')'}
   </button>`;
   const tabs=['theory','forms','ex','tr','quiz'].map(id=>{
