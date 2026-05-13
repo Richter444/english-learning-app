@@ -19,9 +19,9 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  /* Richer, more distinct dark palette */
-  --bg:#0a0d14;--s1:#111827;--s2:#1a2235;--s3:#1f2d45;--s4:#263452;
-  --ln:#1e2d47;--ln2:#2e4266;
+  /* High-contrast dark palette — clearly distinct levels */
+  --bg:#080c14;--s1:#0f1623;--s2:#162032;--s3:#1c2b44;--s4:#233557;
+  --ln:#1a2d47;--ln2:#2a4266;
   /* Crisper text */
   --t1:#f1f5fb;--t2:#94a3b8;--t3:#4b6080;
   /* Accent colors — slightly more vibrant */
@@ -84,7 +84,13 @@ a{text-decoration:none;color:inherit}
 .bp:hover{box-shadow:0 6px 24px rgba(79,142,247,.35)}
 .bg{background:linear-gradient(135deg,var(--gr),var(--tl));color:#030f08;box-shadow:var(--shadow-glow-gr)}
 .bgh{border:1px solid var(--ln2);color:var(--t2);background:var(--s2)}
-.bgh:hover{background:var(--s3);border-color:var(--ln2);color:var(--t1)}
+.bgh:hover{background:var(--s3);border-color:var(--t3);color:var(--t1)}
+/* Success button */
+.bgr{background:rgba(34,214,124,.12);border:1px solid rgba(34,214,124,.3);color:var(--gr)}
+.bgr:hover{background:rgba(34,214,124,.2)}
+/* Warning button */
+.bam{background:rgba(246,188,24,.12);border:1px solid rgba(246,188,24,.3);color:var(--am)}
+.bam:hover{background:rgba(246,188,24,.2)}
 .br{border:1px solid rgba(240,56,112,.5);color:var(--ro);background:rgba(240,56,112,.06)}
 .bsm{padding:5px 13px;font-size:11px;border-radius:8px}
 .bxs{padding:3px 9px;font-size:10px;border-radius:6px}
@@ -104,12 +110,40 @@ a{text-decoration:none;color:inherit}
 .mt4{margin-top:4px}.mt6{margin-top:6px}.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}
 .tc{text-align:center}.tr{text-align:right}
 .b{font-weight:600}.sb{font-weight:500}.it{font-style:italic}.mono{font-family:monospace}.fp{font-family:var(--fp)}
-.f9{font-size:9px}.f10{font-size:10px}.f11{font-size:11px}.f12{font-size:12px}.f13{font-size:13px}.f14{font-size:14px}.f16{font-size:16px}.f18{font-size:18px}.f20{font-size:20px}.f22{font-size:22px}.f24{font-size:24px}.f28{font-size:28px}.f32{font-size:32px}
+.f9{font-size:9px}
+/* Typography scale helpers */
+.txt-xs{font-size:11px;line-height:1.5}
+.txt-sm{font-size:12px;line-height:1.6}
+.txt-base{font-size:14px;line-height:1.6}
+.txt-lg{font-size:16px;line-height:1.5;font-weight:600}
+.txt-xl{font-size:20px;line-height:1.3;font-weight:700}
+.txt-2xl{font-size:24px;line-height:1.2;font-weight:700}
+/* Semantic text */
+.label{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--t3)}
+.caption{font-size:11px;color:var(--t3);line-height:1.5}
+.body{font-size:13px;color:var(--t2);line-height:1.7}
+.body-sm{font-size:12px;color:var(--t2);line-height:1.7}.f10{font-size:10px}.f11{font-size:11px}.f12{font-size:12px}.f13{font-size:13px}.f14{font-size:14px}.f16{font-size:16px}.f18{font-size:18px}.f20{font-size:20px}.f22{font-size:22px}.f24{font-size:24px}.f28{font-size:28px}.f32{font-size:32px}
 .c1{color:var(--t1)}.c2{color:var(--t2)}.c3{color:var(--t3)}
 .cbl{color:var(--bl)}.cvi{color:var(--vi)}.cgr{color:var(--gr)}.ctl{color:var(--tl)}.cam{color:var(--am)}.cor{color:var(--or)}.cro{color:var(--ro)}.cpk{color:var(--pk)}
 .w100{width:100%}.mxa{margin-left:auto}
 .sl{font-size:9px;font-weight:700;letter-spacing:3.5px;color:var(--t3);text-transform:uppercase;opacity:.8}
+.more-item{display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 6px;background:var(--s2);border-radius:10px;color:var(--t2);font-size:10px;font-weight:500;border:1px solid var(--ln);cursor:pointer;transition:all .15s}
+.more-item span:first-child{font-size:20px}
+.more-item:hover{background:var(--s3);color:var(--t1);border-color:var(--ln2)}
 .sec{padding:24px;max-width:880px;margin:0 auto}
+/* Consistent section header */
+.sec-hd{margin-bottom:20px}
+.sec-hd .label{margin-bottom:6px}
+.sec-hd h2{font-size:20px;font-weight:700;color:var(--t1);margin:0}
+.sec-hd p{font-size:13px;color:var(--t3);margin-top:4px;line-height:1.6}
+/* Content divider */
+.divider{height:1px;background:var(--ln);margin:16px 0}
+/* Empty state */
+.empty-state{text-align:center;padding:48px 24px;color:var(--t3)}
+.empty-state .empty-ico{font-size:48px;margin-bottom:12px}
+.empty-state p{font-size:13px;line-height:1.6}
+.quick-btn{transition:all .15s ease!important}
+.quick-btn:hover{border-color:var(--ln2)!important;color:var(--t1)!important;background:var(--s3)!important;transform:translateY(-1px)}
 
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--s1);border:1px solid var(--ln2);border-radius:12px;padding:11px 22px;font-size:13px;font-weight:500;z-index:9999;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
 #toast.on{transform:translateX(-50%) translateY(0)}
@@ -149,6 +183,14 @@ a{text-decoration:none;color:inherit}
 .wc{background:var(--s1);border:1px solid var(--ln);border-radius:var(--r);padding:14px;margin-bottom:8px;transition:border-color .15s}
 .wc:hover{border-color:var(--ln2)}
 .qcard{width:100%;max-width:580px;background:var(--s1);border:1px solid var(--ln);border-radius:var(--r2);padding:28px;box-shadow:var(--shadow-md);animation:fadeUp .2s ease}
+/* Quiz progress bar — more prominent */
+.quiz-progress{height:4px;background:var(--s3);border-radius:4px;overflow:hidden;margin-bottom:20px}
+.quiz-progress-fill{height:100%;background:linear-gradient(90deg,var(--bl),var(--gr));border-radius:4px;transition:width .4s ease}
+/* Quiz counter badge */
+.quiz-counter{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:20px;font-size:11px;color:var(--t3);margin-bottom:16px}
+/* Correct/Wrong answer feedback */
+.qopt-correct{border-color:var(--gr)!important;background:rgba(34,214,124,.08)!important;color:var(--gr)!important}
+.qopt-wrong{border-color:var(--ro)!important;background:rgba(240,56,112,.08)!important;color:var(--ro)!important}
 .qopt{width:100%;padding:12px 16px;border-radius:10px;text-align:left;font-size:13px;margin-bottom:8px;cursor:pointer;transition:all .15s;border:1px solid var(--ln);background:var(--s2);line-height:1.5}
 .qopt:hover{border-color:var(--bl);background:rgba(79,142,247,.06);transform:translateX(3px)}
 
@@ -169,17 +211,23 @@ a{text-decoration:none;color:inherit}
 .tqo{width:100%;padding:8px 12px;border-radius:6px;text-align:left;font-size:12px;font-family:monospace;margin-bottom:6px;cursor:pointer;transition:all .12s;border:1px solid var(--ln)}
 
 /* GRAMMAR */
-.gch{background:var(--s1);border:1px solid var(--ln);border-radius:var(--r);padding:16px;cursor:pointer;transition:all .15s;margin-bottom:10px}
-.gch:hover{border-color:var(--ln2);transform:translateY(-1px)}
+.gch{background:var(--s1);border:1px solid var(--ln);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .18s ease;margin-bottom:10px;position:relative;overflow:hidden}
+.gch::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--vi);opacity:0;transition:opacity .15s}
+.gch:hover{border-color:var(--ln2);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.gch:hover::before{opacity:1}
 .geo{width:100%;padding:9px 12px;border-radius:7px;text-align:left;font-size:13px;margin-bottom:7px;cursor:pointer;transition:all .12s;border:1px solid var(--ln)}
 
 /* WRITING */
-.wtpl{background:var(--s1);border:1px solid var(--ln);border-radius:var(--r);padding:16px;cursor:pointer;margin-bottom:10px;transition:all .15s}
-.wtpl:hover{border-color:var(--ln2);transform:translateY(-1px)}
+.wtpl{background:var(--s1);border:1px solid var(--ln);border-radius:var(--r);padding:18px;cursor:pointer;margin-bottom:10px;transition:all .18s ease;position:relative;overflow:hidden}
+.wtpl::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--or);opacity:0;transition:opacity .15s}
+.wtpl:hover{border-color:var(--ln2);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.wtpl:hover::before{opacity:1}
 
 /* READING */
-.rcard{background:var(--s1);border:1px solid var(--ln);border-radius:var(--r);padding:16px;cursor:pointer;margin-bottom:10px;transition:all .15s}
-.rcard:hover{border-color:var(--ln2);transform:translateY(-1px)}
+.rcard{background:var(--s1);border:1px solid var(--ln);border-radius:var(--r);padding:18px;cursor:pointer;margin-bottom:10px;transition:all .18s ease;position:relative;overflow:hidden}
+.rcard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--tl);opacity:0;transition:opacity .15s}
+.rcard:hover{border-color:var(--ln2);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.rcard:hover::before{opacity:1}
 .rbody{font-size:14px;line-height:1.9;color:var(--t2)}
 .rbody p{margin-bottom:14px}
 .rbody strong{color:var(--t1)}
@@ -421,19 +469,13 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
     <div><div class="brand-name">English Master</div><span class="brand-sub">B1 → C1</span></div>
   </div>
   <div class="tabs">
-    <button class="tab on" onclick="go('home')" id="t-home">🏠 Home</button>
+    <button class="tab" onclick="go('home')" id="t-home">🏠 Home</button>
     <button class="tab" onclick="go('vocab')" id="t-vocab">📚 Vocabulary</button>
-    <button class="tab" onclick="go('tenses')" id="t-tenses">⏱ Tenses</button>
-    <button class="tab" onclick="go('grammar')" id="t-grammar">✏ Grammar</button>
-    <button class="tab" onclick="go('writing')" id="t-writing">✍ Writing</button>
-    <button class="tab" onclick="go('reading')" id="t-reading">📄 Reading</button>
-    <button class="tab" onclick="go('speaking')" id="t-speaking">🗣 Speaking</button>
     <button class="tab" onclick="go('lessons')" id="t-lessons">🎯 Daily Lesson</button>
-    <button class="tab" onclick="go('builder')" id="t-builder">🔤 Sentence Builder</button>
-    <button class="tab" onclick="go('falsefriends')" id="t-falsefriends">⚠ False Friends</button>
+    <button class="tab" onclick="go('grammar')" id="t-grammar">✏ Grammar</button>
+    <button class="tab" onclick="go('tenses')" id="t-tenses">⏱ Tenses</button>
     <button class="tab" onclick="go('stats')" id="t-stats">📊 Stats</button>
-    <button class="tab" onclick="go('tracker')" id="t-tracker">📅 Tracker</button>
-    <button class="tab" onclick="go('settings')" id="t-settings">⚙ Settings</button>
+    <button class="tab" onclick="showDesktopMore(event)" id="t-more">☰ Άλλα</button>
   </div>
   <div class="nav-r">
     <span class="lv-b" id="xp-lv">Lv 1</span>
@@ -495,6 +537,18 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
 </div>
 
 <div id="toast"></div>
+
+<div id="desktop-more" onclick="event.stopPropagation()" style="display:none;position:fixed;top:54px;right:0;background:var(--s1);border:1px solid var(--ln2);border-radius:0 0 var(--r2) var(--r2);padding:10px;z-index:8888;box-shadow:var(--shadow-lg);min-width:220px">
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:4px">
+    <button onclick="go('writing');hideDesktopMore()" class="more-item"><span>✍</span><span>Writing</span></button>
+    <button onclick="go('reading');hideDesktopMore()" class="more-item"><span>📄</span><span>Reading</span></button>
+    <button onclick="go('speaking');hideDesktopMore()" class="more-item"><span>🗣</span><span>Speaking</span></button>
+    <button onclick="go('tracker');hideDesktopMore()" class="more-item"><span>📅</span><span>Tracker</span></button>
+    <button onclick="go('builder');hideDesktopMore()" class="more-item"><span>🔤</span><span>Builder</span></button>
+    <button onclick="go('falsefriends');hideDesktopMore()" class="more-item"><span>⚠</span><span>False Fr.</span></button>
+    <button onclick="go('settings');hideDesktopMore()" class="more-item"><span>⚙</span><span>Settings</span></button>
+  </div>
+</div>
 <div id="offline-banner" style="display:none;position:fixed;top:52px;left:0;right:0;background:var(--am);color:#1a0d00;padding:6px;text-align:center;font-size:11px;font-weight:600;z-index:9990">
   📡 Offline — Η εφαρμογή δουλεύει κανονικά (χωρίς AI features)
 </div>
@@ -695,6 +749,21 @@ function showAch(msg){
 
 /* ══ NAVIGATION ══ */
 const FPANELS=['vocab','tenses','tracker'];
+function showDesktopMore(e){
+  if(e) e.stopPropagation();
+  const m=document.getElementById('desktop-more');
+  if(!m)return;
+  const isOpen=m.style.display!=='none';
+  m.style.display=isOpen?'none':'block';
+  if(!isOpen){
+    setTimeout(()=>document.addEventListener('click',hideDesktopMore,{once:true}),10);
+  }
+}
+function hideDesktopMore(){
+  const m=document.getElementById('desktop-more');
+  if(m)m.style.display='none';
+}
+
 function go(id){
   document.querySelectorAll('.pnl,.fpnl').forEach(p=>{p.style.display='none'});
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
@@ -1162,6 +1231,29 @@ function rVDash(el){
       <div class="pb" style="height:3px"><div class="pf" style="width:${pct}%;background:${cat.col}"></div></div>
     </div>`;
   }).join('');
+  // Empty state for new users
+  const totalSeen=getAllW().filter(w=>getWS(w.id).seen>0).length;
+  if(totalSeen===0){
+    el.innerHTML=`<div style="max-width:460px;margin:40px auto;text-align:center;padding:24px" class="fu">
+      <div style="font-size:56px;margin-bottom:16px">📚</div>
+      <div class="fp f22 b mb8" style="color:var(--t1)">Καλώς ήρθες στο Vocabulary!</div>
+      <div class="f13 mb20" style="color:var(--t3);line-height:1.7">Ξεκίνα ένα quiz για να αρχίσεις να μαθαίνεις λέξεις με Spaced Repetition.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        <button onclick="VS.mode='fc';VS.cat='all';startQ(document.getElementById('vm'),'fc')" style="padding:16px;background:linear-gradient(135deg,rgba(79,142,247,.15),rgba(124,92,245,.1));border:1px solid rgba(124,92,245,.3);border-radius:var(--r);cursor:pointer;text-align:center">
+          <div style="font-size:28px;margin-bottom:6px">🃏</div>
+          <div class="f12 b" style="color:var(--vi)">Flashcards</div>
+          <div class="f10" style="color:var(--t3);margin-top:3px">Ιδανικό για αρχή</div>
+        </button>
+        <button onclick="VS.mode='mc';VS.cat='all';startQ(document.getElementById('vm'),'mc')" style="padding:16px;background:linear-gradient(135deg,rgba(34,214,124,.1),rgba(32,200,200,.1));border:1px solid rgba(34,214,124,.2);border-radius:var(--r);cursor:pointer;text-align:center">
+          <div style="font-size:28px;margin-bottom:6px">✔</div>
+          <div class="f12 b" style="color:var(--gr)">Multiple Choice</div>
+          <div class="f10" style="color:var(--t3);margin-top:3px">Γρήγορο</div>
+        </button>
+      </div>
+      <button onclick="go('lessons')" class="btn bp" style="width:100%;justify-content:center">🎯 Ή ξεκίνα με το Daily Lesson →</button>
+    </div>`;
+    return;
+  }
   el.innerHTML=`<div style="max-width:760px;margin:0 auto">
     <div class="fx ac jb mb16">
       <div><div class="sl mb2">VOCABULAR DASHBOARD</div><div class="fp f16 b">Λεξιλόγιό μου</div></div>
@@ -1996,7 +2088,11 @@ function rTM(){
     }).join('');
     const allA=Object.keys(TST.qa).length>=t.quiz.length;
     body=qrows+(!TST.qs
-      ?`<button onclick="if(${allA}){let sc=0;TENSES[TST.idx].quiz.forEach((q,i)=>{if(TST.qa[i]===q.a)sc++});TST.qsc=sc;TST.qs=true;addXP(sc*5);const td=DB.get('tDone',[]);if(!td.includes(TST.idx)){td.push(TST.idx);DB.set('tDone',td);}toast('Quiz: '+sc+'/'+TENSES[TST.idx].quiz.length+' σωστές — +'+sc*5+' XP',sc===TENSES[TST.idx].quiz.length?'var(--am)':'var(--bl)');const tKey=['present_simple','present_continuous','simple_past','past_continuous','present_perfect','pp_continuous','past_perfect','future_will','future_going_to'][TST.idx]||'present_simple';if(sc>=Math.ceil(TENSES[TST.idx].quiz.length*0.6))setTimeout(()=>showForcedOutput(tKey,'tense'),1200);rTM()}" style="padding:10px 22px;background:${t.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${allA?1:0.4}">ΥΠΟΒΟΛΗ</button>`
+      ?`<button onclick="if(${allA}){let sc=0;TENSES[TST.idx].quiz.forEach((q,i)=>{if(TST.qa[i]===q.a)sc++});TST.qsc=sc;TST.qs=true;const td=DB.get('tDone',[]);if(!td.includes(TST.idx)){td.push(TST.idx);DB.set('tDone',td);}
+  const tPct=Math.round(sc/TENSES[TST.idx].quiz.length*100);
+  if(tPct===100){setTimeout(()=>showCelebration('🏆 '+TENSES[TST.idx].name+'!','Τέλειο σκορ! '+sc+'/'+TENSES[TST.idx].quiz.length+' απαντήσεις.',sc*5,'TST.idx=(TST.idx+1)%TENSES.length;TST.tab=\'theory\';resetTQ();rTM()','Επόμενος χρόνος'),400);}
+  else if(tPct>=60){setTimeout(()=>showCelebration(TENSES[TST.idx].name+' — Καλά!',sc+'/'+TENSES[TST.idx].quiz.length+' σωστές. Καλή πρόοδος!',sc*5,null,null),400);}
+  else{toast('Quiz: '+sc+'/'+TENSES[TST.idx].quiz.length+' — +'+sc*5+' XP','var(--bl)');}const tKey=['present_simple','present_continuous','simple_past','past_continuous','present_perfect','pp_continuous','past_perfect','future_will','future_going_to'][TST.idx]||'present_simple';if(sc>=Math.ceil(TENSES[TST.idx].quiz.length*0.6))setTimeout(()=>showForcedOutput(tKey,'tense'),1200);rTM()}" style="padding:10px 22px;background:${t.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${allA?1:0.4}">ΥΠΟΒΟΛΗ</button>`
       :`<div class="fx ac g12"><div class="card" style="border:2px solid ${TST.qsc===t.quiz.length?'var(--am)':TST.qsc>=Math.ceil(t.quiz.length*.6)?'var(--gr)':'var(--bl)'}">
          <span class="f11 c3">Αποτέλεσμα: </span><span class="fp f20 b" style="color:${TST.qsc===t.quiz.length?'var(--am)':TST.qsc>=Math.ceil(t.quiz.length*.6)?'var(--gr)':'var(--bl)'}">${TST.qsc}/${t.quiz.length}</span>
          </div><button onclick="resetTQ();rTM()" style="padding:9px 16px;border:1px solid ${t.col};border-radius:7px;color:${t.col};background:transparent;cursor:pointer;font-size:10px;font-weight:700">ΕΠΑΝΑΛΗΨΗ</button></div>`);
@@ -2362,7 +2458,10 @@ function rGTopic(){
       return `<div class="card mb10"><div class="f13 mb10" style="line-height:1.6"><span class="fp b" style="color:${t.col};margin-right:7px">${i+1}.</span>${ex.q}</div><div class="g2 mb8">${opts}</div>${GST.es?`<div class="f11"><span style="color:${GST.ea[i]===ex.a?'var(--gr)':'var(--ro)'}">${GST.ea[i]===ex.a?'✓ Σωστό! ':'✗ Σωστό: "'+ex.a+'" — '}</span><span class="c3">${ex.exp}</span></div>`:''}</div>`;
     }).join('')}
     ${!GST.es
-      ?`<button onclick="const allA=Object.keys(GST.ea).length>=${t.exercises.length};if(allA){let sc=0;GRAM.find(x=>x.id===GST.topic).exercises.forEach((ex,i)=>{if(GST.ea[i]===ex.a)sc++;else{const ge=DB.get('gramErr',{});if(!ge[GST.topic])ge[GST.topic]={count:0,last:null};ge[GST.topic].count++;ge[GST.topic].last=todayK();DB.set('gramErr',ge);}});GST.esc=sc;GST.es=true;addXP(sc*8);const pct=Math.round(sc/${t.exercises.length}*100);toast((pct>=80?'✓ ':pct>=50?'👍 ':'📖 ')+sc+'/${t.exercises.length} σωστές — '+(pct>=80?'Εξαιρετικά!':pct>=50?'Καλά!':'Συνέχισε!'),'var(--'+(pct>=80?'gr':pct>=50?'bl':'ro')+')');if(pct>=60)setTimeout(()=>showForcedOutput(GST.topic,'grammar'),1200);rGTopic()}" style="padding:10px 22px;background:${t.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${Object.keys(GST.ea).length>=t.exercises.length?1:0.4}">ΥΠΟΒΟΛΗ</button>`
+      ?`<button onclick="const allA=Object.keys(GST.ea).length>=${t.exercises.length};if(allA){let sc=0;GRAM.find(x=>x.id===GST.topic).exercises.forEach((ex,i)=>{if(GST.ea[i]===ex.a)sc++;else{const ge=DB.get('gramErr',{});if(!ge[GST.topic])ge[GST.topic]={count:0,last:null};ge[GST.topic].count++;ge[GST.topic].last=todayK();DB.set('gramErr',ge);}});GST.esc=sc;GST.es=true;addXP(sc*8);const pct=Math.round(sc/${t.exercises.length}*100);const gramMsg=pct>=80?'Εξαιρετικά! Εξαιρετικά!':pct>=50?'Καλά — συνέχισε!':'Συνέχισε την εξάσκηση!';
+if(pct>=80){setTimeout(()=>showCelebration('✓ '+t.t+' — Ολοκληρώθηκε!',gramMsg+' '+sc+'/'+t.exercises.length+' σωστές.',sc*8,'GST.topic=null;rGrammar()','Επόμενο κεφάλαιο'),400);}
+else{toast((pct>=50?'👍 ':'📖 ')+sc+'/${t.exercises.length} σωστές — '+gramMsg,'var(--'+(pct>=50?'bl':'ro')+')');if(pct>=60)setTimeout(()=>showForcedOutput(GST.topic,'grammar'),1200);}
+rGTopic()}" style="padding:10px 22px;background:${t.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${Object.keys(GST.ea).length>=t.exercises.length?1:0.4}">ΥΠΟΒΟΛΗ</button>`
       :`<div class="fx ac g12"><div class="card" style="border:2px solid ${GST.esc===t.exercises.length?'var(--am)':'var(--gr)'}">
          <span class="f11 c3">Αποτέλεσμα: </span><span class="fp f20 b" style="color:${GST.esc===t.exercises.length?'var(--am)':'var(--gr)'}">${GST.esc}/${t.exercises.length}</span>
          </div><button onclick="GST.ea={};GST.es=false;GST.esc=null;rGTopic()" style="padding:9px 16px;border:1px solid ${t.col};border-radius:7px;color:${t.col};background:transparent;cursor:pointer;font-size:10px;font-weight:700">ΕΠΑΝΑΛΗΨΗ</button></div>`}
@@ -4504,104 +4603,127 @@ function buildWOTD(){
 
 
 function rHome(){
-  const xp=getXP(),lv=getLv(xp),ld=LVLS[lv];
-  const nx=LVLS[lv+1]?LVLS[lv+1].x:ld.x+2000;
-  const lp=Math.min(((xp-ld.x)/(nx-ld.x))*100,100);
-  const comp=DB.get('comp',{});const today=todayK();
-  const streak=calcStreak();
-  const totalDays=Object.keys(comp).filter(k=>(comp[k]||[]).length>=3).length;
-  const learned=learnedW().length;const due=dueW().length;
-  const achDone=getAchs();
-  const minsTd=(comp[today]||[]).reduce((s,id)=>s+(PLAN.find(p=>p.id===id)?.mins||0),0);
-  const todayDone=comp[today]||[];
+  unlockAch('start');
+  const el=document.getElementById('home');
+  const xp=getXP(),lv=getLv(xp),streak=calcStreak();
+  const lc=learnedW().length,due=dueW().length,all=getAllW().length;
+  const comp=DB.get('comp',{}),today=todayK();
+  const todayComp=(comp[today]||[]).length;
+  const todayTotal=PLAN.length;
+  const todayPct=Math.round(todayComp/todayTotal*100);
+  const lesson=getTodayLesson();
+  const lessonDone=lesson.steps.filter(s=>s.done).length;
+  const lessonPct=Math.round(lessonDone/lesson.steps.length*100);
 
-  document.getElementById('home').innerHTML=`<div style="padding:20px;max-width:900px;margin:0 auto" class="fu">
-    <!-- Word of the Day -->
+  el.innerHTML=`<div style="max-width:900px;margin:0 auto;padding:24px" class="fu">
+
+    <!-- TOP: Greeting + Streak -->
+    <div class="fx ac jb mb20">
+      <div>
+        <div class="fp f22 b mb4" style="color:var(--t1)">Καλώς ήρθες! 👋</div>
+        <div class="f13" style="color:var(--t3)">${new Date().toLocaleDateString('el-GR',{weekday:'long',day:'numeric',month:'long'})}</div>
+      </div>
+      <div class="fx ac g12">
+        ${streak>0?`<div style="background:linear-gradient(135deg,var(--am),var(--or));border-radius:12px;padding:10px 16px;text-align:center">
+          <div class="fp f20 b" style="color:#1a0d00">${streak}</div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#1a0d00;opacity:.8">STREAK</div>
+        </div>`:''}
+        <div style="background:var(--s2);border:1px solid var(--ln);border-radius:12px;padding:10px 16px;text-align:center">
+          <div class="fp f20 b" style="color:var(--bl)">${lv.name}</div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--t3)">ΕΠΙΠΕΔΟ</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WORD OF THE DAY -->
     ${buildWOTD()}
-    <div style="text-align:center;padding:24px 20px 20px">
-      <div class="sl mb8 cam">ENGLISH MASTER — B1 → C1 · GENERAL & BUSINESS</div>
-      <h1 class="fp" style="font-size:26px;background:linear-gradient(135deg,#f0eef8 30%,var(--bl) 70%,var(--vi));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px">Καλώς ήρθες!</h1>
-      <p class="f12 c3">Vocabulary · Tenses · Grammar · Writing · Reading · Speaking</p>
-    </div>
 
-    <div class="card mb16">
-      <div class="fx ac jb mb8">
-        <div><span class="f11 c3">Level ${lv+1} — </span><span class="f12 b cam">${ld.n}</span></div>
-        <span class="f11 c3">${xp} / ${nx} XP</span>
+    <!-- PRIMARY ACTION: Today's Lesson -->
+    <div style="background:linear-gradient(135deg,rgba(124,92,245,.15),rgba(79,142,247,.1));border:1px solid rgba(124,92,245,.3);border-radius:var(--r2);padding:20px;margin-bottom:16px;cursor:pointer" onclick="go('lessons')">
+      <div class="fx ac jb mb12">
+        <div class="fx ac g10">
+          <span style="font-size:28px">🎯</span>
+          <div>
+            <div class="fp f16 b mb2" style="color:var(--t1)">Σημερινό Μάθημα</div>
+            <div class="f12" style="color:var(--t3)">${lessonDone===0?'Δεν έχεις ξεκινήσει ακόμα':lessonDone===lesson.steps.length?'✓ Ολοκληρώθηκε!':lessonDone+'/'+lesson.steps.length+' βήματα'}</div>
+          </div>
+        </div>
+        <div class="fx ac g8">
+          <div style="text-align:right">
+            <div class="fp f18 b" style="color:${lessonPct===100?'var(--gr)':'var(--vi)'}">${lessonPct}%</div>
+            <div style="font-size:9px;color:var(--t3)">ΠΡΟΟΔΟΣ</div>
+          </div>
+          <span style="color:var(--vi);font-size:18px">→</span>
+        </div>
       </div>
-      <div class="pb" style="height:7px"><div class="pf" style="width:${lp}%;background:linear-gradient(90deg,var(--am),var(--or));height:100%"></div></div>
-    </div>
-
-    <div class="hstats">
-      ${[['🔥',streak,'STREAK','var(--or)'],['📅',totalDays,'ΜΕΡΕΣ','var(--gr)'],['📚',learned,'ΛΕΞΕΙΣ','var(--bl)'],["⏱",minsTd+"'",'ΣΗΜΕΡΑ','var(--vi)'],['🏆',achDone.length+'/'+ACHS.length,'ΕΠΙΤ.','var(--am)']].map(([i,v,l,c])=>`
-      <div class="hs"><div style="font-size:20px;margin-bottom:3px">${i}</div><div class="hs-v" style="color:${c}">${v}</div><div class="hs-l">${l}</div></div>`).join('')}
-    </div>
-
-    <div class="hgrid">
-      <div class="hcard" onclick="go('vocab')" style="background:linear-gradient(135deg,#051a0a,#0a2a14);border-color:#22c77a22">
-        <div class="hcard-ico">📚</div><h3 style="color:var(--gr)">Vocabulary</h3>
-        <p>${getAllW().length} λέξεις B1→C1 · Spaced Repetition · 4 Quiz Modes</p>
-        <div class="mt8"><div class="pb" style="height:3px"><div class="pf" style="width:${Math.round((learned/getAllW().length)*100)}%;background:var(--gr)"></div></div>
-        <div class="f9 c3 mt4">${learned}/${getAllW().length}${due>0?` · ⏰ ${due} για επανάληψη`:' · Ενημερωμένο ✓'}</div></div>
-      </div>
-      <div class="hcard" onclick="go('tenses')" style="background:linear-gradient(135deg,#0a0818,#150a28);border-color:#7c5cf522">
-        <div class="hcard-ico">⏱</div><h3 style="color:var(--vi)">Tenses</h3>
-        <p>9 χρόνοι · Θεωρία · Quiz · Μετάφραση · Confusable Pairs</p>
-        <div class="mt8 f9 c3">45 quiz ερωτήσεις · Tips & Παγίδες</div>
-      </div>
-      <div class="hcard" onclick="go('grammar')" style="background:linear-gradient(135deg,#050d18,#0a1830);border-color:#5b8def22">
-        <div class="hcard-ico">✏</div><h3 style="color:var(--bl)">Grammar</h3>
-        <p>8 κεφάλαια: Modals · Reported Speech · Rel. Clauses · Conditionals + άλλα</p>
-        <div class="mt8 f9 c3">Πλήρης θεωρία + Ασκήσεις με feedback</div>
-      </div>
-      <div class="hcard" onclick="go('writing')" style="background:linear-gradient(135deg,#060518,#0a0828);border-color:#7c5cf522">
-        <div class="hcard-ico">✍</div><h3 style="color:var(--vi)">Writing</h3>
-        <p>Formal/Informal Email · Conversation · Opinion Essay</p>
-        <div class="mt8 f9 c3">Δομή + Φράσεις + Εξάσκηση (autosave)</div>
-      </div>
-      <div class="hcard" onclick="go('reading')" style="background:linear-gradient(135deg,#181200,#281c00);border-color:#f5b72222">
-        <div class="hcard-ico">📄</div><h3 style="color:var(--am)">Reading</h3>
-        <p>5 κείμενα B1→C1 · Κατανόηση · Vocabulary Extraction</p>
-        <div class="mt8 f9 c3">Αποθήκευση λέξεων απευθείας στο Vocabular</div>
-      </div>
-      <div class="hcard" onclick="go('speaking')" style="background:linear-gradient(135deg,#051a0a,#081a12);border-color:#22c77a22">
-        <div class="hcard-ico">🗣</div><h3 style="color:var(--gr)">Speaking</h3>
-        <p>Conversation Phrases · Προφορά · Shadowing Guide</p>
-        <div class="mt8 f9 c3">7 κατηγορίες φράσεων · Listening resources</div>
-      </div>
-      <div class="hcard" onclick="go('lessons')" style="background:linear-gradient(135deg,#0a0518,#160828);border-color:#7c5cf522">
-        <div class="hcard-ico">🎯</div><h3 style="color:var(--vi)">Daily Lesson</h3>
-        <p>Νέα λέξη + Context + Grammar tip + Mini Quiz + Πρόταση</p>
-        <div class="mt8 f9 c3">5 βήματα · ${getTodayLesson().steps.filter(s=>s.done).length}/5 σήμερα</div>
-      </div>
-      <div class="hcard" onclick="go('builder')" style="background:linear-gradient(135deg,#051a1a,#081a1a);border-color:#20c8c822">
-        <div class="hcard-ico">🔤</div><h3 style="color:var(--tl)">Sentence Builder</h3>
-        <p>Φτιάξε προτάσεις από λέξεις · Word order · Grammar</p>
-        <div class="mt8 f9 c3">20 προτάσεις B1→C1 · Instant feedback</div>
+      <div style="background:rgba(255,255,255,.06);border-radius:6px;height:6px;overflow:hidden">
+        <div style="height:100%;width:${lessonPct}%;background:linear-gradient(90deg,var(--vi),var(--bl));border-radius:6px;transition:width .4s"></div>
       </div>
     </div>
 
-    <div class="today-box">
-      <div class="fx ac jb mb10">
-        <div class="sl">ΣΗΜΕΡΙΝΟΣ ΣΤΟΧΟΣ</div>
-        <div class="f11 c3">${todayDone.length}/${PLAN.length} ολοκληρωμένα · ${minsTd} λεπτά</div>
-      </div>
-      <div class="pb mb12" style="height:4px"><div class="pf" style="width:${(todayDone.length/PLAN.length)*100}%;background:linear-gradient(90deg,var(--bl),var(--gr))"></div></div>
-      ${PLAN.map(item=>{const done=todayDone.includes(item.id);return `<div class="td-t ${done?'done':''}" onclick="toggleTask('${item.id}');rHome()">
-        <div class="tck">${done?'✓':''}</div>
-        <span style="font-size:16px">${item.ic}</span>
-        <div style="flex:1"><div class="f12 b" style="color:${done?item.col:'var(--t2)'}">${item.label}</div><div class="f10 c3 mt4">${item.tip}</div></div>
-        <div class="f10 c3">${item.mins}'</div>
-      </div>`;}).join('')}
+    <!-- STATS ROW -->
+    <div class="hstats mb20">
+      ${[
+        [lc,'Εκμαθημένες','var(--gr)','📚'],
+        [due,'Επανάληψη','var(--bl)','📅'],
+        [streak,'Streak','var(--am)','🔥'],
+        [todayComp+'/'+todayTotal,'Σήμερα','var(--vi)','✅'],
+        [xp,'XP','var(--or)','⭐'],
+      ].map(([v,l,col,ic])=>`<div class="hs" onclick="${l==='Επανάληψη'?'go(\'vocab\')':l==='Εκμαθημένες'?'go(\'vocab\')':''}" style="${l==='Επανάληψη'&&due>0?'border-color:rgba(79,142,247,.3);cursor:pointer':''}" >
+        <div style="font-size:18px;margin-bottom:4px">${ic}</div>
+        <div class="hs-v" style="color:${col};font-size:18px">${v}</div>
+        <div class="hs-l">${l}</div>
+      </div>`).join('')}
     </div>
 
-    ${due>0?`<div class="card c-warn mt14 fx ac jb">
-      <div><div class="sl mb4 cam">⏰ ΛΕΞΕΙΣ ΓΙΑ ΕΠΑΝΑΛΗΨΗ</div>
-      <div class="fx g6 fw">${dueW().slice(0,6).map(w=>`<span class="tag f9" style="background:var(--am)1a;border:1px solid var(--am)33;color:var(--am)">${w.w}</span>`).join('')}${due>6?`<span class="f9 c3">+${due-6} ακόμα</span>`:''}</div></div>
-      <button onclick="VS.mode='review';go('vocab')" class="btn bp bsm" style="flex-shrink:0;margin-left:12px">Επανάληψη</button>
+    <!-- TODAY'S TASKS -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+      <div class="today-box">
+        <div class="sl mb12">ΣΤΟΧΟΙ ΣΗΜΕΡΑ</div>
+        ${PLAN.map(t=>{
+          const done=(comp[today]||[]).includes(t.id);
+          return `<div class="td-t ${done?'done':''}" onclick="toggleTask('${t.id}')">
+            <div class="tck">${done?'✓':''}</div>
+            <div style="flex:1">
+              <div class="f12 ${done?'':'b'}" style="${done?'color:var(--t3);text-decoration:line-through':'color:var(--t1)'}">${t.label}</div>
+              <div class="f10" style="color:var(--t3)">${t.mins} λεπτά</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <!-- QUICK ACCESS -->
+      <div>
+        <div class="sl mb12">ΓΡΗΓΟΡΗ ΠΡΟΣΒΑΣΗ</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          ${[
+            ['vocab','📚','Vocabulary',due>0?due+' due':''],
+            ['tenses','⏱','Tenses',''],
+            ['grammar','✏','Grammar',''],
+            ['writing','✍','Writing',''],
+            ['reading','📄','Reading',''],
+            ['speaking','🗣','Speaking',''],
+          ].map(([id,ic,lb,badge])=>`<button onclick="go('${id}')" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;color:var(--t2);font-size:12px;cursor:pointer;transition:all .15s;text-align:left" class="quick-btn">
+            <span style="font-size:16px">${ic}</span>
+            <span style="flex:1;font-weight:500">${lb}</span>
+            ${badge?`<span style="padding:1px 6px;background:var(--bl)1a;border:1px solid var(--bl)33;color:var(--bl);border-radius:20px;font-size:9px;font-weight:700">${badge}</span>`:''}
+          </button>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM: Review alert if due words exist -->
+    ${due>0?`<div style="background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.25);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="VS.mode='review';go('vocab')">
+      <div class="fx ac g10">
+        <span style="font-size:20px">📅</span>
+        <div>
+          <div class="f13 b" style="color:var(--bl)">${due} λέξεις για επανάληψη</div>
+          <div class="f11" style="color:var(--t3)">Κάνε review τώρα για καλύτερη μνήμη</div>
+        </div>
+      </div>
+      <button class="btn bp bsm">Επανάληψη →</button>
     </div>`:''}
   </div>`;
-  updXP();
 }
 
 /* ══ INIT ══ */
@@ -4647,15 +4769,15 @@ function showOnboarding(){
 function renderOnboardStep(step){
   const steps=[
     {ico:'👋',title:'Καλώς ήρθες στο English Master!',
-     body:'Σε βοηθάει να περάσεις από <strong>Passive B1</strong> σε <strong>Active B2→C1</strong>.<br><br>Σε 2 βήματα θα στήσουμε το πρόγραμμά σου.',btn:'Ξεκινάμε →'},
-    {ico:'📖',title:'Πώς λειτουργεί',
-     body:'<strong>Κάθε μέρα (45-60 λεπτά):</strong><br>• 🎯 <strong>Daily Lesson</strong>: νέα λέξη + 5 βήματα<br>• 📚 <strong>Vocabulary</strong>: Spaced Repetition<br>• ✏ <strong>Grammar/Tenses</strong>: 1 κεφάλαιο<br>• 📄 <strong>Reading/Writing</strong>: εξάσκηση',btn:'Κατάλαβα →'},
-    {ico:'🎯',title:'Ορισε τον στόχο σου',
+     body:'Σε βοηθάει να περάσεις από <strong>Passive B1</strong> σε <strong>Active B2→C1</strong>.<br><br>Η εφαρμογή χρησιμοποιεί <strong>Spaced Repetition</strong> — επαναλαμβάνει αυτόματα ό,τι ξεχνάς, μέχρι να το μάθεις σωστά.',btn:'Ξεκινάμε →'},
+    {ico:'📅',title:'Το Πρόγραμμά σου',
+     body:'<strong>Κάθε μέρα — μόλις 30-45 λεπτά:</strong><br><br>1️⃣ Ξεκίνα πάντα με το <strong>🎯 Daily Lesson</strong> (10 λεπτά)<br>2️⃣ Κάνε <strong>📚 Vocabulary</strong> review (10 λεπτά)<br>3️⃣ Ένα <strong>✏ Grammar</strong> ή <strong>⏱ Tenses</strong> κεφάλαιο<br>4️⃣ Τελείωσε με <strong>📄 Reading</strong> ή <strong>✍ Writing</strong><br><br>Η συνέπεια > η διάρκεια. <strong>Κάθε μέρα λίγο!</strong>',btn:'Κατάλαβα →'},
+    {ico:'🎯',title:'Ορισε τον ημερήσιο στόχο σου',
      body:'Πόσες λέξεις θέλεις να μαθαίνεις κάθε μέρα;<br><div style="display:flex;gap:8px;justify-content:center;margin:16px 0">'+[5,10,15,20].map(n=>`<button onclick="DB.set('gw',${n});document.querySelectorAll('.ob-goal').forEach(b=>{b.style.background='var(--s3)';b.style.color='var(--t2)';});this.style.background='var(--bl)';this.style.color='#fff'" class="ob-goal" style="padding:8px 16px;border:1px solid var(--ln);border-radius:8px;cursor:pointer;background:${n===10?'var(--bl)':'var(--s3)'};color:${n===10?'#fff':'var(--t2)'}">${n}</button>`).join('')+'</div><div class="f11 c3 tc">Συνιστάται: <strong>10/μέρα</strong></div>',btn:'Ξεκίνα! 🚀'},
   ];
   const s=steps[step];
   const isLast=step===steps.length-1;
-  const nextAction=isLast?`DB.set('onboarded',true);document.getElementById('onboard-modal').remove();go('lessons')`:`document.getElementById('onboard-modal').innerHTML=renderOnboardStep(${step+1})`;
+  const nextAction=isLast?`DB.set('onboarded',true);document.getElementById('onboard-modal').remove();showFirstTimeTip();go('home')`:`document.getElementById('onboard-modal').innerHTML=renderOnboardStep(${step+1})`;
   return `<div style="background:var(--s1);border:1px solid var(--ln2);border-radius:var(--r2);padding:28px;max-width:460px;width:100%;text-align:center">
     <div style="font-size:36px;margin-bottom:12px">${s.ico}</div>
     <div class="fp f18 b mb12">${s.title}</div>
@@ -5846,6 +5968,78 @@ if(storedVersion&&storedVersion!==APP_VERSION){
 } else if(!storedVersion){
   // First visit - just store version
   localStorage.setItem('app_version',APP_VERSION);
+}
+
+
+/* ══ CELEBRATION ══ */
+function showCelebration(title, subtitle, xp, nextAction, nextLabel){
+  const modal = document.createElement('div');
+  modal.id = 'celeb-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px';
+
+  // Confetti particles
+  const colors = ['var(--bl)','var(--gr)','var(--am)','var(--vi)','var(--tl)'];
+  const confetti = Array.from({length:20},(_,i)=>{
+    const col = colors[i%colors.length];
+    const left = Math.random()*100;
+    const delay = Math.random()*0.5;
+    const size = 6+Math.random()*8;
+    return `<div style="position:absolute;left:${left}%;top:-10px;width:${size}px;height:${size}px;background:${col};border-radius:${Math.random()>0.5?'50%':'2px'};animation:confettiFall ${1+Math.random()}s ${delay}s ease-in forwards;opacity:.9"></div>`;
+  }).join('');
+
+  modal.innerHTML = `
+    <style>
+      @keyframes confettiFall{to{transform:translateY(110vh) rotate(${Math.random()*720}deg);opacity:0}}
+      @keyframes celebPop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+    </style>
+    <div style="position:fixed;inset:0;pointer-events:none;overflow:hidden">${confetti}</div>
+    <div style="background:var(--s1);border:1px solid var(--ln2);border-radius:var(--r2);padding:36px 28px;max-width:420px;width:100%;text-align:center;animation:celebPop .5s cubic-bezier(.34,1.56,.64,1);position:relative">
+      <div style="font-size:56px;margin-bottom:12px">🎉</div>
+      <div class="fp f22 b mb6" style="color:var(--t1)">${title}</div>
+      <div class="f13 mb16" style="color:var(--t3);line-height:1.6">${subtitle}</div>
+      <div style="background:linear-gradient(135deg,rgba(246,188,24,.15),rgba(242,112,48,.1));border:1px solid rgba(246,188,24,.3);border-radius:12px;padding:16px;margin-bottom:20px;display:inline-block">
+        <div class="fp f28 b" style="color:var(--am)">+${xp} XP</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--am);opacity:.7">ΚΕΡΔΙΣΕΣ</div>
+      </div>
+      <div class="fx jc g10">
+        <button onclick="document.getElementById('celeb-modal').remove()" class="btn bgh bsm">Κλείσιμο</button>
+        ${nextAction?`<button onclick="document.getElementById('celeb-modal').remove();${nextAction}" class="btn bp">${nextLabel} →</button>`:''}
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+  addXP(xp);
+
+  // Auto close after 6 seconds
+  setTimeout(()=>document.getElementById('celeb-modal')?.remove(), 6000);
+}
+
+function showFirstTimeTip(){
+  const tips=[
+    {target:'t-lessons',text:'Ξεκίνα πάντα από εδώ — το Daily Lesson!',pos:'bottom'},
+    {target:'t-vocab',text:'Κάνε Vocabulary review κάθε μέρα',pos:'bottom'},
+  ];
+  // Show a simple highlight on the Daily Lesson tab
+  setTimeout(()=>{
+    const el=document.getElementById('t-lessons');
+    if(!el)return;
+    el.style.boxShadow='0 0 0 3px var(--vi),0 0 20px rgba(124,92,245,.5)';
+    el.style.borderRadius='6px';
+    const tip=document.createElement('div');
+    tip.style.cssText='position:fixed;z-index:9997;background:var(--vi);color:#fff;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:500;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(124,92,245,.4)';
+    tip.textContent='👆 Ξεκίνα από εδώ!';
+    document.body.appendChild(tip);
+    const rect=el.getBoundingClientRect();
+    tip.style.left=(rect.left+rect.width/2-tip.offsetWidth/2)+'px';
+    tip.style.top=(rect.bottom+8)+'px';
+    setTimeout(()=>{
+      el.style.boxShadow='';
+      el.style.borderRadius='';
+      tip.style.opacity='0';
+      tip.style.transition='opacity .3s';
+      setTimeout(()=>tip.remove(),300);
+    },3500);
+  },500);
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
