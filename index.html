@@ -252,7 +252,10 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
 /* Smooth scroll on iOS */
 .pnl,.fpnl,.vsb,.tsb{-webkit-overflow-scrolling:touch}
 /* Larger touch targets on mobile */
+.mobile-tsb-toggle,.mobile-vsb-toggle{display:none}
 @media(max-width:700px){
+  .mobile-tsb-toggle,.mobile-vsb-toggle{display:inline-flex!important}
+
   .tab{padding:8px 10px;font-size:10px}
   .btn{padding:10px 16px}
   .tck,.trck{width:26px;height:26px}
@@ -301,14 +304,14 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
   
   /* Sidebars → stack vertically */
   .vsb{width:100%!important;border-right:none;border-bottom:1px solid var(--ln);flex-direction:row;flex-wrap:wrap;max-height:none;overflow-x:auto;overflow-y:hidden;padding:6px}
-  .vsb-h{display:none}
+  .vsb-h{padding:4px 8px!important;display:flex!important;align-items:center;gap:8px;min-width:fit-content}
   .vmb{padding:6px 10px;border-left:none;border-bottom:2px solid transparent;font-size:11px;flex-shrink:0;border-radius:20px}
   .vmb.on{background:var(--s3);border-bottom-color:var(--bl);border-radius:20px}
   .vm{overflow-y:auto}
   
   /* Tenses sidebar */
   .tsb{width:100%!important;flex-direction:row;overflow-x:auto;overflow-y:hidden;padding:6px;border-right:none;border-bottom:1px solid var(--ln)}
-  .tsb-h{display:none}
+  .tsb-h{padding:4px 8px!important;display:flex!important;align-items:center;justify-content:space-between;min-width:fit-content}
   .tnb{padding:6px 12px;border-left:none;border-bottom:2px solid transparent;white-space:nowrap;font-size:11px}
   .tmain{padding:14px}
   
@@ -1100,6 +1103,16 @@ function rVocab(){
   else if(VS.mode==='add')rVAdd(vm);
 }
 
+
+function getMobileVSBToggle(){
+  const isOpen=VS.sbOpen;
+  return `<button onclick="VS.sbOpen=!VS.sbOpen;rVocab()" 
+    class="mobile-vsb-toggle"
+    style="padding:4px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:20px;color:var(--t3);font-size:10px;cursor:pointer;margin-bottom:8px;display:none">
+    ${isOpen?'▲ Κλείσε μενού':'▼ Άνοιξε μενού'}
+  </button>`;
+}
+
 function rVDash(el){
   const lc=learnedW().length,due=dueW().length,all=getAllW().length;
   const catCards=Object.entries(VCATS).map(([id,cat])=>{
@@ -1835,12 +1848,12 @@ function rTenses(){
   buildTSB();rTM();
 }
 function buildTSB(){
-  const sb=document.getElementById('tsb');if(!sb)return;
+  const sb=document.getElementById('tsb');
+  if(!sb)return;
   const isOpen=DB.get('tsb_open',true);
 
   if(!isOpen){
-    sb.style.cssText='width:0;overflow:hidden;border:none';
-    // Add open button if not there
+    sb.style.cssText='width:0;overflow:hidden;border:none;padding:0';
     if(!document.getElementById('tsb-open-btn')){
       const btn=document.createElement('button');
       btn.id='tsb-open-btn';
@@ -1853,35 +1866,39 @@ function buildTSB(){
     return;
   }
 
-  // Remove open button if exists
   document.getElementById('tsb-open-btn')?.remove();
   sb.style.cssText='';
 
-  sb.innerHTML=`<div class="tsb-h">
-    <div class="fx ac jb mb4">
-      <div class="sl">TENSES</div>
-      <button onclick="DB.set('tsb_open',false);buildTSB()" style="padding:1px 7px;background:none;border:1px solid var(--ln2);border-radius:10px;color:var(--t3);font-size:10px;cursor:pointer" title="Κλείσε">✕</button>
-    </div>
-    <div class="fp f13 b" style="color:#f0eef8">Επίλεξε χρόνο:</div>
-  </div>`+
-  TENSES.map((t,i)=>`<button class="tnb ${TST.idx===i&&TST.tab!=='cmp'?'on':''}" onclick="TST.idx=${i};TST.tab='theory';resetTQ();rTM()" style="border-left-color:${TST.idx===i&&TST.tab!=='cmp'?t.col:'transparent'}">
-    <div class="f10 b" style="color:${TST.idx===i&&TST.tab!=='cmp'?t.col:'var(--t3)'}">${t.name}</div>
-    <div class="f9 c3 mono">${t.tag}</div>
-  </button>`).join('')+TENSES.map((t,i)=>`<button class="tnb ${TST.idx===i&&TST.tab!=='cmp'?'on':''}" onclick="TST.idx=${i};TST.tab='theory';resetTQ();rTM()" style="border-left-color:${TST.idx===i&&TST.tab!=='cmp'?t.col:'transparent'}">
-    <div class="f10 b" style="color:${TST.idx===i&&TST.tab!=='cmp'?t.col:'var(--t3)'}">${t.name}</div>
-    <div class="f9 c3 mono">${t.tag}</div>
-  </button>`).join('')+
-  `<button class="tnb ${TST.tab==='cmp'?'on':''}" onclick="TST.tab='cmp';rTM()" style="border-left-color:${TST.tab==='cmp'?'var(--am)':'transparent'};border-top:1px solid var(--ln);margin-top:6px;padding-top:10px">
-    <div class="f10 b" style="color:${TST.tab==='cmp'?'var(--am)':'var(--t3)'}">⚖ Σύγκριση Χρόνων</div>
-    <div class="f9 c3">Confusable pairs</div>
-  </button>`;
+  sb.innerHTML=
+    `<div class="tsb-h">
+      <div class="fx ac jb mb4">
+        <div class="sl">TENSES</div>
+        <button onclick="DB.set('tsb_open',false);buildTSB()" style="padding:1px 7px;background:none;border:1px solid var(--ln2);border-radius:10px;color:var(--t3);font-size:10px;cursor:pointer">✕</button>
+      </div>
+      <div class="fp f13 b" style="color:#f0eef8">Επίλεξε χρόνο:</div>
+    </div>`+
+    TENSES.map((t,i)=>`<button class="tnb ${TST.idx===i&&TST.tab!=='cmp'?'on':''}" onclick="TST.idx=${i};TST.tab='theory';resetTQ();rTM()" style="border-left-color:${TST.idx===i&&TST.tab!=='cmp'?t.col:'transparent'}">
+      <div class="f10 b" style="color:${TST.idx===i&&TST.tab!=='cmp'?t.col:'var(--t3)'}">${t.name}</div>
+      <div class="f9 c3 mono">${t.tag}</div>
+    </button>`).join('')+
+    `<button class="tnb ${TST.tab==='cmp'?'on':''}" onclick="TST.tab='cmp';rTM()" style="border-left-color:${TST.tab==='cmp'?'var(--am)':'transparent'};border-top:1px solid var(--ln);margin-top:6px;padding-top:10px">
+      <div class="f10 b" style="color:${TST.tab==='cmp'?'var(--am)':'var(--t3)'}">⚖ Σύγκριση Χρόνων</div>
+      <div class="f9 c3">Confusable pairs</div>
+    </button>`;
 }
 function resetTQ(){TST.qa={};TST.qs=false;TST.qsc=null;TST.ta={};TST.tc={};TST.tips=false;}
 function rTM(){
   const mn=document.getElementById('tmn');if(!mn)return;
+  buildTSB();
   if(TST.tab==='cmp'){rTCmp(mn);return;}
   const t=TENSES[TST.idx];
   document.documentElement.style.setProperty('--tc',t.col);
+  // Mobile collapse button for sidebar
+  const mobileToggleBtn=`<button onclick="DB.set('tsb_open',!DB.get('tsb_open',true));buildTSB()" 
+    class="mobile-tsb-toggle"
+    style="display:none;padding:4px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:20px;color:var(--t3);font-size:10px;cursor:pointer;margin-bottom:8px">
+    ${DB.get('tsb_open',true)?'▲ Κλείσε χρόνους':'▼ Επίλεξε χρόνο ('+TENSES[TST.idx].name+')'}
+  </button>`;
   const tabs=['theory','forms','ex','tr','quiz'].map(id=>{
     const ls={theory:'Θεωρία',forms:'Τύποι',ex:'Παραδείγματα',tr:'Μετάφραση',quiz:`Quiz (${t.quiz.length})`};
     return `<button class="ttab ${TST.tab===id?'on':''}" onclick="TST.tab='${id}';resetTQ();rTM()">${ls[id]}</button>`;
@@ -1967,6 +1984,7 @@ function rTM(){
          </div><button onclick="resetTQ();rTM()" style="padding:9px 16px;border:1px solid ${t.col};border-radius:7px;color:${t.col};background:transparent;cursor:pointer;font-size:10px;font-weight:700">ΕΠΑΝΑΛΗΨΗ</button></div>`);
   }
   mn.innerHTML=`<div style="max-width:720px;margin:0 auto">
+    ${mobileToggleBtn}
     <div class="fx ac g10 mb16">
       <div style="width:6px;height:32px;background:${t.col};border-radius:3px;flex-shrink:0"></div>
       <div><div class="fp f18 b" style="color:#f0eef8">${t.name}</div><div class="f11 c3">${t.gr}</div></div>
