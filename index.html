@@ -1281,8 +1281,11 @@ const WORDS=[
 ];
 
 function getAllW(){
-  const av=typeof AVIATION_VOCAB!=='undefined'&&DB.get('av_enabled',false)?AVIATION_VOCAB:[];
-  return [...WORDS,...DB.get('customW',[]),...DB.get('custom_words',[]),...av];
+  let av=[];
+  try{if(typeof AVIATION_VOCAB!=='undefined'&&DB.get('av_enabled',false))av=AVIATION_VOCAB;}catch(e){}
+  const cust=[];
+  try{if(typeof getCustomWords==='function')cust.push(...getCustomWords());}catch(e){}
+  return [...WORDS,...DB.get('customW',[]),...DB.get('custom_words',[]),...cust,...av];
 }
 function getWB(){return DB.get('wb',{})}
 function getWS(id){return getWB()[id]||{sc:0,st:0,nr:0,seen:0}}
@@ -1880,6 +1883,10 @@ function delCW(id){
 /* ══ TENSES DATA ══ */
 const TENSES=[
   {id:1,name:'Simple Present',gr:'Απλός Ενεστώτας',col:'#5b8def',tag:'I work',
+   theory:`<div class="card mb10" style="border-color:#5b8def33">
+     <div class="f13 mb8" style="line-height:1.8">Ο <strong>Simple Present</strong> χρησιμοποιείται για <em>γεγονότα που επαναλαμβάνονται</em>, <em>αλήθειες</em> και <em>συνήθειες</em>. Είναι ο πιο συχνός χρόνος στα επαγγελματικά αγγλικά.</div>
+     <div class="f12 c3">🔑 Κλειδί: αν μπορείς να προσθέσεις <strong>"every day / always / usually"</strong> → Simple Present</div>
+   </div>`,
    uses:[
      {t:'Συνήθειες & ρουτίνα',e:'I check my emails every morning at 8 am.',g:'Ελέγχω τα email μου κάθε πρωί στις 8.'},
      {t:'Γεγονότα & αλήθειες',e:'English is spoken all over the world.',g:'Τα αγγλικά μιλιούνται σε όλο τον κόσμο.'},
@@ -1903,271 +1910,362 @@ const TENSES=[
      'Do you speak any other languages besides Greek?',
      'The contract expires at the end of this month.',
    ],
+   tr:[
+     {gr:'Αυτή εργάζεται στο τμήμα οικονομικών.',en:'She works in the finance department.',hint:'3rd person singular'},
+     {gr:'Δεν πηγαίνουμε στο γραφείο τις Παρασκευές.',en:'We don\'t go to the office on Fridays.',hint:'plural negative'},
+     {gr:'Μιλά αγγλικά και γαλλικά.',en:'He speaks English and French.',hint:'he/she +s'},
+     {gr:'Αναχωρεί το αεροπλάνο στις 14:30;',en:'Does the plane depart at 14:30?',hint:'question with does'},
+     {gr:'Η σύμβαση λήγει τον Δεκέμβριο.',en:'The contract expires in December.',hint:'fixed fact'},
+   ],
    quiz:[
      {q:'She ___ (work) in the finance department.',opts:['work','is working','works','worked'],a:'works',exp:'3rd person singular → +s'},
-     {q:'They ___ (not/know) about the new policy yet.',opts:["doesn't know","don't know","aren't knowing","didn't know"],a:"don't know",exp:'they → don\'t (not doesn\'t)'},
+     {q:'They ___ (not/know) about the new policy yet.',opts:["doesn\'t know","don\'t know","aren\'t knowing","didn\'t know"],a:"don\'t know",exp:'they → don\'t (not doesn\'t)'},
      {q:'___ he ___ (speak) English fluently?',opts:['Is/speaking','Does/speak','Do/speaks','Is/speaks'],a:'Does/speak',exp:'Question: Does + subject + base verb (no -s)'},
-     {q:'I ___ (check) my emails every morning.',opts:['am checking','checked','check','have checked'],a:'check',exp:'Daily habit → Simple Present'},
-     {q:'The meeting ___ (start) at 10am tomorrow.',opts:['is starting','will start','starts','started'],a:'starts',exp:'Fixed schedule in future → Simple Present'},
+     {q:'Water ___ (boil) at 100°C.',opts:['is boiling','boils','boil','boiled'],a:'boils',exp:'Scientific fact → Simple Present'},
+     {q:'I ___ (not/understand) why this report ___ (have) errors.',opts:["don\'t understand/has","am not understanding/is having","doesn\'t understand/have","don\'t understand/is having"],a:"don\'t understand/has",exp:'Stative verbs (understand, have) → Simple Present'},
+     {q:'The meeting ___ (start) at 9am tomorrow according to the agenda.',opts:['starts','will start','is starting','started'],a:'starts',exp:'Fixed schedule in the future → Simple Present'},
+     {q:'She usually ___ (send) the report before 5pm.',opts:['sends','send','is sending','does send'],a:'sends',exp:'Habit + he/she/it → +s'},
    ]},
 
-  {id:2,name:'Present Continuous',gr:'Παρακείμενος Συνεχής',col:'#7c5cf5',tag:'I am working',
+  {id:2,name:'Present Continuous',gr:'Παρακείμενος Διαρκείας',col:'#22c77a',tag:'I am working',
+   theory:`<div class="card mb10" style="border-color:#22c77a33">
+     <div class="f13 mb8" style="line-height:1.8">Ο <strong>Present Continuous</strong> δείχνει κάτι που γίνεται <em>τώρα αυτή τη στιγμή</em> ή <em>είναι προσωρινό</em>. Χρησιμοποιείται και για <em>μελλοντικά σχέδια</em>.</div>
+     <div class="f12 c3">🔑 Κλειδί: <strong>"now / at the moment / currently / this week"</strong> → Present Continuous</div>
+   </div>`,
    uses:[
-     {t:'Τώρα, αυτή τη στιγμή',e:'She is presenting the quarterly results right now.',g:'Παρουσιάζει τα τριμηνιαία αποτελέσματα αυτή τη στιγμή.'},
-     {t:'Προσωρινή κατάσταση',e:'I am working from home this week.',g:'Δουλεύω από το σπίτι αυτή την εβδομάδα (προσωρινά).'},
-     {t:'Μελλοντικό ραντεβού (arranged)',e:'We are meeting the client on Thursday.',g:'Συναντάμε τον πελάτη την Πέμπτη (έχει κανονιστεί).'},
-     {t:'Αλλαγή/τάση',e:'Standards are getting higher every year.',g:'Τα standards ανεβαίνουν κάθε χρόνο.'},
+     {t:'Τώρα αυτή τη στιγμή',e:'I am currently reviewing the maintenance schedule.',g:'Αυτή τη στιγμή ελέγχω το πρόγραμμα συντήρησης.'},
+     {t:'Προσωρινή κατάσταση',e:'She is working from home this week.',g:'Αυτή την εβδομάδα εργάζεται από το σπίτι.'},
+     {t:'Προσωρινή αλλαγή',e:'We are using a new system until the upgrade is complete.',g:'Χρησιμοποιούμε νέο σύστημα μέχρι να ολοκληρωθεί η αναβάθμιση.'},
+     {t:'Μελλοντικό σχέδιο (fixed plan)',e:'I am meeting the inspector on Thursday.',g:'Συναντώ τον επιθεωρητή την Πέμπτη.'},
    ],
-   forms:[['➕ Καταφατικό','am/is/are + verb-ing · I am working · She is working · They are working'],['➖ Αρνητικό','am/is/are + not + verb-ing · He is not (isn\'t) working'],['❓ Ερωτηματικό','Am/Is/Are + subject + verb-ing? · Is she working?']],
-   kw:['now','right now','at the moment','currently','this week/month','today','still','Look! Listen!'],
-   tips:['run→running, sit→sitting (CVC doubling)','die→dying, lie→lying (ie→ying)','Stative verbs ΔΕΝ παίρνουν continuous: know, like, want, believe, understand, have (=possess)'],
+   forms:[['➕ Καταφατικό','am/is/are + verb+ing · I am working · She is working · They are working'],['➖ Αρνητικό','am/is/are + not + verb+ing · He isn\'t working today'],['❓ Ερωτηματικό','Am/Is/Are + subject + verb+ing? · Are you working on this?']],
+   kw:['now','right now','at the moment','currently','still','today','this week/month','look!','listen!'],
+   tips:['Stative verbs ΔΕΝ έχουν continuous: know, like, want, need, understand, believe, have (possession)','Spelling: come→coming, run→running (double consonant), lie→lying','Προσοχή: "I am having a meeting" ✓ vs "I am having a car" ✗'],
    mistakes:[
-     {wrong:'I am understanding the problem.',right:'I understand the problem.',why:'understand = stative verb — ΔΕΝ παίρνει continuous'},
-     {wrong:'She is work at the office now.',right:'She is WORKING at the office now.',why:'is + verb-ING (όχι base verb)'},
-     {wrong:'They are knowing the answer.',right:'They KNOW the answer.',why:'know = stative — ΔΕΝ παίρνει continuous'},
-     {wrong:'He working on a new project.',right:'He IS working on a new project.',why:'Παραλείφθηκε το is'},
+     {wrong:'She is knowing the answer.',right:'She KNOWS the answer.',why:'Know = stative verb, δεν έχει continuous'},
+     {wrong:'I working now.',right:'I AM working now.',why:'Πρέπει am/is/are + -ing'},
+     {wrong:'He is work at the airport.',right:'He is workING at the airport.',why:'-ing πάντα στο continuous'},
+     {wrong:'Are you understand?',right:'Do you UNDERSTAND?',why:'Understand = stative verb'},
    ],
    examples:[
-     'I\'m currently reviewing the maintenance reports.',
-     'The team is developing a new procedure this month.',
+     'The team is currently working on the safety report.',
      'Are you attending the conference next week?',
-     'She isn\'t answering — she must be in a meeting.',
-     'Costs are rising significantly this quarter.',
-     'What are you working on at the moment?',
+     'We are not accepting new applications at this time.',
+     'She is taking a course in aviation English.',
+     'The engineers are installing the new equipment right now.',
+     'Why are you speaking so quietly?',
+   ],
+   tr:[
+     {gr:'Αυτή τη στιγμή αναθεωρώ την έκθεση.',en:'I am currently reviewing the report.',hint:'now → continuous'},
+     {gr:'Δεν εργάζεται στο γραφείο αυτή την εβδομάδα.',en:'He is not working in the office this week.',hint:'temporary situation'},
+     {gr:'Τι κάνεις τώρα;',en:'What are you doing now?',hint:'question form'},
+     {gr:'Ταξιδεύουμε στις Βρυξέλλες την Τετάρτη.',en:'We are travelling to Brussels on Wednesday.',hint:'fixed future plan'},
    ],
    quiz:[
-     {q:'Please be quiet — she ___ (give) a presentation.',opts:['gives','is giving','give','has given'],a:'is giving',exp:'Right now → Present Continuous'},
-     {q:'I ___ (not/understand) what you mean.',opts:["am not understanding","don't understand","isn't understanding","not understand"],a:"don't understand",exp:'understand = stative verb → Simple Present'},
-     {q:'___ you ___ (work) on the report right now?',opts:['Do/work','Are/working','Have/worked','Is/working'],a:'Are/working',exp:'Present Continuous question: Are + subject + -ing'},
-     {q:'We ___ (meet) the investors next Tuesday. (arranged)',opts:['will meet','meet','are meeting','met'],a:'are meeting',exp:'Fixed future arrangement → Present Continuous'},
-     {q:'Technology ___ (change) the way we communicate.',opts:['changes','is changing','has changed','will change'],a:'is changing',exp:'Ongoing trend/change → Present Continuous'},
+     {q:'She ___ (attend) a training course this week.',opts:['attends','is attending','attended','has attended'],a:'is attending',exp:'Temporary activity this week → Present Continuous'},
+     {q:'Listen! Someone ___ (knock) at the door.',opts:['knocks','knocked','is knocking','has knocked'],a:'is knocking',exp:'Happening right now (Listen!) → Present Continuous'},
+     {q:'Why ___ you ___ (whisper)?',opts:['do/whisper','are/whispering','have/whispered','did/whisper'],a:'are/whispering',exp:'Action happening now → Present Continuous'},
+     {q:'I ___ (not/understand) this regulation at all.',opts:["am not understanding","don\'t understand","haven\'t understood","wasn\'t understanding"],a:"don\'t understand",exp:'Understand = stative verb → Simple Present'},
+     {q:'The company ___ (expand) into new markets this year.',opts:['expands','expanded','is expanding','has expanded'],a:'is expanding',exp:'Temporary trend happening now → Present Continuous'},
+     {q:'We ___ (meet) the HCAA inspector on Friday. (planned)',opts:['meet','will meet','are meeting','met'],a:'are meeting',exp:'Fixed future plan → Present Continuous'},
+     {q:'___ he still ___ (wait) for the approval?',opts:['Does/wait','Is/waiting','Has/waited','Did/wait'],a:'Is/waiting',exp:'Currently in progress → Present Continuous'},
    ]},
 
-  {id:3,name:'Simple Past',gr:'Αόριστος',col:'#f5b722',tag:'I worked',
+  {id:3,name:'Simple Past',gr:'Απλός Αόριστος',col:'#f5b722',tag:'I worked',
+   theory:`<div class="card mb10" style="border-color:#f5b72233">
+     <div class="f13 mb8" style="line-height:1.8">Ο <strong>Simple Past</strong> περιγράφει ενέργειες που <em>ολοκληρώθηκαν στο παρελθόν</em> σε <em>συγκεκριμένο χρόνο</em>. Είναι ο πιο συχνός παρελθοντικός χρόνος.</div>
+     <div class="f12 c3">🔑 Κλειδί: <strong>"yesterday / last week / in 2020 / ago"</strong> → Simple Past</div>
+   </div>`,
    uses:[
-     {t:'Ολοκληρωμένο γεγονός στο παρελθόν',e:'She submitted the report yesterday morning.',g:'Υπέβαλε την αναφορά χθες το πρωί.'},
-     {t:'Σειρά γεγονότων στο παρελθόν',e:'He arrived, opened his laptop and started working.',g:'Έφτασε, άνοιξε το laptop του και άρχισε να δουλεύει.'},
-     {t:'Παρελθοντική συνήθεια (με used to)',e:'I used to commute two hours every day.',g:'Μετακινούμουν 2 ώρες κάθε μέρα (παλιά, όχι πια).'},
-     {t:'Συγκεκριμένη χρονική στιγμή',e:'The company was founded in 1998.',g:'Η εταιρεία ιδρύθηκε το 1998.'},
+     {t:'Ολοκληρωμένη ενέργεια στο παρελθόν',e:'The aircraft completed its annual check last month.',g:'Το αεροσκάφος ολοκλήρωσε τον ετήσιο έλεγχό του τον περασμένο μήνα.'},
+     {t:'Σειρά γεγονότων',e:'He arrived, reviewed the documents, and signed the report.',g:'Έφτασε, ανέθεσε τα έγγραφα και υπέγραψε την έκθεση.'},
+     {t:'Παρελθοντική συνήθεια (used to)',e:'We used to submit reports manually.',g:'Παλιά υποβάλλαμε εκθέσεις χειροκίνητα.'},
+     {t:'Αφήγηση γεγονότων',e:'The inspection took place on 15 March and revealed three deficiencies.',g:'Η επιθεώρηση έγινε στις 15 Μαρτίου και αποκάλυψε τρεις ελλείψεις.'},
    ],
-   forms:[['➕ Regular verbs','+ed · work→worked · submit→submitted · study→studied'],['➕ Irregular verbs','go→went · have→had · come→came · make→made · take→took · know→knew'],['➖ Αρνητικό','did not (didn\'t) + base verb · She didn\'t attend.'],['❓ Ερωτηματικό','Did + subject + base verb? · Did she attend?']],
-   kw:['yesterday','last week/month/year','in 2020','ago','when','then','in the end','finally','at that time'],
-   tips:['Μετά από did → ΠΑΝΤΑ base verb: Did she GO? (✓) Did she WENT? (✗)','Κοινά irregular: see→saw, write→wrote, speak→spoke, buy→bought, think→thought','Regular: stop→stopped, plan→planned, travel→travelled (double consonant)'],
+   forms:[['➕ Καταφατικό','Regular: verb+ed (worked/checked) · Irregular: go→went, have→had, write→wrote'],['➖ Αρνητικό','did not (didn\'t) + base verb · She didn\'t attend the meeting'],['❓ Ερωτηματικό','Did + subject + base verb? · Did you receive my email?']],
+   kw:['yesterday','last week/month/year','ago','in 2020','on Monday','at 9am','once','then','when'],
+   tips:['Irregular verbs: go/went, come/came, take/took, write/wrote, send/sent, find/found, make/made','Αρνητικό + ερωτηματικό: ΠΑΝΤΑ base verb (didn\'t + base, not past form)','ed: work→worked, stop→stopped (double consonant), study→studied (y→ied)'],
    mistakes:[
-     {wrong:'Did she went to the meeting?',right:'Did she GO to the meeting?',why:'Μετά από did → base verb (χωρίς -ed/irregular)'},
-     {wrong:'Yesterday I have visited the client.',right:'Yesterday I VISITED the client.',why:'yesterday = specific past time → Simple Past (not Present Perfect)'},
-     {wrong:'He didn\'t worked yesterday.',right:'He didn\'t WORK yesterday.',why:'Μετά από didn\'t → base verb'},
-     {wrong:'We are visited the office last week.',right:'We VISITED the office last week.',why:'Past = Simple Past, not continuous with past marker'},
+     {wrong:'She didn\'t went to the meeting.',right:'She didn\'t GO to the meeting.',why:'Μετά από did/didn\'t → base verb (δεν βάζουμε -ed ή past form)'},
+     {wrong:'Did he sended the report?',right:'Did he SEND the report?',why:'Μετά από Did → base verb (not past form)'},
+     {wrong:'I have seen him yesterday.',right:'I SAW him yesterday.',why:'Yesterday = specific time → Simple Past (not Present Perfect)'},
+     {wrong:'The flight was departed at 10:00.',right:'The flight DEPARTED at 10:00.',why:'Intransitive verbs δεν σχηματίζουν passive έτσι'},
    ],
    examples:[
-     'The inspection took place last Thursday.',
-     'They didn\'t approve the proposal at the meeting.',
-     'When did you last update the maintenance records?',
-     'She presented her findings clearly and professionally.',
-     'The aircraft underwent a full service in March.',
-     'Did anyone notice the problem before the flight?',
+     'The crew completed the pre-flight checklist without any issues.',
+     'We received the airworthiness directive last Tuesday.',
+     'Did you attend the safety briefing this morning?',
+     'The maintenance team identified three defects during the inspection.',
+     'She submitted the corrective action report on time.',
+     'The aircraft landed safely despite the adverse weather conditions.',
+   ],
+   tr:[
+     {gr:'Έστειλα την έκθεση χθες το απόγευμα.',en:'I sent the report yesterday afternoon.',hint:'specific past time'},
+     {gr:'Δεν παρακολούθησε την ενημέρωση ασφαλείας.',en:'He didn\'t attend the safety briefing.',hint:'negative: didn\'t + base verb'},
+     {gr:'Πότε παρέλαβες την άδεια;',en:'When did you receive the licence?',hint:'question with did'},
+     {gr:'Η επιθεώρηση διήρκεσε τρεις ώρες.',en:'The inspection lasted three hours.',hint:'completed action'},
+     {gr:'Εντοπίσαμε δύο ελλείψεις κατά τον έλεγχο.',en:'We found two deficiencies during the check.',hint:'irregular: find/found'},
    ],
    quiz:[
-     {q:'She ___ (submit) the documents two days ago.',opts:['submits','has submitted','submitted','was submitting'],a:'submitted',exp:'two days ago = specific past time → Simple Past'},
-     {q:'___ you ___ (attend) the briefing yesterday?',opts:['Did/attend','Have/attended','Were/attending','Did/attended'],a:'Did/attend',exp:'Question: Did + subject + base verb (no -ed)'},
-     {q:'He ___ (not/know) about the new regulation.',opts:["didn't know","didn't knew","hasn't known","wasn't knowing"],a:"didn't know",exp:'didn\'t + base verb (know, not knew)'},
-     {q:'They ___ (call), ___ (leave) a message and ___ (hang up).',opts:['call/leave/hang','called/left/hung','called/leaved/hanged','were calling/left/hung'],a:'called/left/hung',exp:'Sequence of past actions → Simple Past · leave→left, hang→hung (irregular)'},
-     {q:'I ___ (work) for this company since 2015.',opts:['worked','was working','have worked','am working'],a:'have worked',exp:'since + duration up to now → Present Perfect (not Simple Past)'},
+     {q:'The inspection ___ (take) place last Thursday.',opts:['takes','is taking','took','has taken'],a:'took',exp:'Specific past time (last Thursday) → Simple Past'},
+     {q:'She ___ (not/attend) the briefing yesterday.',opts:["didn\'t attend","doesn\'t attend","hadn\'t attended","wasn\'t attending"],a:"didn\'t attend",exp:'Negative Simple Past: didn\'t + base verb'},
+     {q:'___ you ___ (receive) my email this morning?',opts:['Have/received','Did/receive','Do/receive','Are/receiving'],a:'Did/receive',exp:'Specific past time (this morning) → Simple Past'},
+     {q:'We ___ (identify) three defects during the check.',opts:['identify','are identifying','identified','have identified'],a:'identified',exp:'Completed action in the past → Simple Past'},
+     {q:'He ___ (not/sign) the documents before he left.',opts:["didn\'t sign","doesn\'t sign","hadn\'t sign","wasn\'t signing"],a:"didn\'t sign",exp:'didn\'t + base verb (not didn\'t signed)'},
+     {q:'When ___ the aircraft ___ (arrive) at the hangar?',opts:['does/arrive','did/arrive','has/arrived','is/arriving'],a:'did/arrive',exp:'Past question: Did + subject + base verb'},
+     {q:'The engineer ___ (write) the technical report in two hours.',opts:['writes','wrote','has written','was writing'],a:'wrote',exp:'Completed action → Simple Past (write/wrote irregular)'},
    ]},
 
-  {id:4,name:'Past Continuous',gr:'Παρατατικός Συνεχής',col:'#f07830',tag:'I was working',
+  {id:4,name:'Past Continuous',gr:'Παρατατικός Διαρκείας',col:'#f07830',tag:'I was working',
+   theory:`<div class="card mb10" style="border-color:#f0783033">
+     <div class="f13 mb8" style="line-height:1.8">Ο <strong>Past Continuous</strong> περιγράφει <em>ενέργεια σε εξέλιξη</em> σε συγκεκριμένη στιγμή του παρελθόντος. Συχνά συνδυάζεται με Simple Past.</div>
+     <div class="f12 c3">🔑 Κλειδί: <strong>"while / when / at that time / at 3pm yesterday"</strong> → Past Continuous</div>
+   </div>`,
    uses:[
-     {t:'Σε εξέλιξη όταν διακόπηκε',e:'I was reviewing the report when the alarm went off.',g:'Ανάγνωσα την αναφορά όταν χτύπησε ο συναγερμός.'},
-     {t:'Δύο πράξεις παράλληλα',e:'While she was presenting, he was taking notes.',g:'Ενώ παρουσίαζε, αυτός κρατούσε σημειώσεις.'},
-     {t:'Περιβάλλον/ατμόσφαιρα παρελθόντος',e:'The sun was setting and people were leaving the office.',g:'Ο ήλιος έδυε και οι άνθρωποι έφευγαν από το γραφείο.'},
+     {t:'Ενέργεια σε εξέλιξη + διακοπή',e:'I was reviewing the report when the phone rang.',g:'Έκανα review την έκθεση όταν χτύπησε το τηλέφωνο.'},
+     {t:'Δύο ταυτόχρονες ενέργειες',e:'While she was checking the logs, he was updating the database.',g:'Ενώ αυτή έλεγχε τα logs, αυτός ενημέρωνε τη βάση δεδομένων.'},
+     {t:'Φόντο σε αφήγηση',e:'It was raining heavily when the aircraft landed.',g:'Έβρεχε έντονα όταν προσγειώθηκε το αεροσκάφος.'},
+     {t:'Προσωρινή κατάσταση στο παρελθόν',e:'She was working as a consultant at that time.',g:'Εκείνη την εποχή εργαζόταν ως σύμβουλος.'},
    ],
-   forms:[['➕ Καταφατικό','was/were + verb-ing · I was working · They were working'],['➖ Αρνητικό','was/were + not + verb-ing · He wasn\'t working'],['❓ Ερωτηματικό','Was/Were + subject + verb-ing? · Were they working?']],
-   kw:['while','when','as','at that moment','at 9pm last night','all day yesterday'],
-   tips:['Past Continuous = background action · Simple Past = interrupting action','while → Past Continuous · when + short action → Simple Past','I was walking (ongoing) WHEN I saw him (interruption)'],
+   forms:[['➕ Καταφατικό','was/were + verb+ing · I/He/She was working · You/We/They were working'],['➖ Αρνητικό','was/were + not + -ing · They weren\'t attending the meeting'],['❓ Ερωτηματικό','Was/Were + subject + -ing? · Were you working at 3pm?']],
+   kw:['while','when','as','at that time','at 3pm yesterday','all morning','throughout'],
+   tips:['was = I/he/she/it · were = you/we/they','while + past continuous → παράλληλες ενέργειες','when + simple past → διακοπή','Past Continuous = φόντο, Simple Past = γεγονός στο φόντο'],
    mistakes:[
-     {wrong:'While I worked, she called.',right:'While I WAS WORKING, she called.',why:'while + ongoing action → Past Continuous'},
-     {wrong:'I was seen the accident.',right:'I SAW the accident.',why:'see = instantaneous action → Simple Past'},
-     {wrong:'He was work when I arrived.',right:'He WAS WORKING when I arrived.',why:'was + verb-ING (not base verb)'},
+     {wrong:'I was work when you called.',right:'I was workING when you called.',why:'-ing πάντα στο continuous'},
+     {wrong:'While I worked, she was calling.',right:'While I WAS WORKING, she called.',why:'While → past continuous για φόντο'},
+     {wrong:'They were knowing the solution.',right:'They KNEW the solution.',why:'Know = stative verb, δεν έχει continuous'},
    ],
    examples:[
-     'What were you doing at 10pm last Tuesday?',
-     'She was preparing the presentation when the power cut happened.',
-     'While the engineers were checking the system, we were updating the logs.',
-     'I wasn\'t feeling well, so I left early.',
-     'They were still discussing the issue when I left.',
+     'The maintenance crew was inspecting the engine when the fault was discovered.',
+     'While the pilot was completing the checklist, the co-pilot was briefing the cabin crew.',
+     'Were you attending the EASA seminar last week?',
+     'The system was processing the data when it crashed.',
+     'At 10:00 yesterday, the engineer was conducting the visual inspection.',
+     'It was getting dark when they finally finished the work.',
+   ],
+   tr:[
+     {gr:'Διάβαζα την τεχνική έκθεση όταν με πήρε τηλέφωνο.',en:'I was reading the technical report when you called me.',hint:'action in progress + interruption'},
+     {gr:'Ενώ αυτός έλεγχε το αεροσκάφος, εγώ ενημέρωνα τα αρχεία.',en:'While he was inspecting the aircraft, I was updating the records.',hint:'two simultaneous actions'},
+     {gr:'Εργαζόταν ως CAME εκείνη την εποχή;',en:'Was she working as a CAME at that time?',hint:'question form'},
    ],
    quiz:[
-     {q:'She ___ (work) when I called her.',opts:['worked','was working','has worked','is working'],a:'was working',exp:'In progress when interrupted → Past Continuous'},
-     {q:'While he ___ (drive), he ___ (hear) the news on the radio.',opts:['drove/heard','was driving/heard','drove/was hearing','was driving/was hearing'],a:'was driving/heard',exp:'Ongoing (driving) + completed moment (heard) → Past Cont + Simple Past'},
-     {q:'At 8pm last night, they ___ (discuss) the new contract.',opts:['discussed','discuss','were discussing','had discussed'],a:'were discussing',exp:'Action in progress at specific past time → Past Continuous'},
-     {q:'I ___ (not/pay) attention when the announcement ___ (be) made.',opts:["wasn't paying/was","didn't pay/was","wasn't paying/were","didn't pay/were"],a:"wasn't paying/was",exp:'Inattention ongoing → Past Cont · announcement = passive Simple Past'},
+     {q:'I ___ (review) the manual when my supervisor called.',opts:['reviewed','was reviewing','am reviewing','had reviewed'],a:'was reviewing',exp:'Action in progress when interrupted → Past Continuous'},
+     {q:'While the crew ___ (prepare) the aircraft, the engineers ___ (check) the fuel.',opts:['prepared/checked','was preparing/was checking','were preparing/were checking','prepared/were checking'],a:'were preparing/were checking',exp:'Two simultaneous past actions → both Past Continuous'},
+     {q:'___ you ___ (attend) the meeting at 3pm yesterday?',opts:['Did/attend','Were/attending','Have/attended','Do/attend'],a:'Were/attending',exp:'Specific time in the past → Past Continuous'},
+     {q:'The system ___ (process) the data when it suddenly ___ (crash).',opts:['processed/was crashing','was processing/crashed','was processing/was crashing','processed/crashed'],a:'was processing/crashed',exp:'Background action (continuous) + sudden event (simple past)'},
+     {q:'She ___ (not/know) about the change while it ___ (happen).',opts:["wasn\'t knowing/was happening","didn\'t know/was happening","didn\'t know/happened","hadn\'t known/was happening"],a:"didn\'t know/was happening",exp:'Know = stative → simple past; background process → continuous'},
    ]},
 
-  {id:5,name:'Present Perfect',gr:'Παρακείμενος',col:'#3dd68c',tag:'I have worked',
+  {id:5,name:'Present Perfect',gr:'Παρακείμενος',col:'#7c5cf5',tag:'I have worked',
+   theory:`<div class="card mb10" style="border-color:#7c5cf533">
+     <div class="f13 mb8" style="line-height:1.8">Ο <strong>Present Perfect</strong> συνδέει <em>παρελθόν με παρόν</em>. Δεν λέμε πότε έγινε — εστιάζουμε στο <strong>αποτέλεσμα τώρα</strong>. Πολύ συχνός στα επαγγελματικά emails!</div>
+     <div class="f12 c3">🔑 Κλειδί: <strong>"just / already / yet / ever / never / recently / since / for"</strong> → Present Perfect</div>
+   </div>`,
    uses:[
-     {t:'Εμπειρία ζωής (έχεις κάνει ποτέ;)',e:'Have you ever worked with an international team?',g:'Έχεις δουλέψει ποτέ με διεθνή ομάδα;'},
-     {t:'Αποτέλεσμα που φαίνεται τώρα',e:'She has just submitted the report.',g:'Μόλις υπέβαλε την αναφορά (και είναι εκεί τώρα).'},
-     {t:'Διάρκεια από παρελθόν ως τώρα',e:'I have worked here for seven years.',g:'Δουλεύω εδώ εδώ και 7 χρόνια (και συνεχίζω).'},
-     {t:'Αόριστο παρελθόν (πότε; δεν ξέρω/δεν έχει σημασία)',e:'Someone has moved my files.',g:'Κάποιος μετέφερε τα αρχεία μου (δεν ξέρω πότε ακριβώς).'},
+     {t:'Ολοκληρώθηκε, αποτέλεσμα τώρα',e:'I have just submitted the corrective action report.',g:'Μόλις υπέβαλα την έκθεση διορθωτικών ενεργειών.'},
+     {t:'Εμπειρία (ποτέ / κάποτε)',e:'Have you ever attended an EASA audit?',g:'Έχεις παρακολουθήσει ποτέ έλεγχο EASA;'},
+     {t:'Κατάσταση που συνεχίζεται',e:'She has worked in aviation for 15 years.',g:'Εργάζεται στην αεροπορία εδώ και 15 χρόνια.'},
+     {t:'Πρόσφατα νέα / ανακοινώσεις',e:'The CAA has released a new airworthiness directive.',g:'Η CAA εξέδωσε νέα οδηγία πτητικής ικανότητας.'},
    ],
-   forms:[['➕ Καταφατικό','have/has + past participle · I have worked · She has submitted'],['➖ Αρνητικό','have/has + not + pp · I haven\'t finished · She hasn\'t arrived'],['❓ Ερωτηματικό','Have/Has + subject + pp? · Have you finished?'],['Irregular pp','go→gone, see→seen, write→written, do→done, take→taken, speak→spoken, give→given, make→made, come→come']],
-   kw:['ever','never','just','already','yet (neg/q)','recently','lately','since','for','so far','up to now'],
-   tips:['ΚΛΕΙΔΙ: Δεν λέμε ΠΟΤΕ — σύνδεση με παρόν','yet = negative/question: "I haven\'t done it YET" / "Have you done it YET?"','already = positive: "I have ALREADY done it"','for + period: for 3 years · since + point: since 2020'],
+   forms:[['➕ Καταφατικό','have/has + past participle · I/You/We/They have worked · He/She/It has worked'],['➖ Αρνητικό','have/has + not + pp · We haven\'t received confirmation yet'],['❓ Ερωτηματικό','Have/Has + subject + pp? · Has the report been approved?']],
+   kw:['just','already','yet','ever','never','recently','lately','so far','for','since','this week/month/year'],
+   tips:['just = μόλις (καταφατικό) · yet = ακόμα (αρνητικό/ερωτηματικό) · already = ήδη','for + διάρκεια: for 3 years · since + σημείο εκκίνησης: since 2020','Specific past time (yesterday, in 2020) → Simple Past, ΟΧΙ Present Perfect'],
    mistakes:[
-     {wrong:'I have seen him yesterday.',right:'I SAW him yesterday.',why:'yesterday = specific time → Simple Past (not Present Perfect)'},
-     {wrong:'She has worked here since 5 years.',right:'She has worked here FOR 5 years.',why:'period = for · point in time = since'},
-     {wrong:'Did you ever visit London?',right:'HAVE you ever visited London?',why:'ever (life experience) → Present Perfect'},
-     {wrong:'I already finished the report.',right:'I have ALREADY finished the report.',why:'already with result → Present Perfect'},
+     {wrong:'I have seen him yesterday.',right:'I SAW him yesterday.',why:'Yesterday = specific time → Simple Past'},
+     {wrong:'She has went to London last week.',right:'She WENT to London last week.',why:'Last week = specific time → Simple Past'},
+     {wrong:'Have you ever went to Paris?',right:'Have you ever BEEN to Paris?',why:'Present Perfect → past participle (gone/been, not went)'},
+     {wrong:'I work here since 2018.',right:'I HAVE WORKED here since 2018.',why:'Since + duration → Present Perfect'},
    ],
    examples:[
-     'I\'ve never experienced anything like this before.',
-     'Has the engineer already inspected the equipment?',
-     'We haven\'t received any response from the client yet.',
-     'She has worked in aviation for over ten years.',
-     'The team has made significant progress this quarter.',
-     'Have you ever had to deal with a difficult audit?',
+     'The engineering team has completed all outstanding maintenance tasks.',
+     'Have you submitted the airworthiness review yet?',
+     'We have already notified the authority about the defect.',
+     'She has never flown on a turboprop before.',
+     'The company has been operating in Greece for over 30 years.',
+     'I have just received confirmation from the CAA.',
+   ],
+   tr:[
+     {gr:'Μόλις έστειλα την έκθεση στην HCAA.',en:'I have just sent the report to the HCAA.',hint:'just → present perfect'},
+     {gr:'Έχεις ελέγξει ποτέ τα έγγραφα της αεροπλοΐας;',en:'Have you ever checked the airworthiness documents?',hint:'ever → present perfect question'},
+     {gr:'Δεν έχουμε λάβει ακόμα την έγκριση.',en:'We haven\'t received the approval yet.',hint:'yet → negative'},
+     {gr:'Η εταιρεία λειτουργεί στην Ελλάδα εδώ και 20 χρόνια.',en:'The company has operated in Greece for 20 years.',hint:'for + duration → present perfect'},
+     {gr:'Εξέδωσε η αρχή νέα AD;',en:'Has the authority issued a new AD?',hint:'question form with has'},
    ],
    quiz:[
-     {q:'I ___ (never/see) such a detailed report before.',opts:['never saw','have never seen','never have seen','didn\'t never see'],a:'have never seen',exp:'Life experience + never → Present Perfect · Subject between have and never'},
-     {q:'She ___ (just/submit) the application.',opts:['just submitted','has just submitted','just has submitted','just submits'],a:'has just submitted',exp:'just = very recently → Present Perfect · just goes between have and pp'},
-     {q:'We ___ (work) together since 2019.',opts:['worked','are working','have worked','work'],a:'have worked',exp:'since + point in time, continuing now → Present Perfect'},
-     {q:'___ you ___ (finish) the report yet?',opts:['Did/finish','Have/finished','Are/finishing','Do/finish'],a:'Have/finished',exp:'yet in question → Present Perfect'},
-     {q:'I last visited London ___ 2021.',opts:['since','for','in','during'],a:'in',exp:'Simple Past + specific year → in 2021 (not since/for)'},
+     {q:'The team ___ (just/complete) the safety audit.',opts:['just completed','has just completed','just has completed','had just completed'],a:'has just completed',exp:'just + present perfect → have/has + just + past participle'},
+     {q:'___ you ___ (ever/work) in aircraft maintenance?',opts:['Did you ever work','Have you ever worked','Do you ever work','Were you ever working'],a:'Have you ever worked',exp:'Ever → Present Perfect question'},
+     {q:'We ___ (not/receive) the parts yet.',opts:["didn\'t receive","haven\'t received","don\'t receive","hadn\'t received"],a:"haven\'t received",exp:'Yet → Present Perfect negative'},
+     {q:'She ___ (work) for the CAMO since 2019.',opts:['works','worked','has worked','is working'],a:'has worked',exp:'Since + point in time → Present Perfect'},
+     {q:'I ___ (see) that film last night.',opts:["have seen","saw","have saw","see"],a:'saw',exp:'Last night = specific time → Simple Past, NOT Present Perfect'},
+     {q:'The HCAA ___ (release) a new directive this week.',opts:['released','has released','is releasing','was releasing'],a:'has released',exp:'This week (still current) → Present Perfect'},
+     {q:'___ he ___ (submit) the maintenance report yet?',opts:['Did/submit','Has/submitted','Is/submitting','Had/submitted'],a:'Has/submitted',exp:'Yet → Present Perfect question: Has + subject + pp?'},
    ]},
 
-  {id:6,name:'Present Perfect Continuous',gr:'Παρακείμενος Συνεχής',col:'#20c8c8',tag:'I have been working',
+  {id:6,name:'Present Perfect Continuous',gr:'Παρακείμενος Διαρκείας',col:'#20c8c8',tag:'I have been working',
+   theory:`<div class="card mb10" style="border-color:#20c8c833">
+     <div class="f13 mb8" style="line-height:1.8">Ο <strong>Present Perfect Continuous</strong> δείχνει <em>ενέργεια που ξεκίνησε στο παρελθόν</em> και <em>συνεχίζεται ή μόλις σταμάτησε</em>. Εστιάζουμε στη <strong>διάρκεια</strong> και στα <strong>ορατά αποτελέσματα</strong>.</div>
+     <div class="f12 c3">🔑 Κλειδί: <strong>"how long / for / since / all day / all morning"</strong> → Present Perfect Continuous</div>
+   </div>`,
    uses:[
-     {t:'Δραστηριότητα που ξεκίνησε στο παρελθόν και συνεχίζεται',e:'I have been waiting for this approval for three weeks.',g:'Περιμένω αυτή την έγκριση εδώ και τρεις εβδομάδες.'},
-     {t:'Αίτια ορατού αποτελέσματος τώρα',e:'She looks exhausted — she has been working all night.',g:'Φαίνεται εξαντλημένη — δούλευε όλη τη νύχτα.'},
-     {t:'Έμφαση στη διάρκεια',e:'How long have you been learning English?',g:'Πόσο καιρό μαθαίνεις αγγλικά;'},
+     {t:'Ενέργεια που συνεχίζεται',e:'I have been working on this AD assessment for three hours.',g:'Δουλεύω πάνω σε αυτή την αξιολόγηση AD για τρεις ώρες.'},
+     {t:'Ορατό αποτέλεσμα τώρα',e:'You look tired. Have you been working all night?',g:'Φαίνεσαι κουρασμένος. Δουλεύεις όλη τη νύχτα;'},
+     {t:'Πόσο καιρό;',e:'How long have you been waiting for the approval?',g:'Πόσο καιρό περιμένεις την έγκριση;'},
    ],
-   forms:[['➕ Καταφατικό','have/has + been + verb-ing · I have been working · She has been studying'],['➖ Αρνητικό','haven\'t/hasn\'t + been + verb-ing'],['❓ Ερωτηματικό','Have/Has + subject + been + verb-ing?']],
-   kw:['for','since','all day/morning/week','how long','recently','lately'],
-   tips:['PPC = emphasis on DURATION and CONTINUITY','PP = result matters · PPC = process/duration matters','She has written 3 emails. (PP = result — we know how many)','She has been writing emails. (PPC = activity still ongoing)'],
+   forms:[['➕ Καταφατικό','have/has + been + verb+ing · I have been working · She has been waiting'],['➖ Αρνητικό','have/has + not + been + -ing · We haven\'t been receiving updates'],['❓ Ερωτηματικό','Have/Has + subject + been + -ing? · How long has she been working here?']],
+   kw:['for','since','how long','all day','all morning','lately','recently','still'],
+   tips:['Present Perfect: αποτέλεσμα → "I have written the report" (it\'s done)','Present Perfect Continuous: διάρκεια → "I have been writing the report" (focus on process)','Stative verbs δεν έχουν continuous: know, understand, like, want'],
    mistakes:[
-     {wrong:'I am working here since 2019.',right:'I HAVE BEEN WORKING here since 2019.',way:'Ongoing from past to now → PPC (not Present Continuous)'},
-     {wrong:'How long are you waiting?',right:'How long HAVE YOU BEEN WAITING?',why:'Duration from past to now → PPC'},
+     {wrong:'I have been knowing him for years.',right:'I HAVE KNOWN him for years.',why:'Know = stative verb, δεν έχει continuous'},
+     {wrong:'She has been worked here since 2020.',right:'She has been workING here since 2020.',why:'-ing πάντα στο perfect continuous'},
+     {wrong:'How long are you waiting?',right:'How long HAVE YOU BEEN WAITING?',why:'Duration question → Present Perfect Continuous'},
    ],
    examples:[
-     'How long have you been preparing for the certification?',
-     'We have been trying to resolve this issue for days.',
-     'She has been attending English classes every week.',
-     'The engineers have been running tests since Monday.',
-     'I haven\'t been sleeping well lately — too much stress.',
+     'The mechanic has been inspecting the landing gear for two hours.',
+     'We have been trying to contact the supplier all morning.',
+     'How long have you been working in the CAMO department?',
+     'She has been preparing for the EASA audit all week.',
+     'They haven\'t been receiving the required maintenance data.',
+     'I have been reviewing airworthiness directives since breakfast.',
+   ],
+   tr:[
+     {gr:'Δουλεύω σε αυτό το project εδώ και τρεις μέρες.',en:'I have been working on this project for three days.',hint:'duration → present perfect continuous'},
+     {gr:'Πόσο καιρό περιμένεις την απόφαση;',en:'How long have you been waiting for the decision?',hint:'how long → present perfect continuous'},
+     {gr:'Ψάχνουμε λύση όλη την ημέρα.',en:'We have been looking for a solution all day.',hint:'all day → duration'},
    ],
    quiz:[
-     {q:'How long ___ you ___ (learn) English?',opts:['do/learn','are/learning','have/been learning','did/learn'],a:'have/been learning',exp:'Duration from past to present → Present Perfect Continuous'},
-     {q:'She looks tired. She ___ (work) all night.',opts:['worked','has been working','was working','is working'],a:'has been working',exp:'Evidence of past continuous activity → PPC'},
-     {q:'We ___ (wait) for the approval since last Monday.',opts:['wait','are waiting','were waiting','have been waiting'],a:'have been waiting',exp:'since + duration continuing now → PPC'},
-     {q:'He ___ (write) reports all morning and he\'s still not done.',opts:['wrote','has written','has been writing','was writing'],a:'has been writing',exp:'Emphasis on ongoing activity → PPC'},
+     {q:'The team ___ (work) on the safety assessment all morning.',opts:['worked','has been working','is working','was working'],a:'has been working',exp:'All morning (duration, still ongoing) → Present Perfect Continuous'},
+     {q:'How long ___ you ___ (wait) for the part to arrive?',opts:['did/wait','have/been waiting','are/waiting','were/waiting'],a:'have/been waiting',exp:'How long → Present Perfect Continuous'},
+     {q:'She ___ (know) about the regulation for years.',opts:['has been knowing','is knowing','has known','knew'],a:'has known',exp:'Know = stative verb → Present Perfect Simple (not continuous)'},
+     {q:'We ___ (try) to reach the authority since yesterday.',opts:['tried','are trying','have been trying','were trying'],a:'have been trying',exp:'Since + ongoing effort → Present Perfect Continuous'},
+     {q:'He looks exhausted. He ___ (review) documents all day.',opts:['reviewed','was reviewing','has been reviewing','is reviewing'],a:'has been reviewing',exp:'Visible result now + duration → Present Perfect Continuous'},
    ]},
 
-  {id:7,name:'Past Perfect',gr:'Υπερσυντέλικος',col:'#f03870',tag:'I had worked',
+  {id:7,name:'Past Perfect',gr:'Υπερσυντέλικος',col:'#d030f0',tag:'I had worked',
+   theory:`<div class="card mb10" style="border-color:#d030f033">
+     <div class="f13 mb8" style="line-height:1.8">Ο <strong>Past Perfect</strong> δείχνει κάτι που έγινε <em>ΠΡΙΝ από ένα άλλο γεγονός στο παρελθόν</em>. Είναι το "παρελθόν του παρελθόντος".</div>
+     <div class="f12 c3">🔑 Κλειδί: δύο παρελθοντικά γεγονότα → το πρώτο στο χρόνο = <strong>Past Perfect</strong></div>
+   </div>`,
    uses:[
-     {t:'Πριν από άλλο παρελθοντικό γεγονός',e:'When I arrived, she had already left the office.',g:'Όταν έφτασα, είχε ήδη φύγει από το γραφείο.'},
-     {t:'3rd Conditional',e:'If they had checked the system, the problem wouldn\'t have occurred.',g:'Αν είχαν ελέγξει το σύστημα, το πρόβλημα δεν θα είχε συμβεί.'},
-     {t:'Reported Speech backshift',e:'She said she had already submitted the documents.',g:'Είπε ότι είχε ήδη υποβάλει τα έγγραφα.'},
+     {t:'Ενέργεια πριν από άλλη',e:'By the time the inspector arrived, we had already prepared all the documents.',g:'Μέχρι να φτάσει ο επιθεωρητής, είχαμε ήδη ετοιμάσει όλα τα έγγραφα.'},
+     {t:'Αιτία που προηγήθηκε',e:'The aircraft was grounded because the engineer had found a serious defect.',g:'Το αεροσκάφος είχε καθηλωθεί επειδή ο μηχανικός είχε εντοπίσει σοβαρό ελάττωμα.'},
+     {t:'Reported speech',e:'She said that she had already sent the report.',g:'Είπε ότι είχε ήδη στείλει την έκθεση.'},
    ],
-   forms:[['➕ Καταφατικό','had + past participle (same for ALL persons) · I/She/They had finished'],['➖ Αρνητικό','had not (hadn\'t) + pp · He hadn\'t arrived yet.'],['❓ Ερωτηματικό','Had + subject + pp? · Had she finished before you arrived?']],
-   kw:['when','before','after','by the time','already','just','never','until'],
-   tips:['ΚΛΕΙΔΙ: Past Perfect = το παλαιότερο από δύο παρελθοντικά γεγονότα','Timeline: PP (older) → Simple Past (newer) → Now','by the time + Simple Past → Past Perfect for the earlier action','If + Past Perfect → would have + pp (3rd Conditional)'],
+   forms:[['➕ Καταφατικό','had + past participle · I/He/She/We/They had completed (same for all persons!)'],['➖ Αρνητικό','had not (hadn\'t) + past participle · We hadn\'t received confirmation'],['❓ Ερωτηματικό','Had + subject + past participle? · Had you informed the authority?']],
+   kw:['by the time','before','after','when','already','just','never','by Monday','until'],
+   tips:['had = ίδιο για ΟΛΟΥΣ (I/you/he/she/we/they had)','Past Perfect vs Simple Past: δύο παρελθ. γεγονότα → το παλαιότερο = had + pp','Reported Speech: "I have sent" → she said she HAD sent'],
    mistakes:[
-     {wrong:'When I arrived, she already left.',right:'When I arrived, she had ALREADY LEFT.',why:'Left happened BEFORE arrived → Past Perfect'},
-     {wrong:'She said she already submitted.',right:'She said she HAD ALREADY SUBMITTED.',why:'Reported speech backshift → had + pp'},
-     {wrong:'After he had finished, he left.',right:'Correct — but: After he finished, he left is also OK.',why:'after already shows sequence — both forms possible'},
+     {wrong:'Before he left, he signed the documents.',right:'Before he left, he HAD SIGNED the documents.',why:'Η υπογραφή έγινε ΠΡΙΝ τη φυγή → Past Perfect'},
+     {wrong:'By the time I arrived, they finished.',right:'By the time I arrived, they HAD FINISHED.',why:'By the time → Past Perfect για την ολοκληρωμένη ενέργεια'},
+     {wrong:'She said she has sent the email.',right:'She said she HAD SENT the email.',why:'Reported speech: has → had'},
    ],
    examples:[
-     'By the time we arrived at the gate, the flight had already departed.',
-     'She hadn\'t seen the updated manual before the inspection.',
-     'Had you ever worked in aviation before joining us?',
-     'The engineer confirmed he had checked all the systems.',
-     'I realised I had left my access card at home.',
+     'The crew had completed all pre-flight checks before the delay was announced.',
+     'By the time the spare part arrived, the aircraft had been grounded for a week.',
+     'Had you informed the HCAA before the defect was discovered?',
+     'She hadn\'t received the maintenance data before the deadline.',
+     'The technician reported that he had already carried out the inspection.',
+     'We realised we had made an error in the initial assessment.',
+   ],
+   tr:[
+     {gr:'Μέχρι να φτάσει η επιθεώρηση, είχαμε ήδη διορθώσει το πρόβλημα.',en:'By the time the inspection arrived, we had already fixed the problem.',hint:'by the time → past perfect'},
+     {gr:'Είπε ότι είχε στείλει την αναφορά.',en:'He said that he had sent the report.',hint:'reported speech'},
+     {gr:'Δεν είχαμε λάβει τα έγγραφα πριν τη σύσκεψη.',en:'We hadn\'t received the documents before the meeting.',hint:'negative past perfect'},
    ],
    quiz:[
-     {q:'When I arrived, they ___ (already/start) the meeting.',opts:['already started','have already started','had already started','already were starting'],a:'had already started',exp:'Action completed before another past action → Past Perfect'},
-     {q:'She said she ___ (never/visit) Athens before.',opts:["never visited","has never visited","had never visited","didn't never visit"],a:'had never visited',exp:'Reported speech + never + before → Past Perfect'},
-     {q:'If we ___ (check) the schedule, we wouldn\'t have missed the deadline.',opts:['checked','had checked','would check','have checked'],a:'had checked',exp:'3rd Conditional: if + Past Perfect → would have + pp'},
-     {q:'By the time he ___ (finish), everyone ___ (go) home.',opts:['finished/went','had finished/had gone','finished/had gone','had finished/went'],a:'finished/had gone',exp:'by the time → the earlier action (go) = Past Perfect · finished = Simple Past'},
+     {q:'By the time the inspector arrived, the team ___ (already/prepare) all documents.',opts:['already prepared','had already prepared','was already preparing','already had prepared'],a:'had already prepared',exp:'By the time → Past Perfect for the earlier action'},
+     {q:'The aircraft was grounded because the engineer ___ (find) a defect.',opts:['found','had found','has found','was finding'],a:'had found',exp:'The finding happened BEFORE the grounding → Past Perfect'},
+     {q:'She said that she ___ (already/submit) the report.',opts:["already submitted","had already submitted","has already submitted","already had submitted"],a:'had already submitted',exp:'Reported speech: has submitted → had submitted'},
+     {q:'___ you ___ (inform) the authority before the incident was reported?',opts:['Did/inform','Had/informed','Have/informed','Were/informing'],a:'Had/informed',exp:'Past Perfect question: Had + subject + past participle?'},
+     {q:'We realised we ___ (make) an error in the assessment.',opts:['made','were making','had made','have made'],a:'had made',exp:'Realising happened after the error → Past Perfect for the earlier event'},
    ]},
 
-  {id:8,name:'Future — will',gr:'Μέλλοντας — will',col:'#f5b722',tag:'I will work',
+  {id:8,name:'Future — will',gr:'Μέλλοντας με will',col:'#22d67c',tag:'I will work',
+   theory:`<div class="card mb10" style="border-color:#22d67c33">
+     <div class="f13 mb8" style="line-height:1.8">Το <strong>will</strong> χρησιμοποιείται για <em>αποφάσεις που παίρνουμε τη στιγμή που μιλάμε</em>, <em>προβλέψεις</em> και <em>υποσχέσεις</em>. ΔΕΝ χρησιμοποιείται για προγραμματισμένα σχέδια.</div>
+     <div class="f12 c3">🔑 Κλειδί: <strong>απόφαση τώρα / πρόβλεψη / υπόσχεση</strong> → will</div>
+   </div>`,
    uses:[
-     {t:'Αυθόρμητη απόφαση (on the spot)',e:'The printer is out of paper? I\'ll get some more.',g:'Δεν έχει χαρτί ο εκτυπωτής; Θα φέρω εγώ.'},
-     {t:'Πρόβλεψη / Γνώμη',e:'I think renewable energy will replace fossil fuels.',g:'Νομίζω ότι οι ανανεώσιμες πηγές θα αντικαταστήσουν τα ορυκτά καύσιμα.'},
-     {t:'Υπόσχεση / Απειλή',e:'I promise I won\'t be late again.',g:'Υπόσχομαι ότι δεν θα αργήσω ξανά.'},
-     {t:'Αίτηση / Προσφορά',e:'Will you help me with this? — Of course, I\'ll do it now.',g:'Θα με βοηθήσεις; — Φυσικά, θα το κάνω τώρα.'},
+     {t:'Απόφαση τη στιγμή που μιλάμε',e:'"The phone is ringing." "I\'ll get it."',g:'"Χτυπάει το τηλέφωνο." "Θα το πάρω εγώ."'},
+     {t:'Πρόβλεψη (χωρίς στοιχεία)',e:'I think the new system will improve efficiency significantly.',g:'Νομίζω ότι το νέο σύστημα θα βελτιώσει σημαντικά την αποδοτικότητα.'},
+     {t:'Υπόσχεση / προσφορά',e:'I will send you the updated manual by end of day.',g:'Θα σου στείλω το ενημερωμένο εγχειρίδιο μέχρι το τέλος της ημέρας.'},
+     {t:'Επίσημη αίτηση',e:'Will you please sign the documents before Thursday?',g:'Θα μπορούσατε να υπογράψετε τα έγγραφα πριν την Πέμπτη;'},
    ],
-   forms:[['➕ Καταφατικό','will + base verb (same for ALL) · I/She/They will work · Contraction: I\'ll, She\'ll'],['➖ Αρνητικό','will not (won\'t) + base verb'],['❓ Ερωτηματικό','Will + subject + base verb? · Will you help?']],
-   kw:['I think/believe/expect...','probably','definitely','perhaps','maybe','I\'m sure','I predict'],
-   tips:['Will = spontaneous decision (decided NOW) · Going to = planned beforehand','Oh, the phone is ringing! I\'ll get it. (spontaneous → will)','I\'m going to call him later. (already planned → going to)','will NOT = won\'t (common contraction)'],
+   forms:[['➕ Καταφατικό','will + base verb (ίδιο για όλα τα πρόσωπα) · I/He/She/We/They will send'],['➖ Αρνητικό','will not (won\'t) + base verb · The delay won\'t affect operations'],['❓ Ερωτηματικό','Will + subject + base verb? · Will you attend the meeting?']],
+   kw:['I think','probably','perhaps','I\'m sure','I believe','I expect','definitely','predict'],
+   tips:['will = απόφαση τώρα · going to = υπάρχει ήδη πρόθεση/σχέδιο','will NOT = won\'t','Προσφορά: "Shall I help?" (formal) / "I\'ll help you" (offer)'],
    mistakes:[
-     {wrong:'I will to go to the meeting.',right:'I will GO to the meeting.',why:'will + base verb (NO \'to\')'},
-     {wrong:'Tomorrow I will going to the conference.',right:'Tomorrow I will GO to the conference.',why:'will + base verb (NOT -ing)'},
-     {wrong:'If it will rain, we cancel.',right:'If it rains, we will cancel.',why:'1st Conditional: if + Simple Present (NOT will)'},
+     {wrong:'I will to call you tomorrow.',right:'I will CALL you tomorrow.',why:'will + base verb (χωρίς to)'},
+     {wrong:'She will works late tonight.',right:'She will WORK late tonight.',why:'will + base verb (χωρίς -s/-ed)'},
+     {wrong:'I am going to call you — (just decided)',right:'I\'LL call you.',why:'Απόφαση τη στιγμή → will (not going to)'},
    ],
    examples:[
-     'I\'ll send you the updated report by end of day.',
-     'Do you think she\'ll get the promotion?',
-     'I won\'t be available on Friday afternoon.',
-     'Will the new system be ready before the audit?',
-     'I think technology will transform this industry completely.',
-     'Don\'t worry — I\'ll handle it.',
+     'I\'ll forward the document to you as soon as I receive it.',
+     'The new regulations will come into effect on 1 January.',
+     'Will you be available for a call tomorrow morning?',
+     'I don\'t think the delay will significantly impact the schedule.',
+     'We won\'t be able to proceed without the signed approval.',
+     'Shall I prepare a summary of the meeting for the team?',
+   ],
+   tr:[
+     {gr:'Θα σου στείλω την αναφορά μόλις την ολοκληρώσω.',en:'I will send you the report as soon as I finish it.',hint:'promise/decision'},
+     {gr:'Νομίζω ότι θα εγκρίνουν την αίτηση.',en:'I think they will approve the application.',hint:'prediction'},
+     {gr:'Δεν θα μπορέσουμε να πετάξουμε χωρίς άδεια.',en:'We won\'t be able to fly without a permit.',hint:'negative will'},
+     {gr:'Θα παρακολουθήσεις τη σύσκεψη αύριο;',en:'Will you attend the meeting tomorrow?',hint:'question form'},
    ],
    quiz:[
-     {q:'A: The printer has run out of ink! B: I ___ (get) some more.',opts:['am going to get','will get','am getting','get'],a:'will get',exp:'Spontaneous decision made at moment of speaking → will'},
-     {q:'In my opinion, AI ___ (change) the way we work dramatically.',opts:['is changing','changes','will change','is going to change'],a:'will change',exp:'Personal prediction/opinion → will'},
-     {q:'If she ___ (work) harder, she ___ (pass) the exam.',opts:['will work/passes','works/will pass','is working/will pass','works/passes'],a:'works/will pass',exp:'1st Conditional: if + Simple Present → will + base verb'},
-     {q:'I promise I ___ (not/tell) anyone about this.',opts:["am not telling","don't tell","won't tell","am not going to tell"],a:"won't tell",exp:'Promise about future → will · won\'t = will not'},
-     {q:'___ you ___ (help) me with this translation?',opts:['Are/going to help','Do/help','Will/help','Are/helping'],a:'Will/help',exp:'Request/offer → Will you help?'},
+     {q:'"The printer is out of paper." "Don\'t worry, I ___ (get) some."',opts:['am going to get','get','will get','am getting'],a:'will get',exp:'Spontaneous decision at the moment of speaking → will'},
+     {q:'I think the new software ___ (improve) the reporting process.',opts:['improves','is improving','will improve','is going to improve'],a:'will improve',exp:'Prediction without evidence → will'},
+     {q:'She ___ (not/be) able to attend the conference next month.',opts:["isn\'t going to be","won\'t be","doesn\'t be","isn\'t being"],a:"won\'t be",exp:'Negative will: will not = won\'t + base verb'},
+     {q:'___ you ___ (send) me the updated SB before Friday?',opts:['Are/going to send','Will/send','Do/send','Are/sending'],a:'Will/send',exp:'Request/promise → Will + subject + base verb'},
+     {q:'I\'m sure prices ___ (rise) next year.',opts:['rise','are rising','will rise','are going to rise'],a:'will rise',exp:'Prediction/certainty → will'},
+     {q:'"I haven\'t booked the hotel yet." "I ___ (do) it now."',opts:["am going to do","will do","am doing","do"],a:'will do',exp:'Decision made at moment of speaking → will (not going to)'},
    ]},
 
-  {id:9,name:'Future — going to',gr:'Μέλλοντας — going to',col:'#3dd68c',tag:'I am going to work',
+  {id:9,name:'Future — going to',gr:'Μέλλοντας με going to',col:'#f03870',tag:"I'm going to work",
+   theory:`<div class="card mb10" style="border-color:#f0387033">
+     <div class="f13 mb8" style="line-height:1.8">Το <strong>going to</strong> χρησιμοποιείται για <em>προθέσεις και σχέδια που ήδη υπάρχουν</em> και για <em>προβλέψεις βάσει στοιχείων</em>.</div>
+     <div class="f12 c3">🔑 Κλειδί: <strong>υπάρχει ήδη πρόθεση / βλέπω στοιχεία</strong> → going to</div>
+   </div>`,
    uses:[
-     {t:'Σχέδιο / Πρόθεση (αποφασισμένο εκ των προτέρων)',e:'I\'m going to apply for the certification next month.',g:'Πρόκειται να κάνω αίτηση για την πιστοποίηση τον επόμενο μήνα.'},
-     {t:'Πρόβλεψη βασισμένη σε ενδείξεις',e:'Look at those dark clouds — it\'s going to rain.',g:'Κοίτα αυτά τα σύννεφα — πρόκειται να βρέξει.'},
-     {t:'Σχεδόν βέβαιο μέλλον',e:'She\'s going to be an excellent engineer.',g:'Πρόκειται να γίνει εξαιρετική μηχανικός.'},
+     {t:'Πρόθεση που υπάρχει ήδη',e:'We are going to implement a new safety management system next quarter.',g:'Πρόκειται να εφαρμόσουμε νέο σύστημα ασφαλείας την επόμενη τριμηνία.'},
+     {t:'Πρόβλεψη βάσει στοιχείων',e:'Look at those clouds — it\'s going to rain.',g:'Κοίτα αυτά τα σύννεφα — θα βρέξει.'},
+     {t:'Προγραμματισμένη ενέργεια',e:'She\'s going to take her ATPL exams in March.',g:'Πρόκειται να δώσει τις εξετάσεις ATPL τον Μάρτιο.'},
    ],
-   forms:[['➕ Καταφατικό','am/is/are + going to + base verb · I am going to work · She is going to work'],['➖ Αρνητικό','am/is/are + not + going to + base verb · I\'m not going to attend.'],['❓ Ερωτηματικό','Am/Is/Are + subject + going to + base verb? · Are you going to apply?']],
-   kw:['I\'m planning to...','I\'ve decided to...','I intend to...','probably going to','definitely going to'],
-   tips:['ΔΙΑΦΟΡΑ will vs going to:','will = SPONTANEOUS (decided now) → "The phone rings! I\'ll answer."','going to = PLANNED (decided before) → "I\'m going to call him" (already decided)','going to + evidence = near certain prediction: "Look at the traffic — we\'re going to be late."'],
+   forms:[['➕ Καταφατικό','am/is/are + going to + base verb · I am going to submit · He is going to review'],['➖ Αρνητικό','am/is/are + not + going to + base verb · They aren\'t going to change the policy'],['❓ Ερωτηματικό','Am/Is/Are + subject + going to + base verb? · Is she going to attend?']],
+   kw:['I\'m planning to','I intend to','I\'ve decided to','next week/month','soon','look at...','evidence shows'],
+   tips:['going to = υπάρχει ήδη πρόθεση · will = αποφασίζω τώρα','going to + στοιχεία = πρόβλεψη · will + γνώμη = πρόβλεψη','be going to = am/is/are going to (όχι "will going to")'],
    mistakes:[
-     {wrong:'I am going to will work tomorrow.',right:'I am going to work tomorrow.',why:'going to + base verb (NO will)'},
-     {wrong:'She going to present tomorrow.',right:'She IS going to present tomorrow.',why:'Χρειάζεται το is/am/are'},
-     {wrong:'Are you going to went to the meeting?',right:'Are you going to GO to the meeting?',why:'going to + base verb (not past tense)'},
+     {wrong:'I will going to submit the report.',right:'I AM GOING TO submit the report.',why:'be going to (am/is/are) — never "will going to"'},
+     {wrong:'She going to attend the course.',right:'She IS GOING TO attend the course.',why:'Πρέπει is/am/are'},
+     {wrong:'Look at that aircraft — it will crash!',right:'Look at that aircraft — it\'s GOING TO crash!',why:'Στοιχείο (look!) → going to (not will)'},
    ],
    examples:[
-     'We\'re going to review the procedure next week.',
-     'Is she going to join the project team?',
-     'I\'m not going to accept those terms.',
-     'They\'re going to launch the new product in Q3.',
-     'It\'s already 10am — we\'re going to be late.',
-     'Are you going to take the advanced course?',
+     'We are going to conduct a full review of our maintenance procedures.',
+     'Is the authority going to extend the compliance deadline?',
+     'Look at the fuel gauge — we\'re going to need to refuel soon.',
+     'She isn\'t going to be available during the audit period.',
+     'They are going to upgrade the fleet with new avionics systems.',
+     'I\'m going to contact the manufacturer for technical support.',
+   ],
+   tr:[
+     {gr:'Πρόκειται να υποβάλουμε αίτηση για νέο πιστοποιητικό.',en:'We are going to apply for a new certificate.',hint:'existing plan → going to'},
+     {gr:'Δεν πρόκειται να αλλάξει η πολιτική.',en:'The policy is not going to change.',hint:'negative going to'},
+     {gr:'Κοίτα εκείνη την καταιγίδα — θα καθυστερήσουμε!',en:'Look at that storm — we\'re going to be delayed!',hint:'evidence-based prediction'},
+     {gr:'Πρόκειται να παρακολουθήσει το σεμινάριο;',en:'Is she going to attend the seminar?',hint:'question form'},
    ],
    quiz:[
-     {q:'I\'ve decided — I ___ (apply) for the job.',opts:["'ll apply",'am going to apply','apply','am applying'],a:'am going to apply',exp:'Pre-decided plan → going to'},
-     {q:'Look! That crane ___ (fall)!',opts:["will fall","is going to fall","falls","is falling"],a:'is going to fall',exp:'Prediction based on present evidence → going to'},
-     {q:'A: Why are you printing that form? B: I ___ (submit) my application today.',opts:["'ll submit",'am going to submit','submit','will be submitting'],a:'am going to submit',exp:'Explains pre-planned intention → going to'},
-     {q:'___ they ___ (announce) the results tomorrow?',opts:['Will/announce','Are/going to announce','Do/announce','Are/announced'],a:'Are/going to announce',exp:'Both will and going to possible — going to preferred for planned event'},
-     {q:'I ___ (not/attend) the seminar — I already have a conflict.',opts:["won't attend","am not going to attend","don't attend","am not attending"],a:'am not going to attend',exp:'Pre-planned decision NOT to do → going to negative'},
+     {q:'We ___ (implement) a new CAMO software next month. (we\'ve decided)',opts:['will implement','are going to implement','implement','are implementing'],a:'are going to implement',exp:'Existing plan/intention → going to'},
+     {q:'Look at those dark clouds! It ___ (rain).',opts:['will rain','rains','is going to rain','rained'],a:'is going to rain',exp:'Evidence visible now → going to (not will)'},
+     {q:'___ the authority ___ (extend) the compliance deadline?',opts:['Will/extend','Is/going to extend','Does/extend','Has/extended'],a:'Is/going to extend',exp:'Asking about an existing plan → going to'},
+     {q:'"I haven\'t bought the parts yet." "I ___ order them now."',opts:["am going to","will","am going to","going to"],a:'will',exp:'Decision made at this moment → will (not going to)'},
+     {q:'She ___ (not/attend) the training because she has another commitment.',opts:["won\'t attend","isn\'t going to attend","doesn\'t attend","hadn\'t attended"],a:"isn\'t going to attend",exp:'Prior commitment = existing plan → going to'},
+     {q:'The engine ___ (overheat) — look at the temperature gauge!',opts:["will overheat","is going to overheat","overheats","has overheated"],a:'is going to overheat',exp:'Clear evidence (gauge) → going to'},
    ]},
 ];
 
-const TCMP=[
-  {t:'Simple Present vs Present Continuous',c1:'#5b8def',c2:'#7c5cf5',n1:'Simple Present',n2:'Present Continuous',
-   rule:'Simple Present = μόνιμο, συνηθισμένο. Present Continuous = προσωρινό, τώρα.',
-   pairs:[{s1:'She works in London.',s2:"She's working from home this week.",g1:'Μόνιμη κατάσταση.',g2:'Προσωρινή κατάσταση.'},{s1:'I always drink coffee in the morning.',s2:"I'm drinking tea today — no coffee!",g1:'Συνήθεια.',g2:'Εξαίρεση — μόνο σήμερα.'}]},
-  {t:'Simple Past vs Present Perfect',c1:'#f5b722',c2:'#22c77a',n1:'Simple Past',n2:'Present Perfect',
-   rule:"Simple Past = ξέρουμε/αναφέρουμε ΠΟΤΕ. Present Perfect = ΔΕΝ αναφέρουμε πότε (εμπειρία, αποτέλεσμα).",
-   pairs:[{s1:'I went to Paris in 2019.',s2:"I've been to Paris (before).",g1:'Συγκεκριμένη χρονική στιγμή (2019).',g2:'Εμπειρία ζωής — πότε δεν αναφέρεται.'},{s1:'She called me an hour ago.',s2:"She's just called me.",g1:'Συγκεκριμένος χρόνος (an hour ago).',g2:'Πρόσφατα — αποτέλεσμα τώρα.'}]},
-  {t:'will vs be going to',c1:'#6a6af5',c2:'#5fd45f',n1:'will',n2:'be going to',
-   rule:"'will' = αυθόρμητο / γνώμη. 'going to' = ήδη αποφάσισα / βλέπω απόδειξη.",
-   pairs:[{s1:"A: 'We need someone!' B: 'I'll do it!'",s2:"I'm going to apply — I've already prepared my CV.",g1:'Αυθόρμητη απόφαση.',g2:'Ήδη αποφάσισα, έχω ήδη προετοιμαστεί.'},{s1:'I think it will be sunny tomorrow.',s2:"Look at those clouds — it's going to storm!",g1:'Γνώμη/πρόβλεψη χωρίς απόδειξη.',g2:'Βλέπω απόδειξη ΤΩΡΑ!'}]},
-  {t:'Present Perfect vs PP Continuous',c1:'#22c77a',c2:'#20c8c8',n1:'Present Perfect',n2:'PP Continuous',
-   rule:"Present Perfect = αποτέλεσμα, πόσα. PP Continuous = διάρκεια, ακόμα σε εξέλιξη.",
-   pairs:[{s1:"I've read 3 chapters.",s2:"I've been reading all evening.",g1:'Αποτέλεσμα — πόσα (3 chapters).',g2:'Διάρκεια — πόσο καιρό (all evening).'},{s1:"She's written the email. (done!)",s2:"She's been writing all morning.",g1:'Ολοκληρωμένο — αποτέλεσμα.',g2:'Σε εξέλιξη — διάρκεια.'}]},
-];
-
+/* ═══ TENSES STATE & FUNCTIONS ═══ */
 let TST={idx:0,tab:'theory',qa:{},qs:false,qsc:null,ta:{},tc:{},tips:false,cmp:0};
+
 function rTenses(){
   const el=document.getElementById('tenses');
   const isOpen=DB.get('tsb_open',true);
@@ -2179,172 +2277,241 @@ function rTenses(){
   if(isOpen) buildTSB();
   rTM();
 }
+
 function buildTSB(){
   const sb=document.getElementById('tsb');
   if(!sb)return;
-  sb.innerHTML=
-    `<div class="tsb-h">
-      <div class="fx ac jb mb4">
-        <div class="sl">TENSES</div>
-        <button onclick="DB.set('tsb_open',false);rTenses()" style="padding:1px 7px;background:none;border:1px solid var(--ln2);border-radius:10px;color:var(--t3);font-size:10px;cursor:pointer">✕</button>
-      </div>
-      <div class="fp f13 b" style="color:#f0eef8">Επίλεξε χρόνο:</div>
-    </div>`+
-    TENSES.map((t,i)=>`<button class="tnb ${TST.idx===i&&TST.tab!=='cmp'?'on':''}" onclick="TST.idx=${i};TST.tab='theory';resetTQ();rTM()" style="border-left-color:${TST.idx===i&&TST.tab!=='cmp'?t.col:'transparent'}">
-      <div class="f10 b" style="color:${TST.idx===i&&TST.tab!=='cmp'?t.col:'var(--t3)'}">${t.name}</div>
-      <div class="f9 c3 mono">${t.tag}</div>
-    </button>`).join('')+
-    `<button class="tnb ${TST.tab==='cmp'?'on':''}" onclick="TST.tab='cmp';rTM()" style="border-left-color:${TST.tab==='cmp'?'var(--am)':'transparent'};border-top:1px solid var(--ln);margin-top:6px;padding-top:10px">
-      <div class="f10 b" style="color:${TST.tab==='cmp'?'var(--am)':'var(--t3)'}">⚖ Σύγκριση Χρόνων</div>
-      <div class="f9 c3">Confusable pairs</div>
+  sb.innerHTML=`<div class="tsb-h">
+    <div class="fx ac jb mb4">
+      <div class="fp f13 b" style="color:var(--t1)">⏱ Χρόνοι</div>
+      <button onclick="DB.set('tsb_open',false);rTenses()" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:2px 6px">✕</button>
+    </div>
+    <div class="f10 c3 mb8">${DB.get('tDone',[]).length}/9 ολοκληρώθηκαν</div>
+  </div>
+  ${TENSES.map((t,i)=>{
+    const _tDone=DB.get('tDone',[]);const done=_tDone.includes(t.id)||_tDone.includes(TENSES.indexOf(t));
+    return `<button class="tnb ${TST.idx===i?'on':''}" onclick="TST.idx=${i};TST.tab='theory';resetTQ();rTM();buildTSB()" style="border-left-color:${TST.idx===i?t.col:'transparent'}">
+      <span style="color:${t.col};margin-right:6px">${done?'✓':t.tag}</span>
+      <span class="f11">${t.name}</span>
+      ${done?`<span class="tag f8" style="margin-left:auto;background:${t.col}1a;border:1px solid ${t.col}33;color:${t.col}">✓</span>`:''}
     </button>`;
+  }).join('')}
+  <div style="padding:10px 12px;border-top:1px solid var(--ln);margin-top:8px">
+    <div class="f10 c3 mb6">Confusable Pairs</div>
+    ${[['Present Simple vs Continuous','sp_vs_pc'],['Present Perfect vs Simple Past','pp_vs_sp'],['will vs going to','will_vs_going']].map(([label,id])=>
+      `<button onclick="TST.idx='${id}';TST.tab='theory';rTM();buildTSB()" class="f10 c3 mb4" style="display:block;text-align:left;background:none;border:none;cursor:pointer;padding:2px 0;color:${TST.idx===id?'var(--vi)':'var(--t3)'}">⚡ ${label}</button>`
+    ).join('')}
+  </div>`;
 }
-function resetTQ(){TST.qa={};TST.qs=false;TST.qsc=null;TST.ta={};TST.tc={};TST.tips=false;}
+
+
+function submitTensesQuiz(){
+  const t=TENSES[TST.idx]||TENSES[0];
+  const allA=Object.keys(TST.qa).length>=t.quiz.length;
+  if(!allA){toast('Απάντησε σε όλες τις ερωτήσεις πρώτα!','var(--am)');return;}
+  let sc=0;
+  t.quiz.forEach((q,i)=>{if(TST.qa[i]===q.a)sc++;});
+  TST.qsc=sc;TST.qs=true;
+  const tPct=Math.round(sc/t.quiz.length*100);
+  const td=DB.get('tDone',[]);
+  const _tid=t.id??TST.idx;
+  if(!td.includes(_tid)){td.push(_tid);DB.set('tDone',td);}
+  if(tPct===100){
+    setTimeout(()=>showCelebration('🏆 '+t.name+'!','Τέλειο σκορ! '+sc+'/'+t.quiz.length+' απαντήσεις.',sc*5,
+      'TST.idx=(TST.idx+1)%TENSES.length;TST.tab=\'theory\';resetTQ();rTM()','Επόμενος χρόνος'),400);
+  } else if(tPct>=60){
+    setTimeout(()=>showCelebration(t.name+' — Καλά!',sc+'/'+t.quiz.length+' σωστές. Συνέχισε!',sc*5,null,null),400);
+  } else {
+    toast('Quiz: '+sc+'/'+t.quiz.length+' — +'+sc*5+' XP','var(--bl)');
+  }
+  addXP(sc*5);
+  rTM();
+}
+
 function rTM(){
   const mn=document.getElementById('tmn');if(!mn)return;
   buildTSB();
-  if(TST.tab==='cmp'){rTCmp(mn);return;}
-  const t=TENSES[TST.idx];
-  document.documentElement.style.setProperty('--tc',t.col);
-  // Mobile collapse button for sidebar
-  const mobileToggleBtn=`<button onclick="DB.set('tsb_open',!DB.get('tsb_open',true));rTenses()" 
-    class="mobile-tsb-toggle"
-    style="padding:4px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:20px;color:var(--t3);font-size:10px;cursor:pointer;margin-bottom:8px">
-    ${DB.get('tsb_open',true)?'▲ Κλείσε χρόνους':'▼ Επίλεξε χρόνο ('+TENSES[TST.idx].name+')'}
-  </button>`;
+  if(TST.tab==='theory'||TST.tab==='forms'||TST.tab==='ex'||TST.tab==='tr'||TST.tab==='quiz'){
+    // handled below
+  }
+  
+  // Handle confusable pairs
+  if(typeof TST.idx==='string'){
+    const pairs={
+      'sp_vs_pc':{name:'Simple Present vs Present Continuous',col:'var(--bl)',
+        content:`<div class="card mb12"><div class="sl mb8 cbl">SIMPLE PRESENT vs PRESENT CONTINUOUS</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <tr style="background:var(--s2)"><th style="padding:8px;text-align:left">Simple Present</th><th style="padding:8px;text-align:left">Present Continuous</th></tr>
+          ${[['Συνήθεια/ρουτίνα','Τώρα αυτή τη στιγμή'],['I work every day','I am working right now'],['Αλήθεια/γεγονός','Προσωρινή κατάσταση'],['Water boils at 100°C','She is staying at a hotel this week'],['Πρόγραμμα (timetable)','Μελλοντικό σχέδιο (plan)'],['The train leaves at 9am','I am meeting him tomorrow']].map(([sp,pc])=>`<tr><td style="padding:6px 8px;border-top:1px solid var(--ln)">${sp}</td><td style="padding:6px 8px;border-top:1px solid var(--ln)">${pc}</td></tr>`).join('')}
+        </table>
+        <div class="card c-info mt10"><div class="f11 c2">🔑 Stative verbs (know, like, want, need, understand) → ΠΑΝΤΑ Simple Present</div></div>
+        </div>`},
+      'pp_vs_sp':{name:'Present Perfect vs Simple Past',col:'var(--vi)',
+        content:`<div class="card mb12"><div class="sl mb8 cvi">PRESENT PERFECT vs SIMPLE PAST</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <tr style="background:var(--s2)"><th style="padding:8px;text-align:left">Present Perfect</th><th style="padding:8px;text-align:left">Simple Past</th></tr>
+          ${[['Δεν ξέρουμε ΠΟΤΕ','Ξέρουμε ΠΟΤΕ (yesterday, in 2020)'],['I have seen that film','I saw that film last week'],['just/already/yet/ever/never','ago/last/in 2020/yesterday'],['Αποτέλεσμα στο παρόν','Ολοκληρωμένο στο παρελθόν'],['I have lost my keys (still lost)','I lost my keys yesterday (fact)']].map(([pp,sp])=>`<tr><td style="padding:6px 8px;border-top:1px solid var(--ln)">${pp}</td><td style="padding:6px 8px;border-top:1px solid var(--ln)">${sp}</td></tr>`).join('')}
+        </table></div>`},
+      'will_vs_going':{name:'will vs going to',col:'var(--gr)',
+        content:`<div class="card mb12"><div class="sl mb8 cgr">WILL vs GOING TO</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <tr style="background:var(--s2)"><th style="padding:8px;text-align:left">will</th><th style="padding:8px;text-align:left">going to</th></tr>
+          ${[['Απόφαση ΤΩΡΑ','Πρόθεση που υπήρχε ήδη'],['"I\'ll help you" (just decided)','I\'m going to study tonight (plan)'],['Πρόβλεψη (γνώμη)','Πρόβλεψη (στοιχεία)'],['I think it will rain','Look! It\'s going to rain (clouds)'],['Υπόσχεση/προσφορά','Προγραμματισμένη ενέργεια'],['I\'ll call you back','She\'s going to take her exam']].map(([w,g])=>`<tr><td style="padding:6px 8px;border-top:1px solid var(--ln)">${w}</td><td style="padding:6px 8px;border-top:1px solid var(--ln)">${g}</td></tr>`).join('')}
+        </table></div>`}
+    };
+    const pair=pairs[TST.idx];
+    if(pair){
+      mn.innerHTML=`<div class="sec fu" style="max-width:780px">
+        <div class="fp f15 b mb12" style="color:${pair.col}">⚡ ${pair.name}</div>
+        ${pair.content}
+        <button onclick="TST.idx=0;rTM()" class="btn bgh bsm mt8">← Πίσω στους Χρόνους</button>
+      </div>`;
+      return;
+    }
+  }
+
+  const t=TENSES[TST.idx]||TENSES[0];
   const tabs=['theory','forms','ex','tr','quiz'].map(id=>{
     const ls={theory:'Θεωρία',forms:'Τύποι',ex:'Παραδείγματα',tr:'Μετάφραση',quiz:`Quiz (${t.quiz.length})`};
     return `<button class="ttab ${TST.tab===id?'on':''}" onclick="TST.tab='${id}';resetTQ();rTM()">${ls[id]}</button>`;
   }).join('');
   let body='';
+  
   if(TST.tab==='theory'){
     body=`
     <!-- USES -->
     <div class="card mb10 fu"><div class="sl mb10" style="color:${t.col}">ΧΡΗΣΕΙΣ — ΠΟΤΕ ΤΟ ΧΡΗΣΙΜΟΠΟΙΟΥΜΕ</div>
-    ${t.uses.map((u,i)=>`<div style="margin-bottom:10px;padding-bottom:10px;${i<t.uses.length-1?'border-bottom:1px solid var(--ln)':''}">
-      <div class="f12 b mb4" style="color:${t.col}">${i+1}. ${u.t}</div>
-      <div class="f13 mb2" style="padding:8px 12px;background:var(--s3);border-left:3px solid ${t.col}44;border-radius:0 7px 7px 0">"${u.e}"</div>
-      ${u.g?`<div class="f11 c3 it" style="padding-left:12px">🇬🇷 ${u.g}</div>`:''}
-    </div>`).join('')}</div>
-
-    <!-- SIGNAL WORDS -->
-    <div class="card mb10"><div class="sl mb8" style="color:var(--vi)">🔑 SIGNAL WORDS — ΛΕΞΕΙΣ-ΚΛΕΙΔΙΑ</div>
-    <div class="fx fw g6">${t.kw.map(k=>`<span class="tag" style="background:var(--vi)1a;border:1px solid var(--vi)33;color:var(--vi)">${k}</span>`).join('')}</div></div>
-
+    ${t.uses.map((u,i)=>`<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--ln)">
+      <span style="color:${t.col};font-weight:700;font-size:11px;min-width:20px;margin-top:2px">${i+1}</span>
+      <div style="flex:1">
+        <div class="f12 b mb2">${u.t}</div>
+        <div class="f13 mb1" style="color:var(--t1)">${u.e} <button onclick="speak('${u.e.replace(/'/g,"\\'")}','en-GB')" style="background:none;border:none;color:var(--tl);cursor:pointer;font-size:11px">🔊</button></div>
+        <div class="f11 c3 it">${u.g}</div>
+      </div>
+    </div>`).join('')}
+    </div>
+    
+    <!-- THEORY HTML if present -->
+    ${t.theory||''}
+    
     <!-- TIPS -->
-    ${t.tips&&t.tips.length?`<div class="card c-ok mb10">
-      <div class="sl mb8 cgr">💡 TIPS & ΠΑΓΙΔΕΣ</div>
-      ${t.tips.map(tp=>`<div class="f12 mb6" style="color:var(--t2);line-height:1.6;padding:5px 10px;border-left:2px solid var(--gr)33;border-radius:0 6px 6px 0">${tp}</div>`).join('')}
-    </div>`:''}
-
+    <div class="card mb10"><div class="sl mb8 cam">💡 ΣΗΜΑΝΤΙΚΕΣ ΠΑΡΑΤΗΡΗΣΕΙΣ</div>
+    ${t.tips.map(tip=>`<div class="f12 c2 mb6" style="padding:6px 10px;background:var(--s2);border-radius:6px;border-left:3px solid var(--am)">⚡ ${tip}</div>`).join('')}
+    </div>
+    
     <!-- COMMON MISTAKES -->
-    ${t.mistakes&&t.mistakes.length?`<div class="card mb10" style="border-color:var(--ro)22">
-      <div class="sl mb10 cro">⚠ ΚΟΙΝΑ ΛΑΘΗ ΕΛΛΗΝΩΝ</div>
-      ${t.mistakes.map(m=>`<div style="margin-bottom:10px;padding:10px;background:var(--s2);border-radius:8px">
-        <div class="f12 mb4"><span style="color:var(--ro);text-decoration:line-through">✗ ${m.wrong}</span></div>
-        <div class="f12 b mb4" style="color:var(--gr)">✓ ${m.right}</div>
-        <div class="f11 c3">📌 ${m.why||m.way||''}</div>
-      </div>`).join('')}
-    </div>`:''}
-
-    <!-- MORE EXAMPLES -->
-    ${t.examples&&t.examples.length?`<div class="card" style="border-color:${t.col}22">
-      <div class="sl mb10" style="color:${t.col}">📝 ΠΕΡΙΣΣΟΤΕΡΑ ΠΑΡΑΔΕΙΓΜΑΤΑ</div>
-      ${t.examples.map((e,i)=>`<div class="f12 c2 mb6" style="padding:7px 12px;background:var(--s2);border-left:2px solid ${t.col}33;border-radius:0 7px 7px 0">
-        <span class="f10 b" style="color:${t.col};margin-right:6px">${i+1}.</span>${e}
-        <button onclick="speak('${e.replace(/'/g,"\'")}')" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:10px;margin-left:6px">🔊</button>
-      </div>`).join('')}
-    </div>`:''}
-  `;
+    <div class="card"><div class="sl mb8 cro">✗ ΣΥΧΝΑ ΛΑΘΗ ΕΛΛΗΝΩΝ</div>
+    ${t.mistakes.map(m=>`<div class="mb8 p8" style="background:var(--s2);border-radius:8px;padding:8px 10px">
+      <div class="f12 cro mb1">✗ ${m.wrong}</div>
+      <div class="f12 cgr mb1">✓ ${m.right}</div>
+      <div class="f10 c3">→ ${m.why}</div>
+    </div>`).join('')}
+    </div>`;
+    
   } else if(TST.tab==='forms'){
-    body=t.forms.map(([l,v])=>`<div class="card mb8 fu"><div class="f10 b mb8" style="color:${t.col}">${l}</div><div class="mono f12 c2" style="line-height:1.7;padding-left:10px;border-left:2px solid ${t.col}44">${v}</div></div>`).join('');
+    body=`<div class="card mb10 fu"><div class="sl mb10" style="color:${t.col}">ΤΥΠΟΙ — HOW TO FORM IT</div>
+    ${t.forms.map(([label,form])=>`<div style="margin-bottom:12px;padding:10px;background:var(--s2);border-radius:8px">
+      <div class="f11 b mb4" style="color:${t.col}">${label}</div>
+      <div class="f13" style="font-family:monospace;color:var(--t1)">${form}</div>
+    </div>`).join('')}
+    </div>
+    <div class="card"><div class="sl mb8">🔑 SIGNAL WORDS</div>
+    <div class="fx fw g6">${t.kw.map(k=>`<span class="tag f10" style="background:${t.col}1a;border:1px solid ${t.col}33;color:${t.col}">${k}</span>`).join('')}</div>
+    </div>`;
+    
   } else if(TST.tab==='ex'){
     const exArr=t.examples||t.ex||[];
     body=exArr.map((e,i)=>`<div class="card mb8 fu">
       <div class="fx ac g10">
         <span class="fp f13 b" style="color:${t.col};min-width:20px">${i+1}</span>
         <div style="flex:1">
-          <div class="f14 mb4" style="line-height:1.6">${typeof e==='string'?e:e.en}</div>
-          ${typeof e==='object'&&e.gr?`<div class="f11 c3 it">🇬🇷 ${e.gr}</div>`:''}
+          <div class="f14 mb4" style="line-height:1.6">${e}</div>
+          <button onclick="speak('${e.replace(/'/g,"\\'")}','en-GB')" style="background:none;border:1px solid var(--tl)44;border-radius:20px;padding:3px 10px;color:var(--tl);font-size:11px;cursor:pointer">🔊 Άκουσε</button>
         </div>
-        <button onclick="speak('${typeof e==='string'?e.replace(/'/g,"\'"):(e.en||'').replace(/'/g,"\'")}')" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:14px">🔊</button>
       </div>
     </div>`).join('');
+    
   } else if(TST.tab==='tr'){
-    const trArr=t.tr||t.uses||[];
-    if(!t.tr){body=`<div class="card c-info"><div class="f12 c2">Χρησιμοποίησε τα παραδείγματα από τη Θεωρία για μετάφραση!</div></div>`;} else
-    body=`<div class="f12 c2 mb14">Μετέφρασε στα αγγλικά:</div>`+
-    t.tr.map((tr,i)=>`<div class="card mb10 fu"><div class="f14 mb10 it" style="color:${t.col}">🇬🇷 ${tr.gr}</div>
-    <textarea id="tt${i}" rows="2" oninput="TST.ta[${i}]=this.value" ${TST.tc[i]?'disabled':''} placeholder="Γράψε εδώ τη μετάφρασή σου..." style="width:100%;background:var(--s2);border:1px solid var(--ln);border-radius:7px;color:var(--t1);font-size:13px;padding:9px;font-family:var(--f);line-height:1.5;resize:none;margin-bottom:8px">${TST.ta[i]||''}</textarea>
-    ${!TST.tc[i]?`<button id="tr_btn_${i}" onclick="TST.tc[${i}]=true;rTM()" style="padding:7px 16px;background:${t.col};border:none;border-radius:6px;color:#07080f;font-size:10px;font-weight:700;cursor:pointer">ΑΠΟΚΑΛΥΨΗ</button>`:
-    `<div class="card c-ok"><div class="sl mb4">ΑΠΑΝΤΗΣΗ</div><div class="f13" style="color:var(--gr)">🇬🇧 ${tr.en}</div></div>`}
-    </div>`).join('');
-  } else {
-    const qrows=t.quiz.map((q,qi)=>{
-      const opts=q.opts.map(opt=>{
-        let bg='var(--s2)',br='var(--ln)',col='var(--t2)';
-        if(TST.qa[qi]===opt){bg='var(--s3)';br=t.col;col=t.col;}
-        if(TST.qs){if(opt===q.a){bg='#051a0a';br='#22c77a44';col='var(--gr)';}else if(TST.qa[qi]===opt){bg='#1a0508';br='#f0387044';col='var(--ro)';}}
-        return `<button class="tqo" onclick="if(!TST.qs){TST.qa[${qi}]='${opt.replace(/'/g,"\\'")}';rTM()}" style="background:${bg};border-color:${br};color:${col}">${opt}</button>`;
-      }).join('');
-      return `<div class="card mb10 fu"><div class="f13 mb10" style="line-height:1.6"><span class="fp b" style="color:${t.col};margin-right:7px">${qi+1}.</span>${q.q}</div><div class="g2 mb8">${opts}</div>${TST.qs?`<div class="f11"><span style="color:${TST.qa[qi]===q.a?'var(--gr)':'var(--ro)'}">${TST.qa[qi]===q.a?'✓ Σωστό! ':'✗ Σωστό: "'+q.a+'" — '}</span><span class="c3">${q.ex}</span></div>`:''}
-        ${TST.qs&&TST.qa[qi]!==q.a?renderEMAButton(q.q,TST.qa[qi]||'',q.a,TENSES[TST.idx].name):''}</div>`;
-    }).join('');
+    const trArr=t.tr||[];
+    if(!trArr.length){
+      body=`<div class="card c-info"><div class="f12 c2">Χρησιμοποίησε τα παραδείγματα από τη Θεωρία για μετάφραση!</div></div>`;
+    } else {
+      body=`<div class="f12 c2 mb14">Μετέφρασε στα αγγλικά:</div>`+
+      trArr.map((tr,i)=>`<div class="card mb10">
+        <div class="f13 b mb6" style="color:var(--t1)">${tr.gr}</div>
+        <div class="f10 c3 mb8" style="color:var(--am)">💡 ${tr.hint}</div>
+        ${TST.ta[i]!==undefined?`
+          <div style="padding:8px;background:${TST.ta[i]===tr.en.toLowerCase()||levenshtein(TST.ta[i].toLowerCase(),tr.en.toLowerCase())<=3?'rgba(34,214,124,.06)':'rgba(79,142,247,.06)'};border-radius:6px;margin-bottom:6px">
+            <div class="f12 mb2">Απάντησές σου: ${TST.ta[i]}</div>
+            <div class="f12 cgr">✓ ${tr.en}</div>
+          </div>
+        `:`<div class="fx ac g8">
+          <input id="tr_${i}" placeholder="Type in English..." style="flex:1;padding:8px;background:var(--s2);border:1px solid var(--ln);border-radius:6px;color:var(--t1);font-size:13px" onkeydown="if(event.key==='Enter'){TST.ta[${i}]=this.value.trim();rTM();}">
+          <button onclick="TST.ta[${i}]=document.getElementById('tr_${i}').value.trim();rTM()" class="btn bp bsm">✓</button>
+        </div>`}
+      </div>`).join('');
+    }
+    
+  } else if(TST.tab==='quiz'){
     const allA=Object.keys(TST.qa).length>=t.quiz.length;
-    body=qrows+(!TST.qs
-      ?`<button onclick="if(${allA}){let sc=0;TENSES[TST.idx].quiz.forEach((q,i)=>{if(TST.qa[i]===q.a)sc++});TST.qsc=sc;TST.qs=true;const td=DB.get('tDone',[]);if(!td.includes(TST.idx)){td.push(TST.idx);DB.set('tDone',td);}
-  const tPct=Math.round(sc/TENSES[TST.idx].quiz.length*100);
-  if(tPct===100){setTimeout(()=>showCelebration('🏆 '+TENSES[TST.idx].name+'!','Τέλειο σκορ! '+sc+'/'+TENSES[TST.idx].quiz.length+' απαντήσεις.',sc*5,'TST.idx=(TST.idx+1)%TENSES.length;TST.tab=\'theory\';resetTQ();rTM()','Επόμενος χρόνος'),400);}
-  else if(tPct>=60){setTimeout(()=>showCelebration(TENSES[TST.idx].name+' — Καλά!',sc+'/'+TENSES[TST.idx].quiz.length+' σωστές. Καλή πρόοδος!',sc*5,null,null),400);}
-  else{toast('Quiz: '+sc+'/'+TENSES[TST.idx].quiz.length+' — +'+sc*5+' XP','var(--bl)');}const tKey=['present_simple','present_continuous','simple_past','past_continuous','present_perfect','pp_continuous','past_perfect','future_will','future_going_to'][TST.idx]||'present_simple';if(sc>=Math.ceil(TENSES[TST.idx].quiz.length*0.6))setTimeout(()=>showForcedOutput(tKey,'tense'),1200);rTM()}" style="padding:10px 22px;background:${t.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${allA?1:0.4};cursor:${allA?'pointer':'not-allowed'};${allA?'box-shadow:0 4px 16px rgba(79,142,247,.3)':''}">Ελέγξτε →</button>`
-      :`<div class="fx ac g12"><div class="card" style="border:2px solid ${TST.qsc===t.quiz.length?'var(--am)':TST.qsc>=Math.ceil(t.quiz.length*.6)?'var(--gr)':'var(--bl)'}">
-         <span class="f11 c3">Αποτέλεσμα: </span><span class="fp f20 b" style="color:${TST.qsc===t.quiz.length?'var(--am)':TST.qsc>=Math.ceil(t.quiz.length*.6)?'var(--gr)':'var(--bl)'}">${TST.qsc}/${t.quiz.length}</span>
-         </div><button onclick="resetTQ();rTM()" style="padding:9px 16px;border:1px solid ${t.col};border-radius:7px;color:${t.col};background:transparent;cursor:pointer;font-size:10px;font-weight:700">ΕΠΑΝΑΛΗΨΗ</button></div>`);
+    if(TST.qs){
+      let sc=0;
+      t.quiz.forEach((q,i)=>{if(TST.qa[i]===q.a)sc++;});
+      const pct=Math.round(sc/t.quiz.length*100);
+      body=`<div class="tc mb16">
+        <div class="fp f32 b mb4" style="color:${pct>=80?'var(--gr)':pct>=50?'var(--am)':'var(--ro)'}">${sc}/${t.quiz.length}</div>
+        <div class="f12 c3">${pct>=80?'Εξαιρετικά! ✓':pct>=50?'Καλά — συνέχισε!':'Δοκίμασε ξανά!'}</div>
+      </div>`+
+      t.quiz.map((q,i)=>{
+        const ua=TST.qa[i],correct=ua===q.a;
+        return `<div class="card mb8 ${correct?'c-ok':'c-err'}">
+          <div class="f12 b mb6">${i+1}. ${q.q}</div>
+          <div class="f12 ${correct?'cgr':'cro'} mb2">${correct?'✓':'✗'} ${ua||'—'}</div>
+          ${!correct?`<div class="f11 cgr mb2">✓ ${q.a}</div>`:''}
+          <div class="f10 c3">${q.exp}</div>
+          ${!correct&&typeof explainAnswer==='function'?renderEMAButton(q.q,ua||'',q.a,t.name):''}
+        </div>`;
+      }).join('')+
+      `<button onclick="resetTQ();rTM()" class="btn bgh w100 mt10" style="justify-content:center">🔄 Ξανά</button>`;
+    } else {
+      const qrows=t.quiz.map((q,i)=>{
+        const qi=i;
+        const opts=q.opts.map((opt,j)=>{
+          let bg='var(--s2)',br='var(--ln)',col='var(--t2)';
+          if(TST.qa[qi]===opt){bg='var(--s3)';br=t.col;col=t.col;}
+          if(TST.qs){if(opt===q.a){bg='#051a0a';br='#22c77a44';col='var(--gr)';}else if(TST.qa[qi]===opt){bg='#1a0508';br='#f0387044';col='var(--ro)';}}
+          return `<button class="tqo" onclick="if(!TST.qs){TST.qa[${qi}]='${opt.replace(/'/g,"\\'")}';rTM()}" style="background:${bg};border-color:${br};color:${col}">${opt}</button>`;
+        }).join('');
+        return `<div class="card mb10 fu"><div class="f13 mb10" style="line-height:1.6"><span class="fp f12 b" style="color:${t.col};margin-right:6px">${i+1}.</span>${q.q}</div><div class="g2 mb8">${opts}</div>
+        ${TST.qs?`<div class="f11"><span style="color:${TST.qa[qi]===q.a?'var(--gr)':'var(--ro)'}">` +
+        `${TST.qa[qi]===q.a?'✓ Σωστό! ':'✗ Σωστό: "'+q.a+'" — '}</span><span class="c3">${q.exp}</span></div>
+        ${TST.qs&&TST.qa[qi]!==q.a?renderEMAButton(q.q,TST.qa[qi]||'',q.a,t.name):''}`:''}</div>`;
+      }).join('');
+      const allA2=Object.keys(TST.qa).length>=t.quiz.length;
+      body=qrows+(!TST.qs
+        ?`<button onclick="submitTensesQuiz()" style="width:100%;padding:11px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;opacity:${allA2?1:0.4};background:linear-gradient(135deg,var(--bl),var(--vi));color:#fff;border:none;box-shadow:${allA2?'0 4px 16px rgba(79,142,247,.3)':''}">Ελέγξτε →</button>`
+        :'');
+    }
   }
-  mn.innerHTML=`<div style="max-width:720px;margin:0 auto">
-    ${mobileToggleBtn}
-    <div class="fx ac g10 mb16">
-      <div style="width:6px;height:32px;background:${t.col};border-radius:3px;flex-shrink:0"></div>
-      <div><div class="fp f18 b" style="color:#f0eef8">${t.name}</div><div class="f11 c3">${t.gr}</div></div>
-      <span class="tag f10 mxa mono" style="background:${t.col}1a;border:1px solid ${t.col}33;color:${t.col}">${t.tag}</span>
+  
+  mn.innerHTML=`<div class="sec fu" style="max-width:780px">
+    <div class="fx ac g12 mb12">
+      <div style="width:40px;height:40px;border-radius:10px;background:${t.col}22;display:flex;align-items:center;justify-content:center;font-size:18px">${t.tag}</div>
+      <div><div class="fp f16 b" style="color:${t.col}">${t.name}</div><div class="f11 c3">${t.gr}</div></div>
+      ${DB.get('tDone',[]).includes(t.id)?`<span class="tag f9" style="margin-left:auto;background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr)">✓ Ολοκληρώθηκε</span>`:''}
     </div>
-    <div class="fx" style="border-bottom:1px solid var(--ln);margin-bottom:16px">${tabs}</div>${body}
+    <div class="fx g4 mb14" style="overflow-x:auto;flex-wrap:nowrap">${tabs}</div>
+    ${body}
   </div>`;
 }
 
-function rTCmp(mn){
-  mn.innerHTML=`<div style="max-width:760px;margin:0 auto" class="fu">
-    <div class="sl mb4 cam">ΣΥΓΚΡΙΣΗ ΧΡΟΝΩΝ</div>
-    <div class="fp f16 b mb16">Confusable Pairs — Χρόνοι που μπερδεύονται συχνά</div>
-    <div class="fx g6 fw mb16">${TCMP.map((c,i)=>`<button onclick="TST.cmp=${i};rTM()" style="padding:5px 12px;border-radius:20px;border:1px solid ${TST.cmp===i?'var(--am)':'var(--ln)'};background:${TST.cmp===i?'var(--s3)':'transparent'};color:${TST.cmp===i?'var(--am)':'var(--t3)'};font-size:11px;cursor:pointer">${c.n1} vs ${c.n2}</button>`).join('')}</div>
-    ${(()=>{const c=TCMP[TST.cmp];return `
-    <div class="card c-warn mb12"><div class="sl mb4">ΚΑΝΟΝΑΣ</div><div class="f12 c2" style="line-height:1.6">${c.rule}</div></div>
-    <div class="g2 mb12">
-      <div class="card tc" style="border-color:${c.c1}33"><div class="fp f12 b mb4" style="color:${c.c1}">${c.n1}</div><span class="tag f9 mono" style="background:${c.c1}1a;border:1px solid ${c.c1}33;color:${c.c1}">${TENSES.find(t=>t.name===c.n1)?.tag||''}</span></div>
-      <div class="card tc" style="border-color:${c.c2}33"><div class="fp f12 b mb4" style="color:${c.c2}">${c.n2}</div><span class="tag f9 mono" style="background:${c.c2}1a;border:1px solid ${c.c2}33;color:${c.c2}">${TENSES.find(t=>t.name===c.n2)?.tag||''}</span></div>
-    </div>
-    ${c.pairs.map((p,i)=>`<div class="mb12"><div class="sl mb6 c3">ΠΑΡΑΔΕΙΓΜΑ ${i+1}</div>
-    <div class="g2">
-      <div class="card" style="border-color:${c.c1}22"><div class="f13 mb4" style="line-height:1.5">${p.s1}</div><div class="f11 it" style="color:${c.c1}">${p.g1}</div></div>
-      <div class="card" style="border-color:${c.c2}22"><div class="f13 mb4" style="line-height:1.5">${p.s2}</div><div class="f11 it" style="color:${c.c2}">${p.g2}</div></div>
-    </div></div>`).join('')}`;})()}
-  </div>`;
-}
+function resetTQ(){TST.qa={};TST.qs=false;TST.qsc=null;TST.ta={};}
 
-/* ══ GRAMMAR ══ */
 const VERB_PATTERNS_DATA={
-  gerund:['enjoy','mind','avoid','consider','finish','keep','practise','miss','deny','imagine','risk','admit','delay','suggest','give up','look forward to','be used to'],
-  infinitive:['want','need','decide','plan','hope','agree','refuse','manage','fail','offer','promise','expect','seem','tend','afford','choose','demand'],
-  obj_inf:['tell','ask','want','expect','allow','force','encourage','remind','warn','invite','persuade','advise','teach','order'],
-  bare_inf:['make','let','have'],
-  both:[
-    {v:'remember',ing:'θυμάμαι κάτι που έγινε: "I remember locking it."',inf:'θυμάμαι να κάνω: "Remember to lock it!"'},
-    {v:'forget',ing:'ξεχνώ κάτι που έγινε: "I forgot meeting her."',inf:'ξεχνώ να κάνω: "I forgot to send it."'},
-    {v:'stop',ing:'σταματώ κάτι (permanently): "He stopped smoking."',inf:'σταματώ ΓΙΑ να κάνω: "She stopped to check her phone."'},
-    {v:'try',ing:'δοκιμάζω ως λύση: "Try taking a break."',inf:'προσπαθώ (δύσκολο): "I tried to understand."'},
-    {v:'regret',ing:'μετανιώνω για κάτι: "I regret saying that."',inf:'λυπάμαι (formal announcement): "We regret to inform you..."'},
-  ]
-}
+  gerund:['enjoy','avoid','finish','suggest','consider','keep','practise','mind','miss','deny','admit','involve','risk','delay','imagine','recommend','stop(=quit)','give up','put off','look forward to'],
+  infinitive:['want','need','hope','decide','plan','agree','refuse','offer','promise','manage','fail','afford','arrange','expect','seem','appear','tend','choose','prepare'],
+  both:['like/love/hate','start/begin','continue','prefer','remember','forget','try','stop','regret','mean']
+};
 
 const GRAM=[
   {id:'modals',t:'Modal Verbs',ic:'🔧',col:'var(--bl)',desc:'can, could, must, should, may, might, would',
