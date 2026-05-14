@@ -36,6 +36,32 @@
   --shadow-glow-bl:0 4px 20px rgba(79,142,247,.2);
   --shadow-glow-gr:0 4px 20px rgba(34,214,124,.2);
 }
+/* ══ LIGHT MODE ══ */
+.light-mode{
+  --bg:#f0f4f8;--s1:#ffffff;--s2:#f1f5f9;--s3:#e2e8f0;--s4:#cbd5e1;
+  --ln:#cbd5e1;--ln2:#94a3b8;
+  --t1:#0f172a;--t2:#475569;--t3:#94a3b8;
+}
+.light-mode .brand-logo{box-shadow:0 4px 12px rgba(79,142,247,.3)}
+.light-mode .card{background:#fff;border-color:#e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.light-mode .card2{background:#f8fafc;border-color:#e2e8f0}
+.light-mode .qopt{background:#f8fafc;border-color:#e2e8f0}
+.light-mode #nav{background:rgba(255,255,255,.95);border-color:#e2e8f0}
+.light-mode .tab:hover{background:#f1f5f9}
+.light-mode .btn.bgh{background:#f1f5f9;border-color:#e2e8f0;color:#475569}
+.light-mode .btn.bgh:hover{background:#e2e8f0}
+.light-mode .hcard{background:#fff;border-color:#e2e8f0}
+.light-mode .hs{background:#fff;border-color:#e2e8f0}
+.light-mode .vsb,.light-mode .tsb{background:#fff;border-color:#e2e8f0}
+.light-mode .vmb{color:#475569}
+.light-mode .vmb.on{background:#f0f7ff;border-color:#4f8ef7}
+.light-mode .trt{background:#f8fafc;border-color:#e2e8f0}
+.light-mode .trt:hover{background:#f1f5f9}
+.light-mode input,.light-mode textarea,.light-mode select{background:#f8fafc;border-color:#e2e8f0;color:#0f172a}
+.light-mode .scard{background:#fff;border-color:#e2e8f0}
+.light-mode .rcard{background:#fff;border-color:#e2e8f0}
+.light-mode .gch{background:#fff;border-color:#e2e8f0}
+
 html,body{height:100%;background:var(--bg);color:var(--t1);font-family:var(--f);overflow:hidden;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
 button{cursor:pointer;font-family:var(--f);border:none;background:none;color:inherit;transition:all .18s ease}
 button:active{transform:scale(.96)}
@@ -464,6 +490,7 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
 .streak-fire{display:inline-block;animation:streakPop .6s ease,streakGlow 2s ease 0.6s infinite}
 @keyframes xpFloat{0%{transform:translateY(0);opacity:1}80%{transform:translateY(-50px);opacity:.4}100%{transform:translateY(-60px);opacity:0}}
 .xp-float{animation:xpFloat .9s ease forwards;position:fixed;font-size:14px;font-weight:700;color:var(--am);pointer-events:none;z-index:9999;text-shadow:0 2px 8px rgba(246,188,24,.5)}
+@keyframes celebPop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
 </style>
 </head>
 <body>
@@ -1222,7 +1249,10 @@ const WORDS=[
   {id:'col15',w:'go the extra mile',g:'κάνω ένα βήμα παραπάνω',p:'idiom',cat:'phrases',e:'She always goes the extra mile for her clients.',d:2,f:[]},
 ];
 
-function getAllW(){return[...WORDS,...DB.get('customW',[])]}
+function getAllW(){
+  const av=typeof AVIATION_VOCAB!=='undefined'&&DB.get('av_enabled',false)?AVIATION_VOCAB:[];
+  return [...WORDS,...DB.get('customW',[]),...DB.get('custom_words',[]),...av];
+}
 function getWB(){return DB.get('wb',{})}
 function getWS(id){return getWB()[id]||{sc:0,st:0,nr:0,seen:0}}
 function setWS(id,correct){
@@ -1264,7 +1294,7 @@ function sortedW(cat='all'){
 }
 
 /* ══ VOCAB UI ══ */
-let VS={mode:'home',cat:'all',search:'',q:{mode:'mixed',sess:[],idx:0,res:[],fl:false,opts:[],sel:-1,fill:'',fd:false}};
+let VS={mode:'home',cat:'all',search:'',sbOpen:true,q:{mode:'mixed',sess:[],idx:0,res:[],fl:false,opts:[],sel:-1,fill:'',fd:false}};
 function rVocab(){
   const el=document.getElementById('vocab');
   const lc=learnedW().length,due=dueW().length,all=getAllW().length;
@@ -1273,7 +1303,10 @@ function rVocab(){
   <div class="vsb ${!VS.sbOpen?'vsb-hidden':''}">
     <div class="vsb-h"><div class="fx ac jb mb4">
       <div class="sl">VOCABULAR</div>
-      <button onclick="VS.sbOpen=false;rVocab()" style="padding:2px 8px;background:none;border:1px solid var(--ln);border-radius:20px;color:var(--t3);font-size:10px;cursor:pointer">✕</button>
+      <div class="fx ac g4">
+        <button onclick="VS.mode='new';VS.sbOpen=true;rVocab()" style="padding:2px 8px;background:var(--gr)1a;border:1px solid var(--gr)33;border-radius:20px;color:var(--gr);font-size:10px;cursor:pointer" title="Προσθήκη λέξης">➕</button>
+        <button onclick="VS.sbOpen=false;rVocab()" style="padding:2px 8px;background:none;border:1px solid var(--ln);border-radius:20px;color:var(--t3);font-size:10px;cursor:pointer">✕</button>
+      </div>
     </div>
     <div class="fp f13 b" style="color:#f0eef8;">Λεξιλόγιο</div>
     <div class="f10 c3 mt4">${all} λέξεις · ${lc} εκμαθημένες</div></div>
@@ -1286,20 +1319,7 @@ function rVocab(){
     </div></div>
   <div class="vm fu" id="vm"></div>`;
   const vm=document.getElementById('vm');
-  if(!VS.sbOpen){
-    // Show open button in main area
-    const existBtn=document.getElementById('vsb-open-btn');
-    if(!existBtn){
-      const btn=document.createElement('button');
-      btn.id='vsb-open-btn';
-      btn.innerHTML='📚 Μενού';
-      btn.style.cssText='position:fixed;top:56px;left:0;padding:6px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:0 20px 20px 0;color:var(--t2);font-size:11px;cursor:pointer;z-index:100;box-shadow:2px 2px 8px rgba(0,0,0,.2)';
-      btn.onclick=()=>{VS.sbOpen=true;rVocab();};
-      document.body.appendChild(btn);
-    }
-  } else {
-    document.getElementById('vsb-open-btn')?.remove();
-  }
+  // vsb open button is inline in el.innerHTML
   if(VS.mode==='home')rVDash(vm);
   else if(VS.mode==='review')rVReview(vm);
   else if(VS.mode==='all')rVAll(vm);
@@ -1530,7 +1550,13 @@ function rQCard(el){
       if(q.sel===i){bg='var(--s4)';br='var(--bl)';col='var(--bl)';}
       if(q.sel>=0){if(opt===cw.g){bg='#051a0a';br='#22c77a44';col='var(--gr)';}else if(q.sel===i&&opt!==cw.g){bg='#1a0508';br='#f03870 44';col='var(--ro)';}}
       return `<button class="qopt" onclick="vMCQ(${i})" style="background:${bg};border-color:${br};color:${col}"><span style="color:var(--t3);font-family:monospace;margin-right:8px">${String.fromCharCode(65+i)}.</span>${opt}</button>`;
-    }).join('')}`;
+    }).join('')}
+    ${q.sel>=0&&q.sel<q.opts.length&&q.opts[q.sel]!==cw.g?
+      `<div style="padding:8px 12px;background:rgba(240,56,112,.07);border:1px solid rgba(240,56,112,.2);border-radius:8px;margin-top:8px">
+        <div class="f12" style="color:var(--ro)">✗ Σωστό: <strong style="color:var(--t1)">${cw.g}</strong></div>
+        <div class="f10 c3 mt2">${cw.e}</div>
+        ${renderEMAButton?renderEMAButton(cw.w,q.opts[q.sel]||'',cw.g,cw.w):''}
+      </div>`:''}`;
   } else {
     const isC=q.fill.trim().toLowerCase()===bw.toLowerCase();
     body=`<div class="tc mb14">
@@ -1606,6 +1632,14 @@ function vRec(correct, userInput){
   VS.q.idx=nxt;VS.q.fl=false;VS.q.opts=[];VS.q.sel=-1;VS.q.fill='';VS.q.fd=false;
   DB.set('quiz_session',{...VS.q});
   rQCard(document.getElementById('vm'))
+}
+
+function vNext(){
+  const nxt=VS.q.idx+1;
+  if(nxt>=VS.q.sess.length){DB.delete?DB.delete('quiz_session'):localStorage.removeItem('quiz_session');showQRes(document.getElementById('vm'));return;}
+  VS.q.idx=nxt;VS.q.fl=false;VS.q.opts=[];VS.q.sel=-1;VS.q.fill='';VS.q.fd=false;
+  DB.set('quiz_session',{...VS.q});
+  rQCard(document.getElementById('vm'));
 }
 
 function showQRes(el){
@@ -2546,6 +2580,10 @@ function rGrammar(){
             '<button onclick="GST.topic=\''+g.id+'\';GST.ea={};GST.es=false;GST.esc=null;rGTopic()" class="btn bp bxs">Επανάληψη →</button></div>').join('')+
           '</div>';
       })()}
+      <!-- AI Features hint -->
+      <div class="card c-info mt8 mb4">
+        <div class="f11 c2" style="line-height:1.6">💡 <strong>Tip:</strong> Κάνε ένα κεφάλαιο → AI εξηγεί τα λάθη σου · <strong>Forced Output</strong> για active practice</div>
+      </div>
       <div class="card mt12" style="border-color:var(--vi)33;cursor:pointer" onclick="startInterleaved()">
         <div class="fx ac jb">
           <div><div class="fp f13 b mb2" style="color:var(--vi)">⚡ Interleaved Practice</div>
@@ -2657,7 +2695,10 @@ function rWriting(){
   if(!WST.topic){
     el.innerHTML=`<div class="sec fu">
       <div class="sl mb4 cpk">WRITING</div>
-      <div class="fp f16 b mb6">Γραφή</div>
+      <div class="fx ac jb mb4">
+        <div class="fp f16 b">Γραφή</div>
+        <button onclick="improveEmail()" style="padding:5px 14px;background:linear-gradient(135deg,var(--bl),var(--vi));border-radius:20px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;box-shadow:var(--shadow-glow-bl)">✉ Email Improver</button>
+      </div>
       <p class="f12 c2 mb20" style="line-height:1.6">Μάθε τη δομή κάθε τύπου κειμένου, απόμνημόνευσε χρήσιμες φράσεις και εξάσκησε τη γραφή σου.</p>
       ${WRITING.map(t=>`<div class="wtpl" onclick="WST.topic='${t.id}';WST.tab='structure';rWTopic()">
         <div class="fx ac jb">
@@ -3328,7 +3369,7 @@ let SPST={tab:'conversations',convIdx:null};
 function rSpeaking(){
   unlockAch('sp1');
   const el=document.getElementById('speaking');
-  const tabs=[['conversations','💬 Συνομιλίες'],['aiconv','🤖 AI Chat'],['roleplay','🎭 Roleplay'],['simulator','🎭 Simulator (old)'],['listening','🎧 Listening'],['pronunciation','🗣 Προφορά'],['shadowing','📖 Shadowing']].map(([id,lb])=>
+  const tabs=[['conversations','💬 Συνομιλίες'],['aiconv','🤖 AI Chat ✨'],['roleplay','🎭 Roleplay'],['simulator','🎭 Simulator (old)'],['listening','🎧 Listening'],['pronunciation','🗣 Προφορά'],['shadowing','📖 Shadowing']].map(([id,lb])=>
     `<button class="ttab ${SPST.tab===id?'on':''}" onclick="SPST.tab='${id}';SPST.convIdx=null;rSpeaking()" style="--tc:var(--gr)">${lb}</button>`
   ).join('');
 
@@ -4223,6 +4264,7 @@ function rStats(){
       <div><div class="sl mb4 cvi">ANALYTICS & PROGRESS</div><div class="fp f16 b">Στατιστικά Προόδου</div></div>
       <div class="fx g8 fw">
         <button onclick="showWeeklySummary()" class="btn bgh bsm">📊 Εβδομαδιαία Σύνοψη</button>
+        <button onclick="showLeaderboard()" class="btn bgh bsm">🏆 Leaderboard</button>
         <button onclick="startCEFRTest()" class="btn bp bsm">🎓 CEFR Test</button>
         <button onclick="exportVocabCSV()" class="btn bgh bsm">📥 Export CSV</button>
         <button onclick="exportLearnedCSV()" class="btn bgh bsm">🃏 Export Anki</button>
@@ -4409,13 +4451,20 @@ function rTRContent(){
         <div class="sl mb8">ΣΗΜΕΙΩΣΕΙΣ</div>
         <textarea rows="3" placeholder="Νέες λέξεις, γραμματικές δομές, ερωτήσεις..." style="width:100%;background:var(--s2);border:1px solid var(--ln);border-radius:7px;color:var(--t1);font-size:13px;padding:9px;font-family:var(--f);line-height:1.5;resize:vertical" oninput="DB.set('trnotes',this.value)">${DB.get('trnotes','')}</textarea>
       </div>
-      <div class="card mb12" style="border-color:var(--vi)33;cursor:pointer" onclick="startEveningRecall()">
+      <div style="background:linear-gradient(135deg,rgba(124,92,245,.1),rgba(79,142,247,.07));border:1px solid rgba(124,92,245,.3);border-radius:var(--r2);padding:14px 16px;margin-bottom:12px;cursor:pointer" onclick="startEveningRecall()">
         <div class="fx ac jb">
-          <div><div class="fp f13 b mb2" style="color:var(--vi)">🌙 Evening Recall</div>
-          <div class="f11 c3">5 λεπτά ανάκλησης — 3x καλύτερη μνήμη</div></div>
-          ${DB.get('er_done_'+todayK(),false)?'<span class="tag f9" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr)">✓ Τέλεια! ✓</span>':'<span class="tag f9" style="background:var(--vi)1a;border:1px solid var(--vi)33;color:var(--vi)">Ξεκίνα →</span>'}
+          <div class="fx ac g10">
+            <span style="font-size:24px">🌙</span>
+            <div>
+              <div class="fp f13 b mb1" style="color:var(--vi)">Evening Recall</div>
+              <div class="f11 c3">5 λεπτά — κάνε το κάθε βράδυ για 3x καλύτερη μνήμη</div>
+            </div>
+          </div>
+          ${DB.get('er_done_'+todayK(),false)?
+            '<span class="tag f9" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr)">✓ Έγινε!</span>':
+            '<span style="padding:4px 10px;background:var(--vi);border-radius:20px;color:#fff;font-size:10px;font-weight:600">Ξεκίνα →</span>'}
         </div>
-      </div>
+      </div>>
       <div class="card" style="border-color:var(--vi)33">
         <div class="sl mb8 cvi">ΕΠΟΜΕΝΟ MILESTONE</div>
         <div class="fx ac g10">
@@ -4603,7 +4652,19 @@ function rSettings(){
   const gw=DB.get('gw',10),gd=DB.get('gd',5);
   document.getElementById('settings').innerHTML=`<div class="sec fu">
     <div class="sl mb4 c3">CONFIGURATION</div>
-    <div class="fp f16 b mb20">Ρυθμίσεις</div>
+    <div class="fp f16 b mb16">Ρυθμίσεις</div>
+
+    <!-- Aviation English Card -->
+    <div style="background:linear-gradient(135deg,rgba(79,142,247,.1),rgba(124,92,245,.06));border:1px solid rgba(79,142,247,.3);border-radius:var(--r2);padding:16px;margin-bottom:20px;cursor:pointer" onclick="rAviation()">
+      <div class="fx ac g12">
+        <span style="font-size:32px">✈</span>
+        <div style="flex:1">
+          <div class="fp f15 b mb1" style="color:var(--bl)">Aviation English</div>
+          <div class="f11 c3">35 λέξεις CAMO/EASA · 4 email templates · Phrases · Quiz</div>
+        </div>
+        <span style="color:var(--bl);font-size:20px">→</span>
+      </div>
+    </div>
 
     <div class="sl mb10 c3">ΕΜΦΑΝΙΣΗ</div>
     <div class="setrow mb16">
@@ -4644,6 +4705,33 @@ function rSettings(){
       ${[['📚',learnedW().length+'/'+getAllW().length,'Λέξεις','var(--bl)'],['⭐',getXP()+' XP','Σύνολο','var(--am)'],['🏆',getAchs().length+'/'+ACHS.length,'Ach.','var(--or)'],['🔥',calcStreak(),'Streak','var(--gr)']].map(([i,v,l,c])=>`<div class="ss"><div style="font-size:18px">${i}</div><div class="ss-v" style="color:${c};font-size:16px">${v}</div><div class="ss-l">${l}</div></div>`).join('')}
     </div>
 
+    <!-- Theme, Notifications, Leaderboard -->
+    <div class="card mb12" style="border-color:var(--am)22">
+      <div class="fx ac jb">
+        <div><div class="f12 b mb1">${DB.get('light_mode',false)?'☀ Light Mode':'🌙 Dark Mode'}</div>
+        <div class="f11 c3">Αλλαγή εμφάνισης</div></div>
+        <button onclick="toggleLightMode()" class="btn bgh bsm">${DB.get('light_mode',false)?'→ Dark':'→ Light'}</button>
+      </div>
+    </div>
+    <div class="card mb12" style="border-color:var(--vi)22">
+      <div class="fx ac jb mb6">
+        <div><div class="f12 b mb1">🔔 Notifications</div>
+        <div class="f11 c3">${DB.get('notif_enabled',false)?'✓ Ενεργά — '+DB.get('notif_time','20:00'):'Απενεργοποιημένα'}</div></div>
+        ${DB.get('notif_enabled',false)
+          ?'<button onclick="disableNotifications()" class="btn br bsm">Off</button>'
+          :'<button onclick="requestNotifications()" class="btn bp bsm">Ενεργοποίηση</button>'}
+      </div>
+      ${DB.get('notif_enabled',false)?`<div class="fx ac g8"><span class="f11 c3">Ώρα:</span>
+        <input type="time" value="${DB.get('notif_time','20:00')}" onchange="DB.set('notif_time',this.value)" style="background:var(--s2);border:1px solid var(--ln);border-radius:6px;color:var(--t1);padding:3px 8px;font-size:12px"></div>`:''}
+    </div>
+    <div class="card mb12" style="border-color:var(--gr)22">
+      <div class="sl mb6 cgr">🏆 LEADERBOARD</div>
+      <div class="fx ac g8 mb8"><span class="f11 c3">Όνομά σου:</span>
+        <input id="player-name-inp" value="${DB.get('player_name','')}" placeholder="Player" style="flex:1;background:var(--s2);border:1px solid var(--ln);border-radius:6px;color:var(--t1);padding:5px 8px;font-size:12px" oninput="DB.set('player_name',this.value)">
+      </div>
+      <button onclick="showLeaderboard()" class="btn bgh bsm">🏆 Δες Leaderboard</button>
+    </div>
+
     <div class="sl mb10 c3">ΕΠΙΠΕΔΟ & PLACEMENT</div>
     <div class="card mb14" style="border-color:var(--bl)22">
       <div class="fx ac jb mb8">
@@ -4670,6 +4758,15 @@ function rSettings(){
       ${hasAPIKey()
         ?'<div class="f10 c3">Key: <span class="mono">sk-ant-...'+DB.get('anthropic_key','').slice(-4)+'</span></div>'
         :'<div class="f11 c2" style="line-height:1.6">AI features: Writing Feedback · Error Analysis · Forced Output · AI Conversation<br><a href="https://console.anthropic.com" target="_blank" style="color:var(--bl)">Δωρεάν key στο console.anthropic.com →</a></div>'}
+    </div>
+
+    <div class="sl mb10 c3">ΕΜΦΑΝΙΣΗ</div>
+    <div class="card mb14">
+      <div class="fx ac jb">
+        <div><div class="f12 b mb1">Θέμα Εφαρμογής</div>
+        <div class="f11 c3">${DB.get('light_mode',false)?'Light Mode ενεργό':'Dark Mode ενεργό'}</div></div>
+        <button id="theme-toggle" onclick="toggleTheme()" class="btn bgh bsm">${DB.get('light_mode',false)?'🌙 Dark Mode':'☀ Light Mode'}</button>
+      </div>
     </div>
 
     <div class="sl mb10 c3">ΕΠΙΚΙΝΔΥΝΗ ΖΩΝΗ</div>
@@ -6397,7 +6494,8 @@ function startSpeech(expectedText, onResult, onError){
     if(onError)onError(e.error);
   };
   
-  SR.rec.onend=()=>{SR.active=false;};
+  SR.rec.onerror=(e)=>{SR.active=false;if(SR.onError)SR.onError(e.error||'error');};
+  SR.rec.onend=()=>{if(SR.active){SR.active=false;}};
   SR.rec.start();
 }
 
@@ -6560,11 +6658,7 @@ function addCustomWord(word,translation,example,category){
   return true;
 }
 
-function getAllW(){
-  const base=WORDS||[];
-  const custom=getCustomWords();
-  return [...base,...custom];
-}
+// getAllW defined above
 
 function showAddWordModal(prefillWord){
   const modal=document.createElement('div');
@@ -7318,8 +7412,513 @@ function getHesitationPenalty(){
   if(h==='very_slow')return 2; // Reduce more
   return 0;
 }
+
+/* ══ LIGHT MODE ══ */
+function initTheme(){
+  if(DB.get('light_mode',false)){
+    document.body.classList.add('light-mode');
+  }
+}
+
+function toggleTheme(){
+  const isLight=document.body.classList.toggle('light-mode');
+  DB.set('light_mode',isLight);
+  // Update toggle button text
+  const btn=document.getElementById('theme-toggle');
+  if(btn)btn.textContent=isLight?'🌙 Dark Mode':'☀ Light Mode';
+  toast(isLight?'☀ Light mode ενεργό':'🌙 Dark mode ενεργό','var(--bl)');
+}
+
+/* ══ AVIATION ENGLISH MODULE ══ */
+const AVIATION_VOCAB=[
+  // CAMO Core
+  {id:'av01',w:'airworthiness',g:'αξιοπλοΐα',p:'n',cat:'camo',lv:'B2',e:'The aircraft must maintain its airworthiness throughout its operational life.',d:3,f:['airworthy','unairworthy']},
+  {id:'av02',w:'continuing airworthiness',g:'συνεχής αξιοπλοΐα',p:'phrase',cat:'camo',lv:'B2',e:'Continuing airworthiness management ensures the aircraft remains safe to fly.',d:3,f:[]},
+  {id:'av03',w:'maintenance programme',g:'πρόγραμμα συντήρησης',p:'phrase',cat:'camo',lv:'B1',e:'The aircraft maintenance programme must be approved by the competent authority.',d:2,f:[]},
+  {id:'av04',w:'airworthiness directive',g:'οδηγία αξιοπλοΐας',p:'phrase',cat:'camo',lv:'B2',e:'The airworthiness directive requires immediate corrective action within 50 flight hours.',d:3,f:['AD']},
+  {id:'av05',w:'service bulletin',g:'δελτίο υπηρεσίας',p:'phrase',cat:'camo',lv:'B2',e:'The manufacturer issued a service bulletin recommending the replacement of the fuel pump.',d:2,f:['SB']},
+  {id:'av06',w:'certificate of release to service',g:'πιστοποιητικό επιστροφής σε υπηρεσία',p:'phrase',cat:'camo',lv:'B2',e:'The certifying staff must sign the certificate of release to service after maintenance.',d:3,f:['CRS']},
+  {id:'av07',w:'maintenance release',g:'απελευθέρωση συντήρησης',p:'phrase',cat:'camo',lv:'B2',e:'No maintenance release was issued following the scheduled inspection.',d:3,f:[]},
+  {id:'av08',w:'defect',g:'ελάττωμα / βλάβη',p:'n',cat:'camo',lv:'B1',e:'The defect was identified during the pre-flight inspection and deferred appropriately.',d:2,f:['defective','deficiency']},
+  {id:'av09',w:'defer',g:'αναβάλλω / αναστέλλω',p:'v',cat:'camo',lv:'B2',e:'The defect may be deferred provided it does not affect airworthiness.',d:2,f:['deferral','deferred']},
+  {id:'av10',w:'MEL',g:'Κατάλογος Ελάχιστου Εξοπλισμού',p:'abbr',cat:'camo',lv:'B2',e:'The inoperative radio may be deferred in accordance with the MEL procedures.',d:3,f:['Minimum Equipment List']},
+  {id:'av11',w:'CAMO',g:'Οργανισμός Διαχείρισης Συνεχούς Αξιοπλοΐας',p:'abbr',cat:'camo',lv:'B2',e:'The CAMO is responsible for ensuring the aircraft remains airworthy.',d:3,f:['Continuing Airworthiness Management Organisation']},
+  {id:'av12',w:'Part-M',g:'Μέρος-Μ (κανονισμός EASA)',p:'n',cat:'regulatory',lv:'B2',e:'Under Part-M regulations, the operator must maintain a technical log.',d:3,f:[]},
+  {id:'av13',w:'competent authority',g:'αρμόδια αρχή',p:'phrase',cat:'regulatory',lv:'B2',e:'The competent authority must approve any amendment to the aircraft maintenance programme.',d:3,f:[]},
+  {id:'av14',w:'compliance',g:'συμμόρφωση',p:'n',cat:'regulatory',lv:'B2',e:'Full compliance with the airworthiness directive is required within the specified time limit.',d:2,f:['comply','non-compliance','compliant']},
+  {id:'av15',w:'findings',g:'ευρήματα / διαπιστώσεις',p:'n',cat:'regulatory',lv:'B2',e:'The audit revealed several findings that require corrective action within 30 days.',d:2,f:['finding']},
+  {id:'av16',w:'corrective action',g:'διορθωτική ενέργεια',p:'phrase',cat:'regulatory',lv:'B2',e:'A corrective action plan must be submitted within 30 days of receiving the finding.',d:2,f:['CAP']},
+  {id:'av17',w:'technical log',g:'τεχνικό ημερολόγιο',p:'phrase',cat:'camo',lv:'B1',e:'All defects must be recorded in the aircraft technical log immediately.',d:2,f:[]},
+  {id:'av18',w:'airframe',g:'σκελετός αεροσκάφους',p:'n',cat:'maintenance',lv:'B2',e:'The airframe inspection revealed minor corrosion on the lower fuselage.',d:2,f:[]},
+  {id:'av19',w:'life-limited parts',g:'εξαρτήματα περιορισμένης ζωής',p:'phrase',cat:'maintenance',lv:'B2',e:'Life-limited parts must be replaced before reaching their approved life limit.',d:3,f:['LLP']},
+  {id:'av20',w:'overhaul',g:'γενική επισκευή / αποσυναρμολόγηση',p:'n/v',cat:'maintenance',lv:'B2',e:'The engine is due for overhaul after 3,000 hours of operation.',d:3,f:['overhauled','OH']},
+  {id:'av21',w:'unscheduled maintenance',g:'μη προγραμματισμένη συντήρηση',p:'phrase',cat:'maintenance',lv:'B2',e:'The unscheduled maintenance delayed the aircraft\'s return to service by 48 hours.',d:2,f:[]},
+  {id:'av22',w:'scheduled maintenance',g:'προγραμματισμένη συντήρηση',p:'phrase',cat:'maintenance',lv:'B1',e:'The aircraft is grounded for scheduled maintenance until further notice.',d:1,f:[]},
+  {id:'av23',w:'ground',g:'καθηλώνω αεροσκάφος',p:'v',cat:'operations',lv:'B2',e:'The aircraft was grounded pending investigation of the hydraulic leak.',d:2,f:['grounding','grounded']},
+  {id:'av24',w:'return to service',g:'επιστροφή σε υπηρεσία',p:'phrase',cat:'camo',lv:'B2',e:'The aircraft is expected to return to service following the completion of maintenance.',d:2,f:['RTS']},
+  {id:'av25',w:'non-conformity',g:'μη συμμόρφωση',p:'n',cat:'regulatory',lv:'B2',e:'The non-conformity was identified during the internal quality audit.',d:3,f:['non-conformance','non-compliant']},
+  {id:'av26',w:'mandatory',g:'υποχρεωτικός / επιβεβλημένος',p:'adj',cat:'regulatory',lv:'B1',e:'Compliance with airworthiness directives is mandatory and not optional.',d:2,f:['mandatory requirement']},
+  {id:'av27',w:'rectification',g:'αποκατάσταση / διόρθωση',p:'n',cat:'maintenance',lv:'B2',e:'Rectification of the identified defects must be completed before the next flight.',d:2,f:['rectify','rectified']},
+  {id:'av28',w:'approval',g:'έγκριση',p:'n',cat:'regulatory',lv:'B1',e:'EASA approval is required before implementing any amendment to the maintenance programme.',d:1,f:['approve','approved','unapproved']},
+  {id:'av29',w:'operator',g:'φορέας εκμετάλλευσης',p:'n',cat:'regulatory',lv:'B1',e:'The aircraft operator is responsible for maintaining the airworthiness of the fleet.',d:1,f:['operating','operations']},
+  {id:'av30',w:'AOC',g:'Πιστοποιητικό Αεροπορικού Φορέα',p:'abbr',cat:'regulatory',lv:'B2',e:'The airline holds an Air Operator Certificate issued by the competent authority.',d:2,f:['Air Operator Certificate']},
+  // HCAA/EASA Phrases
+  {id:'av31',w:'submit',g:'υποβάλλω',p:'v',cat:'correspondence',lv:'B1',e:'Please submit the completed documentation to the HCAA by the specified deadline.',d:1,f:['submission','submitted']},
+  {id:'av32',w:'pursuant to',g:'σύμφωνα με / βάσει',p:'prep phrase',cat:'correspondence',lv:'C1',e:'Pursuant to Regulation (EU) 1321/2014, the following amendment is hereby submitted.',d:3,f:[]},
+  {id:'av33',w:'hereby',g:'διά του παρόντος / με το παρόν',p:'adv',cat:'correspondence',lv:'C1',e:'We hereby confirm our compliance with the applicable airworthiness requirements.',d:3,f:[]},
+  {id:'av34',w:'discrepancy',g:'αναντιστοιχία / απόκλιση',p:'n',cat:'maintenance',lv:'B2',e:'A discrepancy was noted between the aircraft records and the actual part installed.',d:2,f:['discrepancies']},
+  {id:'av35',w:'endorsement',g:'επικύρωση / έγκριση',p:'n',cat:'regulatory',lv:'C1',e:'The maintenance release requires the endorsement of a certifying staff member.',d:3,f:['endorse']},
+];
+
+const AVIATION_EMAIL_TEMPLATES=[
+  {id:'ae1',title:'Airworthiness Directive Compliance',level:'B2',
+   subject:'AD [AD Number] — Compliance Status Report — [Aircraft Registration]',
+   body:`Dear [Name/Authority],
+
+We are writing to confirm the compliance status of aircraft [Registration] with Airworthiness Directive [AD Number], issued by [Authority] on [Date].
+
+In accordance with the requirements of the aforementioned AD, the following actions have been accomplished:
+
+- [Task description] — Completed on [Date] at [Airframe Hours] hours
+- [Task description] — Compliance method: [Method]
+
+All required documentation has been retained in the aircraft records and is available for inspection upon request.
+
+Should you require any further information, please do not hesitate to contact us.
+
+Yours faithfully,
+[Name]
+[Title] — CAMO
+[Company]`},
+
+  {id:'ae2',title:'Defect Notification to MRO',level:'B2',
+   subject:'Defect Notification — [Aircraft Registration] — [ATA Chapter]',
+   body:`Dear [MRO Contact],
+
+We are writing to formally notify you of the following defect identified on aircraft [Registration] during [inspection/flight/maintenance]:
+
+**Defect Description:** [Detailed description]
+**ATA Chapter:** [Chapter number and title]
+**Date Identified:** [Date]
+**Aircraft Hours/Cycles:** [TT / TC]
+
+We request that you assess the defect and provide a rectification plan at your earliest convenience. Please confirm whether the defect can be deferred in accordance with the MEL or whether immediate rectification is required.
+
+We await your technical assessment and estimated rectification schedule.
+
+Best regards,
+[Name]
+[CAMO Reference]`},
+
+  {id:'ae3',title:'Return to Service Confirmation',level:'B2',
+   subject:'Return to Service — [Aircraft Registration] — [Maintenance Type]',
+   body:`Dear [Operator/Captain],
+
+This is to confirm that aircraft [Registration] ([Aircraft Type]) has successfully completed [maintenance type] and has been released to service.
+
+**Maintenance Carried Out:** [Description]
+**Date of Completion:** [Date]
+**Certifying Staff:** [Name and authorisation number]
+**Aircraft Hours/Cycles at Release:** [TT / TC]
+
+All maintenance has been carried out in accordance with the approved maintenance data and the aircraft has been found airworthy.
+
+The Certificate of Release to Service (CRS) has been issued and is available in the aircraft technical log.
+
+The aircraft is cleared for return to service.
+
+Yours faithfully,
+[Name]
+CAMO — [Company]`},
+
+  {id:'ae4',title:'HCAA/Authority Correspondence',level:'C1',
+   subject:'Response to Finding No. [X] — [Subject]',
+   body:`Dear Sir/Madam,
+
+With reference to your letter dated [Date] regarding Finding No. [Number], we wish to provide the following response.
+
+**Finding Summary:** [Brief description of the finding]
+
+**Root Cause Analysis:**
+Following a thorough internal investigation, we have determined that the root cause of the non-conformity was [explanation].
+
+**Corrective Action Taken:**
+- Immediate action: [Action taken immediately]
+- Long-term corrective measure: [Systemic change implemented]
+- Preventive measure: [Action to prevent recurrence]
+
+**Target Completion Date:** [Date]
+
+We trust that the above corrective actions address the finding satisfactorily. Should you require any additional information or documentation, please do not hesitate to contact us.
+
+Yours faithfully,
+[Name]
+[Title]
+[Company] — [CAMO Reference]`},
+];
+
+const AVIATION_PHRASES=[
+  {cat:'Reporting Defects',phrases:[
+    {e:'A defect has been identified in the [component].',g:'Ανιχνεύτηκε ελάττωμα στο [εξάρτημα].'},
+    {e:'The defect is being deferred under MEL item [X].',g:'Το ελάττωμα αναστέλλεται βάσει του MEL στοιχείου [X].'},
+    {e:'Rectification is required before the next flight.',g:'Απαιτείται αποκατάσταση πριν την επόμενη πτήση.'},
+    {e:'The component has been found unserviceable.',g:'Το εξάρτημα βρέθηκε εκτός υπηρεσίας.'},
+    {e:'Further investigation is required to determine the root cause.',g:'Απαιτείται περαιτέρω έρευνα για τον εντοπισμό της αιτίας.'},
+  ]},
+  {cat:'Maintenance Communication',phrases:[
+    {e:'Please confirm the availability of the required parts.',g:'Παρακαλώ επιβεβαιώστε τη διαθεσιμότητα των απαιτούμενων εξαρτημάτων.'},
+    {e:'The work order has been raised and assigned to [reference].',g:'Η εντολή εργασίας έχει εκδοθεί και αποδοθεί στο [αναφορά].'},
+    {e:'Maintenance has been completed in accordance with the approved data.',g:'Η συντήρηση ολοκληρώθηκε σύμφωνα με τα εγκεκριμένα δεδομένα.'},
+    {e:'The aircraft is cleared for return to service.',g:'Το αεροσκάφος έχει εκκαθαριστεί για επιστροφή σε υπηρεσία.'},
+    {e:'A Certificate of Release to Service has been issued.',g:'Εκδόθηκε Πιστοποιητικό Επιστροφής σε Υπηρεσία.'},
+  ]},
+  {cat:'Regulatory & Compliance',phrases:[
+    {e:'In accordance with Regulation (EU) 1321/2014...',g:'Σύμφωνα με τον Κανονισμό (ΕΕ) 1321/2014...'},
+    {e:'Compliance with this AD is mandatory within [X] flight hours.',g:'Η συμμόρφωση με αυτή την ΟΑ είναι υποχρεωτική εντός [Χ] ωρών πτήσης.'},
+    {e:'The competent authority has been duly notified.',g:'Η αρμόδια αρχή έχει ενημερωθεί καταλλήλως.'},
+    {e:'All documentation is available for inspection upon request.',g:'Όλα τα έγγραφα διατίθενται για επιθεώρηση κατόπιν αιτήματος.'},
+    {e:'The non-conformity has been addressed through the corrective action plan.',g:'Η μη συμμόρφωση αντιμετωπίστηκε μέσω του σχεδίου διορθωτικών ενεργειών.'},
+  ]},
+  {cat:'Email Formalities',phrases:[
+    {e:'We refer to your correspondence dated [Date].',g:'Αναφερόμαστε στην επιστολή σας με ημερομηνία [Ημερομηνία].'},
+    {e:'Please find attached the requested documentation.',g:'Σας αποστέλλουμε συνημμένα την αιτηθείσα τεκμηρίωση.'},
+    {e:'We would be grateful if you could confirm receipt.',g:'Θα σας ήμασταν ευγνώμονες αν μπορούσατε να επιβεβαιώσετε τη λήψη.'},
+    {e:'Should you require any clarification, please do not hesitate to contact us.',g:'Σε περίπτωση που χρειάζεστε διευκρινίσεις, μη διστάσετε να επικοινωνήσετε μαζί μας.'},
+    {e:'We trust the above is in order.',g:'Πιστεύουμε ότι τα ανωτέρω είναι εντάξει.'},
+  ]},
+];
+
+const AVIATION_QUIZ=[
+  {q:'An airworthiness directive is:',opts:['A recommendation from the manufacturer','A mandatory safety requirement from the authority','An optional service bulletin','A maintenance schedule item'],a:'A mandatory safety requirement from the authority'},
+  {q:'CRS stands for:',opts:['Crew Rest Schedule','Certificate of Release to Service','Compliance Review Sheet','Corrective Rectification Summary'],a:'Certificate of Release to Service'},
+  {q:'Which term means "the aircraft cannot be operated"?',opts:['Serviceable','Deferred','Unserviceable','Grounded'],a:'Unserviceable'},
+  {q:'A finding from an audit requires:',opts:['Immediate grounding','A corrective action plan','An AD compliance check','A new maintenance programme'],a:'A corrective action plan'},
+  {q:'"Pursuant to" in formal correspondence means:',opts:['In addition to','According to / In accordance with','Despite','Following the completion of'],a:'According to / In accordance with'},
+  {q:'MEL stands for:',opts:['Maintenance Engineering Log','Minimum Equipment List','Mandatory Engineering Limit','Monthly Estimation Log'],a:'Minimum Equipment List'},
+  {q:'Which phrase correctly reports a defect to an MRO?',opts:['The thing is broken.','A defect has been identified in the hydraulic system.','There is a problem with the aircraft.','Something needs fixing on the landing gear.'],a:'A defect has been identified in the hydraulic system.'},
+  {q:'Life-limited parts must be:',opts:['Inspected every 100 hours','Replaced before reaching their approved life limit','Overhauled at each A-check','Deferred under the MEL'],a:'Replaced before reaching their approved life limit'},
+];
+
+let AVST={tab:'vocab',cat:'all',quiz:{idx:0,answers:{},done:false,sel:null}};
+
+function rAviation(){
+  const el=document.getElementById('settings');
+  const tabs=[
+    ['vocab','📚 Vocabulary'],
+    ['phrases','💬 Phrases'],
+    ['emails','📧 Email Templates'],
+    ['quiz','✈ Quiz'],
+  ];
+  
+  const tabBar=tabs.map(([id,lb])=>`<button onclick="AVST.tab='${id}';rAviation()" 
+    class="ttab ${AVST.tab===id?'on':''}">${lb}</button>`).join('');
+  
+  let body='';
+  
+  if(AVST.tab==='vocab'){
+    const cats=[['all','Όλες'],['camo','CAMO'],['regulatory','Κανονισμοί'],['maintenance','Συντήρηση'],['correspondence','Αλληλογραφία'],['operations','Επιχειρήσεις']];
+    body=`<div class="fx fw g6 mb14">
+      ${cats.map(([id,lb])=>`<button onclick="AVST.cat='${id}';rAviation()" class="tag" style="cursor:pointer;background:${AVST.cat===id?'var(--bl)':'var(--s2)'};border:1px solid ${AVST.cat===id?'var(--bl)':'var(--ln)'};color:${AVST.cat===id?'#fff':'var(--t2)'}">${lb}</button>`).join('')}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">
+      ${AVIATION_VOCAB.filter(w=>AVST.cat==='all'||w.cat===AVST.cat).map(w=>`
+      <div class="card">
+        <div class="fx ac jb mb6">
+          <div>
+            <div class="fp f14 b mb1" style="color:var(--bl)">${w.w}</div>
+            <div class="f11" style="color:var(--t3)">${w.p} · ${w.cat}</div>
+          </div>
+          <div class="fx ac g6">
+            <button onclick="speak('${w.w.replace(/'/g,"\\'")}','en-GB')" style="background:none;border:1px solid var(--tl)33;border-radius:20px;padding:2px 8px;color:var(--tl);font-size:10px;cursor:pointer">🔊</button>
+            <span class="tag f9" style="background:var(--vi)1a;border:1px solid var(--vi)33;color:var(--vi)">${w.lv}</span>
+          </div>
+        </div>
+        <div class="f12 c3 mb6">🇬🇷 ${w.g}</div>
+        <div class="f11 c2 it mb6" style="padding:6px 10px;background:var(--s2);border-radius:6px;border-left:2px solid var(--bl)33">"${w.e}"</div>
+        ${w.f&&w.f.length?`<div class="f10 c3">↔ ${w.f.join(' · ')}</div>`:''}
+      </div>`).join('')}
+    </div>`;
+  }
+  
+  else if(AVST.tab==='phrases'){
+    body=AVIATION_PHRASES.map(cat=>`
+    <div class="card mb14">
+      <div class="sl mb10 cbl">${cat.cat.toUpperCase()}</div>
+      ${cat.phrases.map(p=>`<div style="padding:10px 12px;background:var(--s2);border-radius:8px;margin-bottom:8px;cursor:pointer" onclick="speak('${p.e.replace(/'/g,"\\'")}','en-GB')">
+        <div class="f13 mb3" style="color:var(--t1);line-height:1.5">${p.e} <span style="color:var(--t3);font-size:10px">🔊</span></div>
+        <div class="f11 c3 it">🇬🇷 ${p.g}</div>
+      </div>`).join('')}
+    </div>`).join('');
+  }
+  
+  else if(AVST.tab==='emails'){
+    body=AVIATION_EMAIL_TEMPLATES.map(t=>`
+    <div class="card mb14">
+      <div class="fx ac jb mb8">
+        <div class="fp f13 b">${t.title}</div>
+        <span class="tag f9" style="background:var(--bl)1a;border:1px solid var(--bl)33;color:var(--bl)">${t.level}</span>
+      </div>
+      <div class="f11 c3 mb8">📧 Subject: <em>${t.subject}</em></div>
+      <div style="font-family:monospace;font-size:11px;background:var(--s2);border-radius:8px;padding:12px;border-left:3px solid var(--bl)33;white-space:pre-wrap;line-height:1.7;color:var(--t2)">${t.body}</div>
+      <button onclick="navigator.clipboard.writeText(${JSON.stringify(t.body)}).then(()=>toast('✓ Αντιγράφτηκε!','var(--gr)'))" class="btn bgh bsm mt10">📋 Αντιγραφή</button>
+    </div>`).join('');
+  }
+  
+  else if(AVST.tab==='quiz'){
+    if(AVST.quiz.done){
+      const sc=AVIATION_QUIZ.filter((q,i)=>AVST.quiz.answers[i]===q.a).length;
+      const pct=Math.round(sc/AVIATION_QUIZ.length*100);
+      body=`<div style="text-align:center;padding:32px">
+        <div style="font-size:48px;margin-bottom:12px">${pct>=80?'🏆':pct>=60?'✈':'📖'}</div>
+        <div class="fp f22 b mb4">Aviation Quiz</div>
+        <div class="fp f36 b mb4" style="color:${pct>=80?'var(--gr)':pct>=60?'var(--am)':'var(--bl)'}">${sc}/${AVIATION_QUIZ.length}</div>
+        <div class="f12 mb16" style="color:var(--t3)">${pct}%</div>
+        <button onclick="AVST.quiz={idx:0,answers:{},done:false,sel:null};rAviation()" class="btn bp">Ξανά</button>
+      </div>`;
+      addXP(sc*10);
+    } else {
+      const q=AVIATION_QUIZ[AVST.quiz.idx];
+      const sel=AVST.quiz.sel;
+      body=`<div style="max-width:560px">
+        <div class="pb mb14" style="height:4px"><div class="pf" style="width:${Math.round(AVST.quiz.idx/AVIATION_QUIZ.length*100)}%;background:var(--bl)"></div></div>
+        <div class="f11 c3 mb6">✈ Ερώτηση ${AVST.quiz.idx+1}/${AVIATION_QUIZ.length}</div>
+        <div class="fp f15 mb14" style="line-height:1.7">${q.q}</div>
+        ${q.opts.map((opt,i)=>{
+          let bg='var(--s2)',br='var(--ln)',col='var(--t2)';
+          if(sel!==null){if(opt===q.a){bg='rgba(34,214,124,.08)';br='rgba(34,214,124,.4)';col='var(--gr)';}else if(opt===sel&&opt!==q.a){bg='rgba(240,56,112,.08)';br='rgba(240,56,112,.4)';col='var(--ro)';}}
+          return `<button onclick="if(AVST.quiz.sel===null){AVST.quiz.sel='${opt.replace(/'/g,"\\'")}';rAviation()}" style="width:100%;padding:11px 14px;border-radius:9px;text-align:left;font-size:13px;margin-bottom:8px;cursor:${sel!==null?'default':'pointer'};background:${bg};border:1px solid ${br};color:${col};transition:.15s">${opt}</button>`;
+        }).join('')}
+        ${sel!==null?`<button onclick="AVST.quiz.idx++;AVST.quiz.sel=null;if(AVST.quiz.idx>=AVIATION_QUIZ.length){AVST.quiz.done=true;}rAviation()" class="btn bp w100 mt4" style="justify-content:center">→ ${AVST.quiz.idx<AVIATION_QUIZ.length-1?'Επόμενο':'Αποτελέσματα'}</button>`:''}
+      </div>`;
+    }
+  }
+  
+  el.innerHTML=`<div class="sec fu" style="max-width:900px">
+    <button onclick="go('settings')" style="color:var(--t3);font-size:11px;background:none;border:none;cursor:pointer;margin-bottom:12px;display:flex;align-items:center;gap:4px">← Settings</button>
+    <div class="fx ac g12 mb16">
+      <span style="font-size:32px">✈</span>
+      <div style="flex:1">
+        <div class="fp f20 b" style="color:var(--bl)">Aviation English</div>
+        <div class="f12 c3">CAMO · EASA · HCAA · Maintenance · Correspondence</div>
+      </div>
+      <div style="text-align:right">
+        <div class="f10 c3 mb4">Προσθήκη στο Vocabulary</div>
+        <button onclick="DB.set('av_enabled',!DB.get('av_enabled',false));rAviation()" 
+          style="padding:4px 14px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;background:${DB.get('av_enabled',false)?'var(--gr)':'var(--s3)'};border:1px solid ${DB.get('av_enabled',false)?'var(--gr)':'var(--ln)'};color:${DB.get('av_enabled',false)?'#030f08':'var(--t3)'}">
+          ${DB.get('av_enabled',false)?'✓ Ενεργό':'Ενεργοποίηση'}
+        </button>
+      </div>
+    </div>
+    <div class="fx mb16" style="border-bottom:1px solid var(--ln);overflow-x:auto">${tabBar}</div>
+    ${body}
+  </div>`;
+}
+
+/* ══ EMAIL IMPROVER ══ */
+async function improveEmail(){
+  const modal=document.createElement('div');
+  modal.id='email-improve-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px';
+
+  modal.innerHTML=`<div style="background:var(--s1);border:1px solid var(--ln2);border-radius:var(--r2);padding:24px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto">
+    <div class="fx ac jb mb16">
+      <div>
+        <div class="fp f16 b mb2">✉ Email Improver</div>
+        <div class="f11 c3">Γράψε το email σου → AI το κάνει native-level English</div>
+      </div>
+      <button onclick="closeTopModal()" style="color:var(--t3);font-size:18px;background:none;border:none;cursor:pointer">✕</button>
+    </div>
+    <div class="mb10">
+      <div class="f11 b mb4">Το email σου (ακόμα και "greeklish" ή απλά ελληνικά):</div>
+      <textarea id="ei-input" rows="6" placeholder="π.χ. Dear John, θελω να σε ενημερωσω για το airworthiness directive που βγηκε. Πρεπει να κανουμε compliance μεσα σε 50 ωρες..."
+        style="width:100%;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px;padding:12px;font-family:var(--f);line-height:1.6;resize:none"></textarea>
+    </div>
+    <div class="mb14">
+      <div class="f11 b mb4">Τόνος / Στυλ:</div>
+      <div class="fx g8">
+        ${['formal','semi-formal','technical'].map(t=>`<button onclick="document.querySelectorAll('.ei-tone').forEach(b=>b.style.background='var(--s2)');this.style.background='var(--bl)22';this.dataset.sel='true'" class="ei-tone tag f10" style="background:var(--s2);border:1px solid var(--ln);color:var(--t2);cursor:pointer;padding:5px 12px" data-tone="${t}">${t}</button>`).join('')}
+      </div>
+    </div>
+    <button onclick="runEmailImprover()" class="btn bp w100 mb14" style="justify-content:center">✨ Βελτίωσε το email</button>
+    <div id="ei-result"></div>
+  </div>`;
+
+  document.body.appendChild(modal);
+  setTimeout(()=>document.getElementById('ei-input')?.focus(),100);
+}
+
+async function runEmailImprover(){
+  const input=document.getElementById('ei-input')?.value?.trim();
+  if(!input||input.length<10){toast('Γράψε πρώτα το email σου!','var(--am)');return;}
+  
+  const toneBtn=document.querySelector('.ei-tone[data-sel="true"]');
+  const tone=toneBtn?.dataset?.tone||'formal';
+  
+  const resultEl=document.getElementById('ei-result');
+  if(resultEl)resultEl.innerHTML=`<div class="fx ac g8 c3"><div class="pulse" style="width:8px;height:8px;border-radius:50%;background:var(--bl)"></div><span class="f11">AI γράφει το email σου...</span></div>`;
+  
+  try{
+    const improved=await callAI(
+      `You are a professional English writer specialising in aviation and business correspondence.
+The user will give you an email draft (possibly in Greek, Greeklish, or broken English).
+Rewrite it as perfect, professional ${tone} English.
+If aviation/CAMO context: use correct EASA terminology.
+Return ONLY the improved email text, nothing else. No explanations.`,
+      `Original email:\n${input}`,
+      600
+    );
+    
+    if(resultEl){
+      resultEl.innerHTML=`<div>
+        <div class="sl mb8 cgr">✓ ΒΕΛΤΙΩΜΕΝΟ EMAIL</div>
+        <div id="improved-email" style="font-family:monospace;font-size:12px;background:var(--s2);border-radius:8px;padding:14px;border-left:3px solid var(--gr)33;white-space:pre-wrap;line-height:1.7;color:var(--t2)">${improved}</div>
+        <div class="fx g8 mt12">
+          <button onclick="navigator.clipboard.writeText(document.getElementById('improved-email').textContent).then(()=>toast('✓ Αντιγράφτηκε!','var(--gr)'))" class="btn bp bsm">📋 Αντιγραφή</button>
+          <button onclick="document.getElementById('ei-input').value='';document.getElementById('ei-result').innerHTML=''" class="btn bgh bsm">Νέο email</button>
+        </div>
+        <div class="card c-info mt12">
+          <div class="sl mb6 cbl">💡 ΤΙ ΑΛΛΑΞΕ</div>
+          <div class="f11 c2" style="line-height:1.7">Το email έχει γραφτεί σε ${tone} business English με κατάλληλη δομή και ορολογία.</div>
+        </div>
+      </div>`;
+    }
+    addXP(10);
+  }catch(e){
+    if(resultEl)resultEl.innerHTML='<div class="f11 cro">Σφάλμα — δοκίμασε ξανά.</div>';
+  }
+}
+
+// Additional B2-C1 Business & Professional vocabulary
+const EXTRA_WORDS=[
+  {id:'ex01',w:'articulate',g:'διατυπώνω σαφώς / εκφράζω',p:'v/adj',cat:'b2_verbs',lv:'B2',e:'She was able to articulate her concerns clearly during the meeting.',d:2,f:['articulation','well-articulated']},
+  {id:'ex02',w:'leverage',g:'αξιοποιώ / εκμεταλλεύομαι',p:'v/n',cat:'business',lv:'C1',e:'We need to leverage our existing relationships to secure the contract.',d:3,f:['leveraged','leveraging']},
+  {id:'ex03',w:'streamline',g:'απλοποιώ / βελτιστοποιώ',p:'v',cat:'business',lv:'B2',e:'The new software will streamline our maintenance tracking processes.',d:2,f:['streamlined','streamlining']},
+  {id:'ex04',w:'deteriorate',g:'επιδεινώνομαι / υποβαθμίζομαι',p:'v',cat:'b2_adj',lv:'B2',e:'The component may deteriorate if not properly maintained.',d:2,f:['deterioration','deteriorating']},
+  {id:'ex05',w:'mitigate',g:'μετριάζω / περιορίζω',p:'v',cat:'b2_verbs',lv:'C1',e:'Additional safety measures were introduced to mitigate the identified risks.',d:3,f:['mitigation','mitigating']},
+  {id:'ex06',w:'expedite',g:'επισπεύδω / επιταχύνω',p:'v',cat:'b2_verbs',lv:'B2',e:'Please expedite the delivery of the replacement parts.',d:2,f:['expedited','expediting']},
+  {id:'ex07',w:'discrepancy',g:'αναντιστοιχία / διαφορά',p:'n',cat:'b2_nouns',lv:'B2',e:'A discrepancy was found between the log entries and the actual flight hours.',d:2,f:['discrepancies']},
+  {id:'ex08',w:'incumbent',g:'επιβεβλημένο / υποχρεωτικό / κάτοχος θέσης',p:'adj/n',cat:'formal',lv:'C1',e:'It is incumbent upon the operator to ensure full compliance.',d:3,f:[]},
+  {id:'ex09',w:'provisional',g:'προσωρινός / ενδεικτικός',p:'adj',cat:'b2_adj',lv:'B2',e:'A provisional approval was granted pending submission of final documentation.',d:2,f:['provisionally']},
+  {id:'ex10',w:'scrutinise',g:'εξετάζω λεπτομερώς / ελέγχω',p:'v',cat:'b2_verbs',lv:'C1',e:'The auditors will scrutinise all maintenance records during the inspection.',d:3,f:['scrutiny','scrutinised']},
+  {id:'ex11',w:'pertinent',g:'σχετικός / συναφής',p:'adj',cat:'formal',lv:'C1',e:'Please include all pertinent information in your response to the authority.',d:3,f:[]},
+  {id:'ex12',w:'forthcoming',g:'επικείμενος / επερχόμενος',p:'adj',cat:'b2_adj',lv:'B2',e:'We will address this issue at the forthcoming management review meeting.',d:2,f:[]},
+  {id:'ex13',w:'stringent',g:'αυστηρός / αποστερητικός',p:'adj',cat:'b2_adj',lv:'C1',e:'The aviation industry is subject to stringent safety regulations.',d:3,f:['stringently']},
+  {id:'ex14',w:'substantiate',g:'τεκμηριώνω / αποδεικνύω',p:'v',cat:'formal',lv:'C1',e:'You will need to substantiate your claims with supporting documentation.',d:3,f:['substantiation','substantiated']},
+  {id:'ex15',w:'unprecedented',g:'πρωτοφανής / αδιανόητος',p:'adj',cat:'b2_adj',lv:'B2',e:'The maintenance backlog reached unprecedented levels during the pandemic.',d:2,f:[]},
+];
+
+
+/* ══ LIGHT MODE ══ */
+function applyTheme(){
+  const light=DB.get('light_mode',false);
+  const root=document.documentElement;
+  if(light){
+    root.style.setProperty('--bg','#f0f4f8');
+    root.style.setProperty('--s1','#ffffff');
+    root.style.setProperty('--s2','#f7f9fc');
+    root.style.setProperty('--s3','#edf2f7');
+    root.style.setProperty('--s4','#e2e8f0');
+    root.style.setProperty('--ln','#e2e8f0');
+    root.style.setProperty('--ln2','#cbd5e0');
+    root.style.setProperty('--t1','#1a202c');
+    root.style.setProperty('--t2','#4a5568');
+    root.style.setProperty('--t3','#a0aec0');
+    document.body.style.background='#f0f4f8';
+    document.body.style.color='#1a202c';
+  } else {
+    ['--bg','--s1','--s2','--s3','--s4','--ln','--ln2','--t1','--t2','--t3'].forEach(v=>root.style.removeProperty(v));
+    document.body.style.background='';
+    document.body.style.color='';
+  }
+}
+function toggleLightMode(){
+  DB.set('light_mode',!DB.get('light_mode',false));
+  applyTheme();
+  toast(DB.get('light_mode',false)?'☀ Light mode':'🌙 Dark mode','var(--bl)');
+  rSettings();
+}
+
+/* ══ NOTIFICATIONS ══ */
+async function requestNotifications(){
+  if(!('Notification' in window)){toast('Ο browser δεν υποστηρίζει notifications','var(--am)');return;}
+  const perm=await Notification.requestPermission();
+  if(perm==='granted'){
+    DB.set('notif_enabled',true);
+    scheduleNotifications();
+    toast('✓ Notifications ενεργοποιήθηκαν!','var(--gr)');
+    rSettings();
+    setTimeout(()=>new Notification('English Master 📚',{body:'Θα σου θυμίζω να μελετάς κάθε μέρα!'}),500);
+  } else {toast('Notifications απορρίφθηκαν','var(--t3)');}
+}
+function scheduleNotifications(){
+  if(!DB.get('notif_enabled',false))return;
+  const time=DB.get('notif_time','20:00');
+  const [h,m]=time.split(':').map(Number);
+  const now=new Date(),target=new Date();
+  target.setHours(h,m,0,0);
+  if(target<=now)target.setDate(target.getDate()+1);
+  setTimeout(()=>{
+    if(!DB.get('notif_enabled',false))return;
+    const streak=calcStreak(),due=dueW().length;
+    const msg=due>0?due+' λέξεις για επανάληψη! 📚':'Συνέχισε τη μελέτη σου! '+(streak>0?'🔥 '+streak+' ημέρες streak':'');
+    new Notification('English Master',{body:msg});
+    scheduleNotifications();
+  },target.getTime()-now.getTime());
+}
+function disableNotifications(){
+  DB.set('notif_enabled',false);
+  toast('Notifications απενεργοποιήθηκαν','var(--t3)');
+  rSettings();
+}
+
+/* ══ LEADERBOARD ══ */
+function getWeekKey(){return 'week_'+Math.floor(Date.now()/604800000);}
+function updateLeaderboard(){
+  const xpd=DB.get('xpd',{});
+  const today=new Date();
+  const ws=new Date(today);ws.setDate(today.getDate()-today.getDay());
+  let weekXP=0;
+  for(let d=0;d<7;d++){const dt=new Date(ws);dt.setDate(ws.getDate()+d);weekXP+=(xpd[dt.toISOString().split('T')[0]]||0);}
+  const name=DB.get('player_name','')||'Player';
+  const entry={name,xp:weekXP,streak:calcStreak(),words:learnedW().length,ts:Date.now()};
+  const lb=DB.get('local_lb',[]);
+  const ei=lb.findIndex(e=>e.name===name);
+  if(ei>=0)lb[ei]=entry;else lb.push(entry);
+  lb.sort((a,b)=>b.xp-a.xp);
+  DB.set('local_lb',lb.slice(0,20));
+  return{weekXP,rank:lb.findIndex(e=>e.name===name)+1,total:lb.length};
+}
+function showLeaderboard(){
+  updateLeaderboard();
+  const lb=DB.get('local_lb',[]);
+  const playerName=DB.get('player_name','')||'Player';
+  const modal=document.createElement('div');
+  modal.id='lb-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px';
+  const myRank=lb.findIndex(e=>e.name===playerName)+1;
+  const myEntry=lb.find(e=>e.name===playerName);
+  modal.innerHTML=`<div style="background:var(--s1);border:1px solid var(--ln2);border-radius:var(--r2);padding:24px;max-width:460px;width:100%;max-height:85vh;overflow-y:auto">
+    <div class="fx ac jb mb14">
+      <div><div class="fp f18 b mb1">🏆 Weekly Leaderboard</div><div class="f11 c3">XP αυτή την εβδομάδα</div></div>
+      <button onclick="closeTopModal()" style="color:var(--t3);font-size:18px;background:none;border:none;cursor:pointer">✕</button>
+    </div>
+    ${myEntry?`<div style="padding:10px 14px;background:rgba(246,188,24,.1);border:1px solid rgba(246,188,24,.3);border-radius:10px;margin-bottom:12px">
+      <div class="fx ac jb"><div class="fx ac g10"><span class="fp f18" style="color:var(--am)">#${myRank}</span>
+      <div><div class="f12 b">${playerName} (εσύ)</div><div class="f10 c3">${myEntry.xp} XP · ${myEntry.streak}🔥 · ${myEntry.words} λέξεις</div></div></div></div>
+    </div>`:''}
+    ${lb.length===0?'<div class="f12 c3 tc" style="padding:20px">Κάνε quiz για να εμφανιστείς!</div>':
+    lb.map((e,i)=>{
+      const isMe=e.name===playerName;
+      const medal=['🥇','🥈','🥉'][i]||('#'+(i+1));
+      return '<div style="padding:9px 12px;border-radius:8px;margin-bottom:5px;background:'+(isMe?'rgba(246,188,24,.06)':'var(--s2)')+';border:1px solid '+(isMe?'rgba(246,188,24,.3)':'var(--ln)')+'"><div class="fx ac jb"><div class="fx ac g8"><span class="f14" style="min-width:28px;color:'+(isMe?'var(--am)':'var(--t3)')+'">'+medal+'</span><div><div class="f12 b '+(isMe?'':'c2')+'">'+e.name+(isMe?' 👤':'')+'</div><div class="f9 c3">'+e.streak+'🔥 · '+e.words+' λέξεις</div></div></div><div class="fp f15 b" style="color:'+(isMe?'var(--am)':'var(--t2)')+'">'+e.xp+' XP</div></div></div>';
+    }).join('')}
+    <div class="card c-info mt12"><div class="f11 c2">💡 Το leaderboard είναι local — δείχνει τους χρήστες σε αυτή τη συσκευή.</div></div>
+    <button onclick="closeTopModal()" class="btn bgh w100 mt10" style="justify-content:center">Κλείσιμο</button>
+  </div>`;
+  document.body.appendChild(modal);
+}
 document.addEventListener('DOMContentLoaded',()=>{
-  if(DB.get('lm',false))document.body.classList.add('light');
+  applyTheme();
   updXP();
   rHome();
   // Offline detection
@@ -7337,10 +7936,16 @@ document.addEventListener('DOMContentLoaded',()=>{
   const td=Object.keys(DB.get('comp',{})).filter(k=>(DB.get('comp',{})[k]||[]).length>=3).length;
   if(td>=10)unlockAch('st10');
   // Daily notification
+  initTheme();
+  applyTheme();
   showOnboarding();
   checkStreakWarning();
+  scheduleNotifications();
+  scheduleNotifications();
   // Merge extra readings
   if(typeof EXTRA_READINGS!=='undefined')READINGS.push(...EXTRA_READINGS.filter(r=>!READINGS.find(x=>x.id===r.id)));
+  // Merge extra vocabulary
+  if(typeof EXTRA_WORDS!=='undefined')EXTRA_WORDS.forEach(w=>{if(!WORDS.find(x=>x.id===w.id))WORDS.push(w);});
   checkWeeklySummary();
   if(DB.get('nf',false)&&DB.get('lastR','')!==todayK()&&Notification.permission==='granted'){
     DB.set('lastR',todayK());
