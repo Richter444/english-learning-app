@@ -1468,7 +1468,7 @@ function rVAll(el){
     </div>
     <div class="fx g8 fw mb14">${catBtns}</div>
     ${filteredWords.map(w=>{
-      const s=getWS(w.id),cat=VCATS[w.cat],pct=s.sc/5*100;
+      const s=getWS(w.id),cat=VCATS[w.cat],pct=s.sc>=3?100:s.sc/5*100;
       return `<div class="wc">
         <div class="fx ac jb mb6">
           <div class="fx ac g8"><span class="f14 b">${w.w}</span>
@@ -1484,8 +1484,8 @@ function rVAll(el){
         <div class="f11 c3 it mb6">"${w.e}"</div>
         ${w.f&&w.f.length?`<div class="f10 c3">Family: ${w.f.map(f=>`<span style="color:var(--vi)">${f}</span>`).join(' · ')}</div>`:''}
         <div class="fx ac g8 mt8">
-          <div class="pb" style="height:3px;flex:1"><div class="pf" style="width:${pct}%;background:${pct>=60?'var(--gr)':pct>=30?'var(--am)':'var(--t3)'}"></div></div>
-          <span class="f9 c3">${s.sc}/5</span>
+          <div class="pb" style="height:3px;flex:1"><div class="pf" style="width:${pct}%;background:${s.sc>=3?'var(--gr)':pct>=30?'var(--am)':'var(--t3)'}"></div></div>
+          <span class="f9" style="color:${s.sc>=3?'var(--gr)':s.sc>=1?'var(--am)':'var(--t3)'}" title="Βαθμός εκμάθησης: ${s.sc>=3?'Εκμαθημένη ✓':s.sc>=1?'Σε πρόοδο':'Νέα λέξη'}">${s.sc>=3?'⭐'.repeat(Math.min(s.sc,3)):s.sc>=1?'○'.repeat(s.sc)+'◉':'◯'} ${s.sc>=3?'Εκμαθημένη':s.sc>=1?s.sc+'/5':'Νέα'}</span>
           <button onclick="speak('${w.w.split(' → ')[0]}')" class="tag f9" style="background:var(--tl)1a;border:1px solid var(--tl)33;color:var(--tl);cursor:pointer">🔊</button>
           <a href="https://youglish.com/pronounce/${encodeURIComponent(w.w.split(' ')[0])}/english" target="_blank" class="tag f9" style="background:var(--bl)1a;border:1px solid var(--bl)33;color:var(--bl);text-decoration:none">YG</a>
           ${speechSupported()?`<button onclick="showPronunciationInListeningState(document.createElement('div'),'${w.w.replace(/'/g,"\'")}','${w.g.replace(/'/g,"\'")}',null);let m=document.createElement('div');m.id='pron-modal';m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px';document.body.appendChild(m);showPronunciationInListeningState(m,'${w.w.replace(/'/g,"\'")}','${w.g.replace(/'/g,"\'")}',null)" class="tag f9" style="background:var(--ro)1a;border:1px solid var(--ro)33;color:var(--ro);cursor:pointer">🎤</button>`:''}
@@ -1495,7 +1495,7 @@ function rVAll(el){
           <span class="tag f9" style="background:${s.seen===0?'var(--s3)':s.sc>=3?'var(--gr)1a':s.nr<=Date.now()&&s.seen>0?'var(--bl)1a':'var(--am)1a'};border:1px solid ${s.seen===0?'var(--ln)':s.sc>=3?'var(--gr)33':s.nr<=Date.now()&&s.seen>0?'var(--bl)33':'var(--am)33'};color:${s.seen===0?'var(--t3)':s.sc>=3?'var(--gr)':s.nr<=Date.now()&&s.seen>0?'var(--bl)':'var(--am)'}">
             ${s.seen===0?'Νέα':s.sc>=3?'✓ Εμαθα':s.nr<=Date.now()&&s.seen>0?'📅 Επανάληψη':'Μαθαίνεται'}
           </span>
-          ${s.sc<3?`<button onclick="(function(){const wb=getWB();const wid='${w.id}';wb[wid]={sc:3,st:3,nr:Date.now()+604800000,seen:Math.max(3,(wb[wid]?.seen||0)+1)};DB.set('wb',wb);addXP(15);toast('⭐ "${w.w}" στις εμαθημένες!','var(--gr)');rVAll(document.getElementById('vm'))" class="tag f9 bxs" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr);cursor:pointer">Εμαθα ✓</button>`:''}
+          ${s.sc<3?`<button onclick="const wb=getWB();const wid='${w.id}';wb[wid]={sc:3,st:3,nr:Date.now()+604800000,seen:Math.max(3,(wb[wid]?.seen||0)+1)};DB.set('wb',wb);addXP(15);toast('⭐ Εμαθα!','var(--gr)');rVAll(document.getElementById('vm'))" class="tag f9 bxs" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr);cursor:pointer">Εμαθα ✓</button>`:''}
         </div>
       </div>`;
     }).join('')||`<div class="card tc c3" style="padding:20px">Ξεκίνα να μαθαίνεις λέξεις!</div>`}
