@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f1117">
 <meta name="app-version" content="2026.05.13-1138">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -205,7 +205,7 @@ a{text-decoration:none;color:inherit}
 .vmb{display:flex;align-items:center;gap:8px;width:100%;padding:8px 14px;border-left:3px solid transparent;font-size:12px;color:var(--t3);text-align:left;transition:all .13s}
 .vmb.on{background:var(--s2);border-left-color:var(--bl);color:var(--t1)}
 .vmb:hover{background:var(--s2)}
-.vm{flex:1;overflow-y:auto;padding:18px}
+.vm{flex:1;overflow-y:auto;padding:18px;padding-bottom:24px}
 .wc{background:var(--s1);border:1px solid var(--ln);border-radius:var(--r);padding:14px;margin-bottom:8px;transition:border-color .15s}
 .wc:hover{border-color:var(--ln2)}
 .qcard{width:100%;max-width:580px;background:var(--s1);border:1px solid var(--ln);border-radius:var(--r2);padding:28px;box-shadow:var(--shadow-md);animation:fadeUp .2s ease}
@@ -362,7 +362,7 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
   .tck,.trck{width:26px;height:26px}
   .hcard{padding:16px}
   .hcard h3{font-size:14px}
-  input,textarea,select{font-size:16px!important} /* prevents iOS zoom */
+  input,textarea,select{font-size:16px!important;max-width:100%} /* prevents iOS zoom */
 }
 
 
@@ -394,6 +394,12 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
 }
 
 @media(max-width:700px){
+  /* Fix scrolling - allow panels to scroll to bottom */
+  #cnt{overflow-y:auto!important;overflow-x:hidden}
+  /* Use dvh (dynamic viewport height) to handle keyboard properly */
+  .pnl{height:auto!important;min-height:calc(100dvh - 44px - 56px);overflow-y:visible!important;padding-bottom:80px!important}
+  .fpnl{height:auto!important;min-height:calc(100dvh - 44px - 56px);overflow-y:visible!important;padding-bottom:80px!important}
+  
   /* Nav bar */
   .tabs{display:none}
   #nav{height:44px;padding:0 12px}
@@ -431,7 +437,7 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
   
   /* Cards */
   .card,.card2{padding:12px}
-  .sec{padding:12px!important}
+  .sec{padding:12px 12px 80px!important}
   
   /* Quiz */
   .qcard{padding:16px}
@@ -451,6 +457,10 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
   
   /* Buttons full width in some contexts */
   .qcard .btn{width:100%;justify-content:center}
+  /* Quiz card bottom padding */
+  .qcard{padding-bottom:80px!important}
+  /* Ensure forms have bottom padding */
+  form,.form{padding-bottom:80px}
   
   /* Font sizes */
   .fp.f32{font-size:24px!important}
@@ -460,7 +470,8 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
   .fp.f16{font-size:14px!important}
   
   /* fpnl = flex panels need height adjustment */
-  .fpnl{flex-direction:column}
+  .fpnl{flex-direction:column;overflow-y:auto;height:auto}
+  .fpnl .vm,.fpnl .tmain{overflow-y:visible;flex:none;min-height:300px}
   
   /* Home cards */
   .hcard{padding:14px}
@@ -469,15 +480,19 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
   
   /* Modal sheets */
   #fo-modal>div,#er-modal>div,#il-modal>div,#cefr-modal>div,
-  #weekly-modal>div,#ea-modal>div,#onboard-modal>div,#apikey-modal>div{
+  #weekly-modal>div,#ea-modal>div,#onboard-modal>div,#apikey-modal>div,
+  #placement-modal>div,#lb-modal>div,#cert-modal>div,#quick-modal>div,
+  #pron-modal>div,#email-improve-modal>div,#celeb-modal>div{
     max-width:100%!important;
     border-radius:20px 20px 0 0!important;
     position:absolute;bottom:0;left:0;right:0;
-    max-height:90vh;overflow-y:auto;
-    padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))!important;
+    max-height:88vh;overflow-y:auto;
+    padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important;
   }
   #fo-modal,#er-modal,#il-modal,#cefr-modal,
-  #weekly-modal,#ea-modal,#onboard-modal,#apikey-modal{
+  #weekly-modal,#ea-modal,#onboard-modal,#apikey-modal,
+  #placement-modal,#lb-modal,#cert-modal,#quick-modal,
+  #pron-modal,#email-improve-modal,#celeb-modal{
     align-items:flex-end!important;
   }
   
@@ -1564,9 +1579,9 @@ function rQCard(el){
       <div class="fp f20 b mb6" style="color:${cat?.col||'var(--bl)'}">${cw.g}</div>
       <div class="f12 c3 it">${cw.e.replace(new RegExp(bw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),'▓▓▓▓▓')}</div>
     </div>
-    <input id="vfi" value="${q.fill.replace(/"/g,'&quot;')}" oninput="VS.q.fill=this.value" onkeydown="if(event.key==='Enter'&&VS.q.fill.trim()&&!VS.q.fd){VS.q.fd=true;const vm=document.getElementById('vm');vm&&rQCard(vm)}" ${q.fd?'disabled':''} placeholder="Γράψε τη λέξη..." style="width:100%;padding:11px 14px;background:var(--s2);border:1px solid ${q.fd?(isC?'var(--gr)':'var(--ro)'):'var(--ln)'};border-radius:8px;color:var(--t1);font-size:15px;margin-bottom:9px">
+    <input id="vfi" value="${q.fill.replace(/"/g,'&quot;')}" oninput="VS.q.fill=this.value" onkeydown="if(event.key==='Enter'&&VS.q.fill.trim()&&!VS.q.fd){VS.q.fd=true;const vm=document.getElementById('vm');vm&&rQCard(vm);document.getElementById('vfi')?.blur()}" ${q.fd?'disabled':''} placeholder="Γράψε τη λέξη..." style="width:100%;padding:11px 14px;background:var(--s2);border:1px solid ${q.fd?(isC?'var(--gr)':'var(--ro)'):'var(--ln)'};border-radius:8px;color:var(--t1);font-size:15px;margin-bottom:9px">
     ${!q.fd
-      ?`<button class="btn bp w100" style="justify-content:center" onclick="if(VS.q.fill.trim()){VS.q.fd=true;const vm=document.getElementById('vm');vm&&rQCard(vm)}">ΕΛΕΓΧΟΣ</button>`
+      ?`<button class="btn bp w100" style="justify-content:center;padding:12px;font-size:14px" onclick="if(VS.q.fill.trim()){VS.q.fd=true;const vm=document.getElementById('vm');vm&&rQCard(vm)}">✓ ΕΛΕΓΧΟΣ</button>`
       :`<div style="padding:9px;background:${isC?'#051a0a':'#1a0508'};border:1px solid ${isC?'var(--gr)':'var(--ro)'}44;border-radius:8px;text-align:center;margin-bottom:9px;font-size:13px;color:${isC?'var(--gr)':'var(--ro)'}">
         ${isC?'✓ Σωστό!':'✗ Σωστό: "'+bw+'"'}</div>
        <div class="g2"><button onclick="vRec(false)" style="padding:10px;background:var(--s3);border:1px solid var(--ro)44;border-radius:8px;color:var(--ro);cursor:pointer">✗ Λάθος</button>
@@ -2244,7 +2259,7 @@ function rTM(){
   const tPct=Math.round(sc/TENSES[TST.idx].quiz.length*100);
   if(tPct===100){setTimeout(()=>showCelebration('🏆 '+TENSES[TST.idx].name+'!','Τέλειο σκορ! '+sc+'/'+TENSES[TST.idx].quiz.length+' απαντήσεις.',sc*5,'TST.idx=(TST.idx+1)%TENSES.length;TST.tab=\'theory\';resetTQ();rTM()','Επόμενος χρόνος'),400);}
   else if(tPct>=60){setTimeout(()=>showCelebration(TENSES[TST.idx].name+' — Καλά!',sc+'/'+TENSES[TST.idx].quiz.length+' σωστές. Καλή πρόοδος!',sc*5,null,null),400);}
-  else{toast('Quiz: '+sc+'/'+TENSES[TST.idx].quiz.length+' — +'+sc*5+' XP','var(--bl)');}const tKey=['present_simple','present_continuous','simple_past','past_continuous','present_perfect','pp_continuous','past_perfect','future_will','future_going_to'][TST.idx]||'present_simple';if(sc>=Math.ceil(TENSES[TST.idx].quiz.length*0.6))setTimeout(()=>showForcedOutput(tKey,'tense'),1200);rTM()}" style="padding:10px 22px;background:${t.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${allA?1:0.4}">Ελέγξτε →</button>`
+  else{toast('Quiz: '+sc+'/'+TENSES[TST.idx].quiz.length+' — +'+sc*5+' XP','var(--bl)');}const tKey=['present_simple','present_continuous','simple_past','past_continuous','present_perfect','pp_continuous','past_perfect','future_will','future_going_to'][TST.idx]||'present_simple';if(sc>=Math.ceil(TENSES[TST.idx].quiz.length*0.6))setTimeout(()=>showForcedOutput(tKey,'tense'),1200);rTM()}" style="padding:10px 22px;background:${t.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${allA?1:0.4};cursor:${allA?'pointer':'not-allowed'};${allA?'box-shadow:0 4px 16px rgba(79,142,247,.3)':''}">Ελέγξτε →</button>`
       :`<div class="fx ac g12"><div class="card" style="border:2px solid ${TST.qsc===t.quiz.length?'var(--am)':TST.qsc>=Math.ceil(t.quiz.length*.6)?'var(--gr)':'var(--bl)'}">
          <span class="f11 c3">Αποτέλεσμα: </span><span class="fp f20 b" style="color:${TST.qsc===t.quiz.length?'var(--am)':TST.qsc>=Math.ceil(t.quiz.length*.6)?'var(--gr)':'var(--bl)'}">${TST.qsc}/${t.quiz.length}</span>
          </div><button onclick="resetTQ();rTM()" style="padding:9px 16px;border:1px solid ${t.col};border-radius:7px;color:${t.col};background:transparent;cursor:pointer;font-size:10px;font-weight:700">ΕΠΑΝΑΛΗΨΗ</button></div>`);
@@ -2617,7 +2632,7 @@ function rGTopic(){
       ?`<button onclick="const allA=Object.keys(GST.ea).length>=${t.exercises.length};if(allA){let sc=0;GRAM.find(x=>x.id===GST.topic).exercises.forEach((ex,i)=>{if(GST.ea[i]===ex.a)sc++;else{const ge=DB.get('gramErr',{});if(!ge[GST.topic])ge[GST.topic]={count:0,last:null};ge[GST.topic].count++;ge[GST.topic].last=todayK();DB.set('gramErr',ge);}});GST.esc=sc;GST.es=true;addXP(sc*8);const pct=Math.round(sc/${t.exercises.length}*100);const gramMsg=pct>=80?'Εξαιρετικά! Εξαιρετικά!':pct>=50?'Καλά — συνέχισε!':'Συνέχισε την εξάσκηση!';
 if(pct>=80){setTimeout(()=>showCelebration('✓ '+t.t+' — Τέλεια! ✓!',gramMsg+' '+sc+'/'+t.exercises.length+' σωστές.',sc*8,'GST.topic=null;rGrammar()','Επόμενο κεφάλαιο'),400);}
 else{toast((pct>=50?'👍 ':'📖 ')+sc+'/${t.exercises.length} σωστές — '+gramMsg,'var(--'+(pct>=50?'bl':'ro')+')');if(pct>=60)setTimeout(()=>showForcedOutput(GST.topic,'grammar'),1200);}
-rGTopic()}" style="padding:10px 22px;background:${t.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${Object.keys(GST.ea).length>=t.exercises.length?1:0.4}">Ελέγξτε →</button>`
+rGTopic()}" style="padding:10px 22px;background:${t.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${Object.keys(GST.ea).length>=t.exercises.length?1:0.4};cursor:${Object.keys(GST.ea).length>=t.exercises.length?'pointer':'not-allowed'}">Ελέγξτε →</button>`
       :`<div class="fx ac g12"><div class="card" style="border:2px solid ${GST.esc===t.exercises.length?'var(--am)':'var(--gr)'}">
          <span class="f11 c3">Αποτέλεσμα: </span><span class="fp f20 b" style="color:${GST.esc===t.exercises.length?'var(--am)':'var(--gr)'}">${GST.esc}/${t.exercises.length}</span>
          </div><button onclick="GST.ea={};GST.es=false;GST.esc=null;rGTopic()" style="padding:9px 16px;border:1px solid ${t.col};border-radius:7px;color:${t.col};background:transparent;cursor:pointer;font-size:10px;font-weight:700">ΕΠΑΝΑΛΗΨΗ</button></div>`}
@@ -2979,7 +2994,7 @@ function rReading(){
   const rd=DB.get('rdDone',[]);if(!rd.includes(RST.art)){rd.push(RST.art);DB.set('rdDone',rd);}
   if(c===READINGS.find(x=>x.id===RST.art).qs.length)toast('✓ Τέλειο! +'+c*10+' XP','var(--gr)');
   else toast('Αποτέλεσμα: '+c+'/'+READINGS.find(x=>x.id===RST.art).qs.length+' — +'+c*10+' XP','var(--bl)');
-  rReading()}" style="padding:10px 22px;background:${a.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${allA?1:0.4}">Ελέγξτε →</button>`
+  rReading()}" style="padding:10px 22px;background:${a.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${allA?1:0.4};cursor:${allA?'pointer':'not-allowed'};${allA?'box-shadow:0 4px 16px rgba(79,142,247,.3)':''}">Ελέγξτε →</button>`
         :`<div class="fx ac g12"><div class="card" style="border:2px solid ${RST.rsc===a.qs.length?'var(--am)':'var(--gr)'}">
            <span class="f11 c3">Αποτέλεσμα: </span><span class="fp f20 b" style="color:${RST.rsc===a.qs.length?'var(--am)':'var(--gr)'}">${RST.rsc}/${a.qs.length}</span>
            </div><button onclick="RST.ra={};RST.rs=false;RST.rsc=null;rReading()" style="padding:9px 16px;border:1px solid ${a.col};border-radius:7px;color:${a.col};background:transparent;cursor:pointer;font-size:10px;font-weight:700">ΞΑΝΑ</button></div>`}
@@ -5789,7 +5804,7 @@ function rClozeTest(){
         ${cl.blanks.map(b=>`<div class="f11 c3 mb4"><strong class="cbl">_${b.n}_</strong>: ${b.hint}</div>`).join('')}
       </div>
       <button onclick="if(${allFilled}){let s=0;CLOZE_TEXTS.find(x=>x.id===CLST.art).blanks.forEach(b=>{if(CLST.answers[b.n]===b.a)s++});CLST.score=s;CLST.checked=true;addXP(s*10);toast('Αποτέλεσμα: '+s+'/'+CLOZE_TEXTS.find(x=>x.id===CLST.art).blanks.length+' — +'+s*10+' XP','var(--am)');rClozeTest()}" 
-        class="btn bp" style="opacity:${allFilled?1:0.4}">✓ Έλεγχος</button>`
+        class="btn bp" style="opacity:${allFilled?1:0.4};cursor:${allFilled?'pointer':'not-allowed'}">✓ Έλεγχος</button>`
       :`<div class="fx ac g10">
         <div class="card" style="border:2px solid ${CLST.score===cl.blanks.length?'var(--am)':'var(--gr)'}">
           <span class="f11 c3">Αποτέλεσμα: </span>
@@ -7916,6 +7931,13 @@ function showLeaderboard(){
     <button onclick="closeTopModal()" class="btn bgh w100 mt10" style="justify-content:center">Κλείσιμο</button>
   </div>`;
   document.body.appendChild(modal);
+}
+
+/* Auto-scroll submit buttons into view on mobile */
+function scrollToSubmit(el){
+  if(window.innerWidth<=700&&el){
+    setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'nearest'}),300);
+  }
 }
 document.addEventListener('DOMContentLoaded',()=>{
   applyTheme();
