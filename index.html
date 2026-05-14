@@ -2652,7 +2652,7 @@ function rGTopic(){
     <button onclick="GST.topic=null;rGrammar()" style="color:var(--t3);font-size:11px;background:none;border:none;cursor:pointer;margin-bottom:16px">← Πίσω στη Γραμματική</button>
     <div class="fx ac g10 mb20"><span style="font-size:26px">${t.ic}</span><div><div class="fp f16 b" style="color:${t.col}">${t.t}</div><div class="f11 c3">${t.desc}</div></div></div>
     <div class="sl mb10">ΘΕΩΡΙΑ</div>
-    ${t.theory}
+    ${t.theory||''}
     <div class="sl mb12 mt16">ΑΣΚΗΣΕΙΣ (${t.exercises.length})</div>
     ${t.exercises.map((ex,i)=>{
       const opts=ex.opts.map(opt=>{
@@ -4967,7 +4967,7 @@ function rHome(){
   unlockAch('start');
   const el=document.getElementById('home');
   try{
-    const xp=getXP(),lv=getLv(xp),streak=calcStreak();
+    const xp=getXP(),lvIdx=getLv(xp),lv=LVLS[lvIdx]||LVLS[0],streak=calcStreak();
     const lc=learnedW().length,due=dueW().length,all=getAllW().length;
     const comp=DB.get('comp',{}),today=todayK();
     const todayDone=(comp[today]||[]).length;
@@ -4994,7 +4994,7 @@ function rHome(){
             <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#1a0d00;opacity:.8">STREAK</div>
           </div>`:''}
           <div style="background:var(--s2);border:1px solid var(--ln);border-radius:12px;padding:8px 14px;text-align:center">
-            <div class="fp f18 b" style="color:var(--bl)">${lv.name}</div>
+            <div class="fp f18 b" style="color:var(--bl)">${lv.n}</div>
             <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--t3)">ΕΠΙΠΕΔΟ</div>
           </div>
         </div>
