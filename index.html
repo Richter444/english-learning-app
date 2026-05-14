@@ -394,11 +394,28 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
 }
 
 @media(max-width:700px){
-  /* Fix scrolling - allow panels to scroll to bottom */
-  #cnt{overflow-y:auto!important;overflow-x:hidden}
-  /* Use dvh (dynamic viewport height) to handle keyboard properly */
-  .pnl{height:auto!important;min-height:calc(100dvh - 44px - 56px);overflow-y:visible!important;padding-bottom:80px!important}
-  .fpnl{height:auto!important;min-height:calc(100dvh - 44px - 56px);overflow-y:visible!important;padding-bottom:80px!important}
+  /* ═══ MOBILE SCROLL FIX ═══ */
+  /* #cnt is the scrollable container on mobile */
+  #cnt{
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    height:calc(100dvh - 44px - 56px)!important;
+    -webkit-overflow-scrolling:touch;
+  }
+  /* Panels grow with content, don't restrict height */
+  .pnl{
+    height:auto!important;
+    min-height:100%!important;
+    overflow-y:visible!important;
+    padding-bottom:100px!important;
+  }
+  /* Flex panels (Vocab, Tenses) */
+  .fpnl{
+    height:auto!important;
+    min-height:100%!important;
+    overflow-y:visible!important;
+    padding-bottom:100px!important;
+  }
   
   /* Nav bar */
   .tabs{display:none}
@@ -408,21 +425,20 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
   .xpw{display:none}
   #pwab{display:none!important}
   
-  /* Bottom safe area for content */
-  #cnt{margin-bottom:56px}
+  /* Bottom safe area — handled by height calc above */
   
   /* Sidebars → stack vertically */
   .vsb{width:100%!important;border-right:none;border-bottom:1px solid var(--ln);flex-direction:row;flex-wrap:wrap;max-height:none;overflow-x:auto;overflow-y:hidden;padding:6px}
   .vsb-h{padding:4px 8px!important;display:flex!important;align-items:center;gap:8px;min-width:fit-content}
   .vmb{padding:6px 10px;border-left:none;border-bottom:2px solid transparent;font-size:11px;flex-shrink:0;border-radius:20px}
   .vmb.on{background:var(--s3);border-bottom-color:var(--bl);border-radius:20px}
-  .vm{overflow-y:auto}
+  .vm{overflow-y:visible!important;flex:1}
   
   /* Tenses sidebar */
   .tsb{width:100%!important;flex-direction:row;overflow-x:auto;overflow-y:hidden;padding:6px;border-right:none;border-bottom:1px solid var(--ln)}
   .tsb-h{padding:4px 8px!important;display:flex!important;align-items:center;justify-content:space-between;min-width:fit-content}
   .tnb{padding:6px 12px;border-left:none;border-bottom:2px solid transparent;white-space:nowrap;font-size:11px}
-  .tmain{padding:14px}
+  .tmain{padding:14px;overflow-y:visible!important}
   
   /* Tracker nav */
   .trnav{overflow-x:auto}
@@ -437,7 +453,7 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
   
   /* Cards */
   .card,.card2{padding:12px}
-  .sec{padding:12px 12px 80px!important}
+  .sec{padding:16px 14px 100px!important}
   
   /* Quiz */
   .qcard{padding:16px}
@@ -1571,6 +1587,7 @@ function rQCard(el){
         <div class="f12" style="color:var(--ro)">✗ Σωστό: <strong style="color:var(--t1)">${cw.g}</strong></div>
         <div class="f10 c3 mt2">${cw.e}</div>
         ${renderEMAButton?renderEMAButton(cw.w,q.opts[q.sel]||'',cw.g,cw.w):''}
+        <button onclick="vNextWrong()" class="btn bgh w100 mt8" style="justify-content:center">→ Επόμενο</button>
       </div>`:''}`;
   } else {
     const isC=q.fill.trim().toLowerCase()===bw.toLowerCase();
@@ -1621,7 +1638,25 @@ function vMCQ(i){
   VS.q.sel=i;
   const vm=document.getElementById('vm');vm&&rQCard(vm);
   const correct=VS.q.opts[i]===VS.q.sess[VS.q.idx].g;
-  setTimeout(()=>vRec(correct),800)
+  if(correct){
+    setTimeout(()=>vRec(correct,VS.q.opts[i]||''),900);
+  }
+  // Wrong: user taps "→ Επόμενο" button (vNextWrong)
+}
+function vNextWrong(){
+  const cw=VS.q.sess[VS.q.idx];
+  const opt=VS.q.opts[VS.q.sel]||'';
+  setWS(cw.id,false);
+  trackError(cw.id,VS.q.mode);
+  if(loseHeart())return;
+  VS.q.res.push({word:cw,correct:false});
+  const today=todayK();
+  DB.set('wcount_'+today,(DB.get('wcount_'+today,0)+1));
+  const nxt=VS.q.idx+1;
+  if(nxt>=VS.q.sess.length){showQRes(document.getElementById('vm'));return;}
+  VS.q.idx=nxt;VS.q.fl=false;VS.q.opts=[];VS.q.sel=-1;VS.q.fill='';VS.q.fd=false;
+  DB.set('quiz_session',{...VS.q});
+  rQCard(document.getElementById('vm'));
 }
 
 function vRec(correct, userInput){
@@ -2986,6 +3021,10 @@ function rReading(){
       </div>
       <div class="fp f16 b mb4" style="color:${a.col}">${a.t}</div>
       ${a.vocab.length?`<div class="card c-ok mb12 fx ac g8 fw"><span class="f10 c2">💡 Κλικ για αποθήκευση στο Vocabular:</span>${a.vocab.map(v=>`<button onclick="saveFromR('${v}')" style="padding:3px 9px;border-radius:20px;border:1px solid var(--gr)44;background:var(--gr)1a;color:var(--gr);font-size:10px;font-weight:600;cursor:pointer">+ ${v}</button>`).join('')}</div>`:''}
+      <div class="fx ac g8 mb8">
+        <button onclick="speak(a.t+'. '+a.text.replace(/<[^>]+>/g,''),'en-GB')" style="padding:4px 12px;background:none;border:1px solid var(--tl)44;border-radius:20px;color:var(--tl);font-size:11px;cursor:pointer">🔊 Άκουσε το κείμενο</button>
+        <button onclick="saveSentence(a.text.replace(/<[^>]+>/g,'').substring(0,200),'Reading '+a.t,'');toast('📌 Αποθηκεύτηκε στο Sentence Mining!','var(--gr)')" style="padding:4px 12px;background:none;border:1px solid var(--vi)44;border-radius:20px;color:var(--vi);font-size:11px;cursor:pointer">📌 Αποθήκευσε</button>
+      </div>
       <div class="card mb20 rbody">${a.text}</div>
       <div class="sl mb12">COMPREHENSION QUESTIONS</div>
       ${qRows}
@@ -5030,7 +5069,7 @@ function rHome(){
           +'</div>';
       })()}
       <!-- Review alert -->
-      ${due>0?`<div style="background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.2);border-radius:var(--r);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="VS.mode='review';go('vocab')">
+      ${due>0?`<div style="background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.2);border-radius:var(--r);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="VS.mode='review';VS.cat='all';go('vocab')">
         <div class="fx ac g8"><span>📅</span>
           <div><div class="f12 b" style="color:var(--bl)">${due} λέξεις για επανάληψη</div>
           <div class="f10" style="color:var(--t3)">Κάνε review τώρα</div></div>
