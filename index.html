@@ -4760,13 +4760,7 @@ function rSettings(){
     </div>
 
     <!-- Theme, Notifications, Leaderboard -->
-    <div class="card mb12" style="border-color:var(--am)22">
-      <div class="fx ac jb">
-        <div><div class="f12 b mb1">${DB.get('light_mode',false)?'☀ Light Mode':'🌙 Dark Mode'}</div>
-        <div class="f11 c3">Αλλαγή εμφάνισης</div></div>
-        <button onclick="toggleLightMode()" class="btn bgh bsm">${DB.get('light_mode',false)?'→ Dark':'→ Light'}</button>
-      </div>
-    </div>
+
     <div class="card mb12" style="border-color:var(--vi)22">
       <div class="fx ac jb mb6">
         <div><div class="f12 b mb1">🔔 Notifications</div>
@@ -4815,13 +4809,7 @@ function rSettings(){
     </div>
 
     <div class="sl mb10 c3">ΕΜΦΑΝΙΣΗ</div>
-    <div class="card mb14">
-      <div class="fx ac jb">
-        <div><div class="f12 b mb1">Θέμα Εφαρμογής</div>
-        <div class="f11 c3">${DB.get('light_mode',false)?'Light Mode ενεργό':'Dark Mode ενεργό'}</div></div>
-        <button id="theme-toggle" onclick="toggleTheme()" class="btn bgh bsm">${DB.get('light_mode',false)?'🌙 Dark Mode':'☀ Light Mode'}</button>
-      </div>
-    </div>
+
 
     <div class="sl mb10 c3">ΕΠΙΚΙΝΔΥΝΗ ΖΩΝΗ</div>
     <div class="card c-err">
