@@ -4782,15 +4782,15 @@ function rSettings(){
 
     <div class="sl mb10 c3">ΕΠΙΠΕΔΟ & PLACEMENT</div>
     <div class="card mb14" style="border-color:var(--bl)22">
-      <div class="fx ac jb mb8">
-        <div>
-          <div class="f12 b mb1">Τρέχον Επίπεδο</div>
-          <div class="f11 c3">${DB.get('placement_done',false)?'Placement ολοκληρώθηκε':'Δεν έχεις κάνει placement ακόμα'}</div>
-        </div>
-        <div class="fp f18 b" style="color:var(--bl)">${DB.get('placement_lv','B1')}</div>
+      <div class="sl mb8 cbl">🎯 PLACEMENT TEST</div>
+      <div class="fx ac jb mb10">
+        <div><div class="f12 b mb1">Επίπεδο Αγγλικών</div>
+        <div class="f11 c3">${DB.get('placement_done',false)?'Αποτέλεσμα Placement':'Δεν έχεις κάνει Placement ακόμα'}</div></div>
+        <div class="fp f22 b" style="color:var(--bl)">${DB.get('placement_lv','—')}</div>
       </div>
-      <button onclick="DB.set('placement_done',false);startPlacementQuiz()" class="btn bgh bsm">🎯 Επανάλαβε Placement Quiz</button>
-    </div>
+      <div class="card c-info mb10"><div class="f11 c2" style="line-height:1.7">Κάνε το αν μόλις ξεκίνας ή αν νιώθεις ότι έχεις βελτιωθεί — βρίσκει το επίπεδό σου (B1→B2+).</div></div>
+      <button onclick="DB.set('placement_done',false);startPlacementQuiz()" class="btn bp bsm" style="width:100%;justify-content:center">🎯 ${DB.get('placement_done',false)?'Επανάλαβε':'Ξεκίνα'} Placement Quiz</button>
+    </div></div>
 
     <div class="sl mb10 c3">AI FEATURES — API KEY</div>
     <div class="card mb16" style="border-color:${hasAPIKey()?'var(--gr)33':'var(--am)33'}">
@@ -4981,14 +4981,24 @@ function rHome(){
             <div class="fp f18 b" style="color:#1a0d00">${streak>=7?'🔥 ':''} ${streak}</div>
             <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#1a0d00;opacity:.8">STREAK</div>
           </div>`:''}
-          <div style="background:var(--s2);border:1px solid var(--ln);border-radius:12px;padding:8px 14px;text-align:center">
-            <div class="fp f18 b" style="color:var(--bl)">${lv.n}</div>
+          <div style="background:var(--s2);border:1px solid var(--ln);border-radius:12px;padding:8px 14px;text-align:center;cursor:pointer" onclick="go('settings')">
+            <div class="fp f18 b" style="color:var(--bl)">${DB.get('placement_lv','—')}</div>
             <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--t3)">ΕΠΙΠΕΔΟ</div>
+            ${!DB.get('placement_done',false)?'<div style="font-size:8px;color:var(--am);margin-top:2px">Κάνε Placement →</div>':''}
           </div>
         </div>
       </div>
 
-      <!-- Word of the Day -->
+      <!-- Placement prompt if not done -->
+      ${!DB.get('placement_done',false)?`<div style="background:linear-gradient(135deg,rgba(246,188,24,.12),rgba(242,112,48,.08));border:1px solid rgba(246,188,24,.3);border-radius:var(--r2);padding:14px 16px;margin-bottom:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between" onclick="startPlacementQuiz()">
+        <div class="fx ac g10"><span style="font-size:22px">🎯</span>
+          <div><div class="f12 b" style="color:var(--am)">Κάνε Placement Quiz — βρες το επίπεδό σου!</div>
+          <div class="f10 c3">10 ερωτήσεις · B1/B1+/B2/B2+</div></div>
+        </div>
+        <span class="btn bp bsm">Ξεκίνα →</span>
+      </div>`:''}
+
+     <!-- Word of the Day -->
       ${buildWOTD()}
 
       <!-- Quick 5-min button -->
@@ -7292,8 +7302,8 @@ function renderPlacementModal(){
         <div class="fp f32 b" style="color:${res.col}">${res.lv}</div>
         <div class="f13 mt4" style="color:${res.col};opacity:.8">${res.label}</div>
       </div>
-      <div class="f12 mb20" style="color:var(--t3);line-height:1.7">Καλή αρχή! Το πρόγραμμα έχει ρυθμιστεί βάσει του επιπέδου σου. Μπορείς να το αλλάξεις από τα Settings.</div>
-      <button onclick="document.getElementById('placement-modal').remove();go('lessons')" class="btn bp" style="width:100%;justify-content:center;font-size:15px;padding:13px">
+      <div class="f12 mb16" style="color:var(--t3);line-height:1.7">${res.lv==='B1'?'Ξεκίνα με το Daily Lesson και Vocabulary!':res.lv==='B1+'?'Καλές βάσεις! Εστίασε στο Grammar και B2 Vocabulary.':res.lv==='B2'?'Καλό επίπεδο! Εστίασε στο Speaking, Writing και C1 λεξιλόγιο.':'Εξαιρετικό! Στόχευσε C1 — AI Conversation και advanced Reading.'}</div>
+      <button onclick="document.getElementById('placement-modal').remove();showFirstTimeTip();go('home')" class="btn bp" style="width:100%;justify-content:center;font-size:15px;padding:13px">
         🚀 Ξεκίνα τη μελέτη σου →
       </button>
     </div>`;
