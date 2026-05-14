@@ -1965,7 +1965,32 @@ const TENSES=[
           examples:['Who works here? (not Who does work)','What happens next?']},
         {type:'Tag Questions',formula:'..., do/does + subject? / don\'t/doesn\'t + subject?',
           examples:['She works here, doesn\'t she?','They don\'t know, do they?']},
-      ]},
+      ]
+   ,fillin:[
+     {s:"She ___ (check) the technical logs every morning before the briefing.",a:"checks",h:"3rd person singular +s"},
+     {s:"___ the engineer usually ___ (review) the maintenance records on Fridays?",a:"Does / review",h:"Does + subject + base verb (no -s in question)"},
+     {s:"Water ___ (freeze) at 0°C and ___ (boil) at 100°C.",a:"freezes / boils",h:"Scientific facts + 3rd person singular"},
+     {s:"He ___ (not/know) about the new regulation yet.",a:"does not know",h:"Stative verb → Simple Present"},
+     {s:"The contract ___ (expire) at the end of this month.",a:"expires",h:"Fixed schedule fact + 3rd person"},
+   ],
+   transform:[
+     {type:"Negative",orig:"She works at the Athens airport.",ans:"She does not (doesn't) work at the Athens airport.",h:"does not + base verb"},
+     {type:"Question",orig:"They submit reports every Monday.",ans:"Do they submit reports every Monday?",h:"Do + subject + base verb"},
+     {type:"3rd person",orig:"I check the documents every morning.",ans:"She checks the documents every morning.",h:"I→she: check→checks (+s)"},
+     {type:"Negative Q",orig:"He speaks French fluently.",ans:"Doesn't he speak French fluently?",h:"Doesn't + subject + base verb?"},
+   ],
+   errcorrect:[
+     {w:"She don't work on weekends.",r:"She doesn't work on weekends.",why:"3rd person → doesn't (not don't)"},
+     {w:"Does he works in CAMO?",r:"Does he work in CAMO?",why:"After does → base verb (no -s)"},
+     {w:"I am knowing the answer.",r:"I know the answer.",why:"Know = stative verb → Simple Present"},
+     {w:"The plane leave at 9am every day.",r:"The plane leaves at 9am every day.",why:"3rd person singular → +s"},
+     {w:"She is having a car.",r:"She has a car.",why:"have (possession) = stative → Simple Present"},
+   ],
+   story:{
+     text:"Every morning, Maria [1] (arrive) at the CAMO office at 7:30. She [2] (check) the maintenance schedule and [3] (prepare) the briefing. Her team [4] (meet) at 8:00. The regulations [5] (require) that every aircraft [6] (undergo) a pre-flight inspection.",
+     answers:["arrives","checks","prepares","meets","require","undergoes"],
+     tr:"Κάθε πρωί η Μαρία φτάνει στο CAMO στις 7:30. Ελέγχει το πρόγραμμα συντήρησης και ετοιμάζει την ενημέρωση. Η ομάδα συνεδριάζει στις 8:00. Οι κανονισμοί απαιτούν κάθε αεροσκάφος να υποβάλλεται σε προπτητικό έλεγχο.",
+   }},
 
   {id:2,name:'Present Continuous',gr:'Παρακείμενος Διαρκείας',col:'#22c77a',tag:'I am working',
    theory:`<div class="card mb10" style="border-color:#22c77a33">
@@ -2050,7 +2075,32 @@ const TENSES=[
           examples:['Who is calling?','What is happening?']},
         {type:'Tag Questions',formula:'..., isn\'t/aren\'t + subject?',
           examples:['She is working, isn\'t she?','They aren\'t coming, are they?']},
-      ]},
+      ]
+   ,fillin:[
+     {s:"The engineers ___ (inspect) the landing gear at this very moment.",a:"are inspecting",h:"at this very moment → continuous"},
+     {s:"I ___ (not/understand) why the system ___ (behave) like this.",a:"don't understand / is behaving",h:"understand=stative; system=continuous"},
+     {s:"___ she still ___ (wait) for the approval?",a:"Is / waiting",h:"Is + subject + -ing?"},
+     {s:"We ___ (fly) to Brussels for the conference next Monday.",a:"are flying",h:"Fixed future plan → Present Continuous"},
+     {s:"The situation ___ (improve) since we changed the procedure.",a:"is improving",h:"Ongoing improvement right now"},
+   ],
+   transform:[
+     {type:"Negative",orig:"She is reviewing the maintenance report.",ans:"She is not (isn't) reviewing the maintenance report.",h:"is/are + not + -ing"},
+     {type:"Question",orig:"They are attending the safety seminar.",ans:"Are they attending the safety seminar?",h:"Is/Are + subject + -ing?"},
+     {type:"Wh-Q",orig:"He is working on the compliance report.",ans:"What is he working on?",h:"What + is + subject + -ing?"},
+     {type:"Future plan",orig:"She meets the inspector on Friday.",ans:"She is meeting the inspector on Friday.",h:"Fixed arrangement → Present Continuous"},
+   ],
+   errcorrect:[
+     {w:"She is work from home today.",r:"She is working from home today.",why:"-ing missing (is + verb-ing)"},
+     {w:"Are they knowing the rule?",r:"Do they know the rule?",why:"Know = stative → Simple Present"},
+     {w:"I am not understanding this.",r:"I don't understand this.",why:"Understand = stative → Simple Present"},
+     {w:"He is having a car.",r:"He has a car.",why:"Have (possession) = stative"},
+     {w:"We working on it right now.",r:"We are working on it right now.",why:"Missing 'are' — need am/is/are + -ing"},
+   ],
+   story:{
+     text:"It is Monday morning and the CAMO team [1] (start) its weekly review. Maria [2] (prepare) the agenda while her colleague [3] (update) the system. Two engineers [4] (inspect) the aircraft. The director [5] (wait) for data — the authority [6] (expect) a report by noon.",
+     answers:["is starting","is preparing","is updating","are inspecting","is waiting","is expecting"],
+     tr:"Η ομάδα CAMO ξεκινά την εβδομαδιαία επανεξέταση. Η Μαρία ετοιμάζει την ατζέντα ενώ ο συνάδελφός της ενημερώνει το σύστημα. Δύο μηχανικοί επιθεωρούν το αεροσκάφος. Ο διευθυντής περιμένει — η αρχή αναμένει έκθεση μέχρι το μεσημέρι.",
+   }},
 
   {id:3,name:'Simple Past',gr:'Απλός Αόριστος',col:'#f5b722',tag:'I worked',
    theory:`<div class="card mb10" style="border-color:#f5b72233">
@@ -2160,7 +2210,32 @@ const TENSES=[
           examples:['Was she at the meeting?','Were you informed?','Was the flight on time?']},
         {type:'Tag Questions',formula:'..., didn\'t + subject? / did + subject?',
           examples:['She sent it, didn\'t she?','They didn\'t come, did they?']},
-      ]},
+      ]
+   ,fillin:[
+     {s:"The HCAA inspector ___ (arrive) without notice and ___ (request) all records.",a:"arrived / requested",h:"Two completed past actions"},
+     {s:"We ___ (not/receive) the parts on time, so the aircraft ___ (stay) grounded.",a:"didn't receive / stayed",h:"Negative: didn't + base verb"},
+     {s:"___ you ___ (inform) the authority before the defect ___ (be) discovered?",a:"Did / inform / was",h:"Did + subject + base verb?"},
+     {s:"She ___ (take) over as CAME in 2019 and ___ (implement) new procedures immediately.",a:"took / implemented",h:"take/took irregular"},
+     {s:"The aircraft ___ (undergo) its last C-check two years ago.",a:"underwent",h:"undergo/underwent irregular"},
+   ],
+   transform:[
+     {type:"Negative",orig:"The team completed the inspection on Tuesday.",ans:"The team didn't complete the inspection on Tuesday.",h:"didn't + base verb (never past form!)"},
+     {type:"Question",orig:"She sent the corrective action report.",ans:"Did she send the corrective action report?",h:"Did + subject + base verb?"},
+     {type:"Passive",orig:"The engineer found the defect.",ans:"The defect was found by the engineer.",h:"was/were + past participle (V3)"},
+     {type:"Reported",orig:"I sent the report yesterday (she said)",ans:"She said she had sent the report the day before.",h:"Past → Past Perfect in reported speech"},
+   ],
+   errcorrect:[
+     {w:"She didn't went to the inspection.",r:"She didn't go to the inspection.",why:"After didn't → base verb (go, not went)"},
+     {w:"Did he sended the report?",r:"Did he send the report?",why:"After did → base verb (send, not sended)"},
+     {w:"I have seen him yesterday.",r:"I saw him yesterday.",why:"Yesterday = specific time → Simple Past"},
+     {w:"They was at the hangar.",r:"They were at the hangar.",why:"They → were (not was)"},
+     {w:"When did the aircraft landed?",r:"When did the aircraft land?",why:"After did → base verb (land, not landed)"},
+   ],
+   story:{
+     text:"Last Tuesday, an unexpected HCAA audit [1] (begin). The inspector [2] (arrive) at 09:00 and [3] (request) all records. The CAMO team [4] (not/expect) the visit, but they [5] (manage) to provide everything. After four hours, the inspector [6] (leave) with only two minor findings.",
+     answers:["began","arrived","requested","didn't expect","managed","left"],
+     tr:"Την περασμένη Τρίτη ξεκίνησε αναπάντεχος έλεγχος HCAA. Ο επιθεωρητής έφτασε στις 09:00 και ζήτησε όλα τα αρχεία. Η ομάδα δεν περίμενε την επίσκεψη αλλά κατάφερε να παράσχει όλα τα απαιτούμενα. Μετά από 4 ώρες έφυγε με δύο μόνο μικροευρήματα.",
+   }},
 
   {id:4,name:'Past Continuous',gr:'Παρατατικός Διαρκείας',col:'#f07830',tag:'I was working',
    theory:`<div class="card mb10" style="border-color:#f0783033">
@@ -2239,7 +2314,31 @@ const TENSES=[
           examples:['Who was calling?','What was happening at the time?']},
         {type:'Tag Questions',formula:'..., wasn\'t/weren\'t + subject?',
           examples:['She was working, wasn\'t she?','They weren\'t listening, were they?']},
-      ]},
+      ]
+   ,fillin:[
+     {s:"The mechanic ___ (examine) the engine when he ___ (notice) a crack.",a:"was examining / noticed",h:"Background process + sudden discovery"},
+     {s:"While she ___ (brief) the crew, her phone ___ (ring) three times.",a:"was briefing / rang",h:"While + continuous / simple past interruption"},
+     {s:"___ they ___ (work) on the aircraft when the power ___ (fail)?",a:"Were / working / failed",h:"Were + subject + -ing?"},
+     {s:"It ___ (rain) and wind ___ (blow) at 40 knots when the flight ___ (cancel).",a:"was raining / was blowing / was cancelled",h:"Weather conditions as background"},
+     {s:"I ___ (not/expect) the call — I ___ (have) a meeting at the time.",a:"wasn't expecting / was having",h:"Two simultaneous past activities"},
+   ],
+   transform:[
+     {type:"While clause",orig:"She reviewed manual. He updated database. (same time)",ans:"While she was reviewing the manual, he was updating the database.",h:"Two simultaneous → both continuous"},
+     {type:"Interruption",orig:"I worked. The phone rang.",ans:"I was working when the phone rang.",h:"Background (continuous) + event (simple past)"},
+     {type:"Question",orig:"He was inspecting the aircraft at noon.",ans:"Was he inspecting the aircraft at noon?",h:"Was/Were + subject + -ing?"},
+     {type:"Negative",orig:"She was attending the EASA seminar.",ans:"She wasn't attending the EASA seminar.",h:"was/were + not + -ing"},
+   ],
+   errcorrect:[
+     {w:"While I worked, she was calling me.",r:"While I was working, she called me.",why:"While → continuous; interruption → simple past"},
+     {w:"I was work when you arrived.",r:"I was working when you arrived.",why:"-ing missing"},
+     {w:"She was knowing the answer.",r:"She knew the answer.",why:"Know = stative → Simple Past"},
+     {w:"Was they attending?",r:"Were they attending?",why:"They → were (not was)"},
+   ],
+   story:{
+     text:"At the time of the incident, Captain Harris [1] (conduct) pre-flight checks. The co-pilot [2] (review) weather data while cabin crew [3] (prepare) for boarding. Ground staff [4] (load) the cargo hold. Suddenly a warning light [5] (flash). While engineers [6] (diagnose) the fault, the airline delayed departure.",
+     answers:["was conducting","was reviewing","was preparing","were loading","flashed","were diagnosing"],
+     tr:"Τη στιγμή του συμβάντος ο Κυβερνήτης διεξήγαγε προ-πτητικούς ελέγχους. Ο συγκυβερνήτης ανασκοπούσε τα μετεωρολογικά δεδομένα. Χερσαίο προσωπικό φόρτωνε το αμπάρι. Ξαφνικά άναψε ενδεικτική λυχνία. Ενώ οι μηχανικοί διέγνωσαν τη βλάβη, η εταιρεία καθυστέρησε την αναχώρηση.",
+   }},
 
   {id:5,name:'Present Perfect',gr:'Παρακείμενος',col:'#7c5cf5',tag:'I have worked',
    theory:`<div class="card mb10" style="border-color:#7c5cf533">
@@ -2341,7 +2440,32 @@ const TENSES=[
           examples:['How long have you been in aviation?','How long has the aircraft been grounded?']},
         {type:'Tag Questions',formula:'..., haven\'t/hasn\'t + subject?',
           examples:['You\'ve submitted it, haven\'t you?','She hasn\'t arrived yet, has she?']},
-      ]},
+      ]
+   ,fillin:[
+     {s:"The aircraft ___ (not/fly) since the engineers ___ (discover) the defect last month.",a:"has not flown / discovered",h:"Ongoing situation since past event"},
+     {s:"___ you ___ (complete) the recurrent training required by the AMP yet?",a:"Have / completed",h:"Yet → present perfect question"},
+     {s:"She ___ (work) in aviation safety for fifteen years and ___ (never/fail) an audit.",a:"has worked / has never failed",h:"For + duration → present perfect"},
+     {s:"The CAMO ___ (just/receive) a new airworthiness directive.",a:"has just received",h:"Just → present perfect"},
+     {s:"We ___ (not/hear) back from the manufacturer, even though we ___ (send) three emails.",a:"haven't heard / have sent",h:"Ongoing + completed actions"},
+   ],
+   transform:[
+     {type:"Add just",orig:"She submitted the report.",ans:"She has just submitted the report.",h:"just → have/has + just + V3"},
+     {type:"Add already",orig:"He completed the safety audit.",ans:"He has already completed the safety audit.",h:"already → present perfect"},
+     {type:"Yet Q",orig:"They finished the investigation.",ans:"Have they finished the investigation yet?",h:"yet → Have/Has + subject + V3?"},
+     {type:"Experience Q",orig:"She visited EASA headquarters.",ans:"Has she ever visited EASA headquarters?",h:"ever → Have + subject + ever + V3?"},
+   ],
+   errcorrect:[
+     {w:"I have seen him yesterday.",r:"I saw him yesterday.",why:"Yesterday = specific time → Simple Past"},
+     {w:"She has went to London last year.",r:"She went to London last year.",why:"Last year = specific time → Simple Past"},
+     {w:"Have you ever went to Paris?",r:"Have you ever been to Paris?",why:"After have → V3 (been, not went)"},
+     {w:"We work here since 2018.",r:"We have worked here since 2018.",why:"Since + duration → Present Perfect"},
+     {w:"She has never miss a deadline.",r:"She has never missed a deadline.",why:"After have/has → V3 (missed)"},
+   ],
+   story:{
+     text:"The Quality Manager [1] (just/complete) the annual review. This year the team [2] (implement) four improvements. The authority [3] (already/acknowledge) two of them. So far no findings [4] (be) identified. The CAME [5] (decide) to schedule an extra review. It [6] (be) a challenging but successful year.",
+     answers:["has just completed","has implemented","has already acknowledged","have been","has decided","has been"],
+     tr:"Η Διευθύντρια Ποιότητας μόλις ολοκλήρωσε την ετήσια επανεξέταση. Η ομάδα υλοποίησε τέσσερις βελτιώσεις. Η αρχή αναγνώρισε ήδη δύο από αυτές. Δεν έχουν εντοπιστεί ευρήματα. Ο CAME αποφάσισε να προγραμματίσει επιπλέον έλεγχο.",
+   }},
 
   {id:6,name:'Present Perfect Continuous',gr:'Παρακείμενος Διαρκείας',col:'#20c8c8',tag:'I have been working',
    theory:`<div class="card mb10" style="border-color:#20c8c833">
@@ -2418,7 +2542,31 @@ const TENSES=[
           examples:['What have you been doing?','Where have they been staying?']},
         {type:'Tag Questions',formula:'..., haven\'t/hasn\'t + subject?',
           examples:['She\'s been working hard, hasn\'t she?']},
-      ]},
+      ]
+   ,fillin:[
+     {s:"How long ___ the team ___ (work) on this compliance issue?",a:"has / been working",h:"How long → present perfect continuous"},
+     {s:"The aircraft ___ (sit) in the hangar for two months waiting for parts.",a:"has been sitting",h:"Duration → present perfect continuous"},
+     {s:"We ___ (not/receive) proper data lately — this is serious.",a:"haven't been receiving",h:"Lately + negative → present perfect continuous"},
+     {s:"She ___ (study) aviation English for six months and her writing has improved.",a:"has been studying",h:"Ongoing process with visible result"},
+     {s:"The HCAA ___ (request) additional documents for weeks — we must respond.",a:"has been requesting",h:"Ongoing repeated action"},
+   ],
+   transform:[
+     {type:"How long Q",orig:"She has been waiting for the approval.",ans:"How long has she been waiting for the approval?",h:"How long + have/has + subject + been + -ing?"},
+     {type:"Negative",orig:"He has been attending daily briefings.",ans:"He hasn't been attending daily briefings.",h:"has/have + not + been + -ing"},
+     {type:"Simple vs Cont",orig:"I have written 5 reports. (result)",ans:"I have been writing reports all week. (process)",h:"Simple=result/completion, Continuous=ongoing process"},
+     {type:"Evidence",orig:"(Her hands are covered in grease)",ans:"She has been servicing the engine.",h:"Visible evidence → Present Perfect Continuous"},
+   ],
+   errcorrect:[
+     {w:"She has been know him for years.",r:"She has known him for years.",why:"Know = stative → Present Perfect Simple"},
+     {w:"How long are you waiting?",r:"How long have you been waiting?",why:"Duration question → Present Perfect Continuous"},
+     {w:"I have been worked here since January.",r:"I have been working here since January.",why:"After 'have been' → -ing (not past participle)"},
+     {w:"They has been reviewing it.",r:"They have been reviewing it.",why:"they → have (not has)"},
+   ],
+   story:{
+     text:"The QA team [1] (work) on the compliance report for three days. The lead auditor [2] (review) over 200 records since Monday. Her colleague [3] (try) to reach the MRO all morning — they [4] (not/respond). The CAME [5] (wait) for the final summary. The whole team [6] (put) in extra hours to meet the deadline.",
+     answers:["has been working","has been reviewing","has been trying","haven't been responding","has been waiting","has been putting"],
+     tr:"Η ομάδα QA εργάζεται στην έκθεση συμμόρφωσης για τρεις μέρες. Ο ελεγκτής εξετάζει αρχεία από τη Δευτέρα. Ο συνάδελφός της προσπαθεί να επικοινωνήσει με το MRO. Ο CAME περιμένει την τελική σύνοψη.",
+   }},
 
   {id:7,name:'Past Perfect',gr:'Υπερσυντέλικος',col:'#d030f0',tag:'I had worked',
    theory:`<div class="card mb10" style="border-color:#d030f033">
@@ -2507,7 +2655,31 @@ const TENSES=[
           examples:['"I have sent it" → She said she HAD SENT it','"I saw him" → He told me he HAD SEEN him']},
         {type:'Tag Questions',formula:'..., hadn\'t + subject?',
           examples:['She had finished, hadn\'t she?','They hadn\'t arrived yet, had they?']},
-      ]},
+      ]
+   ,fillin:[
+     {s:"By the time the new regulation ___ (come) into force, we ___ (already/update) procedures.",a:"came / had already updated",h:"By the time + simple past → past perfect for earlier action"},
+     {s:"The inspector found that the company ___ (not/maintain) proper records for two years.",a:"had not maintained",h:"Discovered result of past failure"},
+     {s:"She ___ (never/see) such a finding before she ___ (join) this CAMO.",a:"had never seen / joined",h:"Experience before a past point"},
+     {s:"___ he ___ (inform) the authority before the accident ___ (report)?",a:"Had / informed / was reported",h:"Had + subject + V3?"},
+     {s:"The aircraft ___ (complete) its last check before the defect ___ (discover).",a:"had completed / was discovered",h:"Earlier event → past perfect"},
+   ],
+   transform:[
+     {type:"Before/After",orig:"First: she submitted report. Then: she attended debrief.",ans:"She had submitted the report before she attended the debrief.",h:"First action → Past Perfect, Second → Simple Past"},
+     {type:"By the time",orig:"We finished repairs. Then inspector arrived.",ans:"By the time the inspector arrived, we had finished the repairs.",h:"By the time + simple past, + had + V3"},
+     {type:"Reported",orig:"I have already informed the authority (he said)",ans:"He said he had already informed the authority.",h:"Reported speech: have → had"},
+     {type:"Negative",orig:"She had informed the team.",ans:"She hadn't informed the team.",h:"had + not + V3"},
+   ],
+   errcorrect:[
+     {w:"By the time she arrived, we finish the report.",r:"By the time she arrived, we had finished the report.",why:"By the time → earlier action needs Past Perfect"},
+     {w:"He said he has sent the report.",r:"He said he had sent the report.",why:"Reported speech: has sent → had sent"},
+     {w:"Before he left, he signs the forms.",r:"Before he left, he had signed the forms.",why:"Action before another past action → Past Perfect"},
+     {w:"I never saw such a problem before I join.",r:"I had never seen such a problem before I joined.",why:"Experience before past point → Past Perfect + V3"},
+   ],
+   story:{
+     text:"When auditors arrived on Monday, they found the team [1] (prepare) extensively. The QM [2] (compile) all documentation, and engineers [3] (complete) a full internal review. The CAME [4] (brief) all staff the previous Friday. One file [5] (not/update) — an oversight the team [6] (not/notice) before the audit.",
+     answers:["had prepared","had compiled","had completed","had briefed","had not been updated","had not noticed"],
+     tr:"Όταν οι ελεγκτές έφτασαν Δευτέρα, διαπίστωσαν ότι η ομάδα είχε προετοιμαστεί εκτενώς. Η QM είχε συγκεντρώσει όλα τα έγγραφα. Ένα αρχείο δεν είχε ενημερωθεί — παράλειψη που δεν είχε παρατηρηθεί.",
+   }},
 
   {id:8,name:'Future — will',gr:'Μέλλοντας με will',col:'#22d67c',tag:'I will work',
    theory:`<div class="card mb10" style="border-color:#22d67c33">
@@ -2595,7 +2767,32 @@ const TENSES=[
           examples:['She will come, won\'t she?','It won\'t be a problem, will it?']},
         {type:'Conditional (real)',formula:'If + Present Simple, + will + Base Verb',
           examples:['If you send it today, I will review it tomorrow','If she calls, tell her I\'ll be late']},
-      ]},
+      ]
+   ,fillin:[
+     {s:"I ___ (send) you the schedule as soon as it ___ (approve).",a:"will send / is approved",h:"will + base verb; after as soon as → present simple"},
+     {s:"___ the authority ___ (extend) the deadline for Part-CAMO operators?",a:"Will / extend",h:"Will + subject + base verb?"},
+     {s:"I do not think the regulation ___ (come) into force before January.",a:"will come",h:"Prediction (I don't think) → will"},
+     {s:"The printer is out of paper. I ___ (get) more.",a:"will get",h:"Spontaneous decision → will"},
+     {s:"She promised she ___ (review) the findings and ___ (send) comments by Friday.",a:"would review / would send",h:"Reported speech: will → would"},
+   ],
+   transform:[
+     {type:"Negative",orig:"The system will improve efficiency.",ans:"The system won't improve efficiency.",h:"will not = won't + base verb"},
+     {type:"Question",orig:"She will present findings tomorrow.",ans:"Will she present findings tomorrow?",h:"Will + subject + base verb?"},
+     {type:"Conditional",orig:"If we get approval, we start immediately.",ans:"If we get approval, we will start immediately.",h:"If + present simple, will + base verb"},
+     {type:"Offer",orig:"(Someone needs help with the report)",ans:"Shall I help you with the report?",h:"Offer: Shall I + base verb?"},
+   ],
+   errcorrect:[
+     {w:"I will to send you the report.",r:"I will send you the report.",why:"will + base verb (no to)"},
+     {w:"She will works late tonight.",r:"She will work late tonight.",why:"will + base verb (no -s)"},
+     {w:"When she will arrive, call me.",r:"When she arrives, call me.",why:"After when → Present Simple (not will)"},
+     {w:"I think it will rains.",r:"I think it will rain.",why:"will + base verb (no -s)"},
+     {w:"Will she can attend?",r:"Will she be able to attend?",why:"Can + will → will be able to"},
+   ],
+   story:{
+     text:"After today's briefing the CAMO has a clear plan. The lead engineer [1] (inspect) the aircraft tomorrow. If defects are found, the technical team [2] (assess) airworthiness impact. The QM [3] (prepare) a report by end of day. The CAME [4] (contact) the authority if grounding [5] (be) required. The director said: We [6] (handle) this professionally.",
+     answers:["will inspect","will assess","will prepare","will contact","is","will handle"],
+     tr:"Μετά τη σημερινή ενημέρωση η ομάδα έχει ξεκάθαρο σχέδιο. Ο μηχανικός θα επιθεωρήσει το αεροσκάφος αύριο. Αν βρεθούν ελαττώματα η τεχνική ομάδα θα αξιολογήσει. Ο διευθυντής είπε: θα το χειριστούμε επαγγελματικά.",
+   }},
 
   {id:9,name:'Future — going to',gr:'Μέλλοντας με going to',col:'#f03870',tag:"I'm going to work",
    theory:`<div class="card mb10" style="border-color:#f0387033">
@@ -2679,11 +2876,35 @@ const TENSES=[
           examples:['Look at that gauge — it\'s going to fail!','Watch out — you\'re going to spill it!']},
         {type:'Tag Questions',formula:'..., aren\'t/isn\'t + subject?',
           examples:['She\'s going to apply, isn\'t she?','They aren\'t going to change it, are they?']},
-      ]},
+      ]
+   ,fillin:[
+     {s:"Look at the fuel gauge — we ___ (run) out before we reach the alternate!",a:"are going to run",h:"Visible evidence → going to"},
+     {s:"The CAMO ___ (implement) new digital maintenance tracking next quarter.",a:"is going to implement",h:"Existing plan/decision"},
+     {s:"___ the authority ___ (conduct) a full audit of all Part-CAMO organisations?",a:"Is / going to conduct",h:"Is + subject + going to + base verb?"},
+     {s:"We ___ (not/accept) any further delays — this has gone on too long.",a:"are not going to accept",h:"Firm decision already made"},
+     {s:"She ___ (present) findings to the board next Thursday — she has been preparing for weeks.",a:"is going to present",h:"Pre-arranged plan with preparation"},
+   ],
+   transform:[
+     {type:"Evidence",orig:"(Storm clouds are forming over the airport)",ans:"There is going to be a storm.",h:"Visible evidence → going to"},
+     {type:"Existing plan",orig:"(He has booked flight) He will fly to Brussels.",ans:"He is going to fly to Brussels.",h:"Pre-existing plan → going to"},
+     {type:"Question",orig:"She is going to retire next year.",ans:"Is she going to retire next year?",h:"Is/Are + subject + going to + base verb?"},
+     {type:"Negative",orig:"They are going to change the procedure.",ans:"They are not going to change the procedure.",h:"am/is/are + not + going to"},
+   ],
+   errcorrect:[
+     {w:"I will going to submit the report.",r:"I am going to submit the report.",why:"NEVER will going to — choose: will OR going to"},
+     {w:"She going to attend.",r:"She is going to attend.",why:"Need am/is/are before going to"},
+     {w:"Look! It will rain — clouds are dark.",r:"Look! It is going to rain.",why:"Visible evidence (Look!) → going to"},
+     {w:"They are going to went.",r:"They are going to go.",why:"going to + BASE verb (not past form)"},
+   ],
+   story:{
+     text:"Management has made key decisions for next year. The CAMO [1] (expand) fleet approval. The QA dept [2] (recruit) two new auditors. Without extra staff, the team [3] (struggle) with compliance deadlines. The CAME [4] (attend) the EASA conference. The organisation [5] (introduce) a new document management system. Staff [6] (need) thorough training first.",
+     answers:["is going to expand","is going to recruit","is going to struggle","is going to attend","is going to introduce","are going to need"],
+     tr:"Η διοίκηση έχει λάβει σημαντικές αποφάσεις. Το CAMO θα επεκτείνει εγκρίσεις. Το QA τμήμα θα προσλάβει δύο ελεγκτές. Χωρίς επιπλέον προσωπικό η ομάδα θα δυσκολευτεί. Ο CAME θα παρακολουθήσει το EASA συνέδριο. Θα εισαχθεί νέο σύστημα εγγράφων.",
+   }},
 ];
 
 /* ═══ TENSES STATE & FUNCTIONS ═══ */
-let TST={idx:0,tab:'theory',qa:{},qs:false,qsc:null,ta:{},tc:{},tips:false,cmp:0};
+let TST={idx:0,tab:'theory',qa:{},qs:false,qsc:null,ta:{},tc:{},te:{},ts:{},tips:false,cmp:0};
 
 function rTenses(){
   const el=document.getElementById('tenses');
@@ -2790,8 +3011,8 @@ function rTM(){
   }
 
   const t=TENSES[TST.idx]||TENSES[0];
-  const tabs=['theory','forms','ex','irreg','prep','worder','qform','tr','quiz'].map(id=>{
-    const ls={theory:'Θεωρία',forms:'Τύποι',ex:'Παραδείγματα',irreg:'Ανώμαλα',prep:'Prepositions',worder:'Word Order',qform:'Ερωτήσεις',tr:'Μετάφραση',quiz:`Quiz (${t.quiz.length})`};
+  const tabs=['theory','forms','ex','irreg','prep','worder','qform','tr','fillin','transform','errcorrect','story','quiz'].map(id=>{
+    const ls={theory:'Θεωρία',forms:'Τύποι',ex:'Παραδείγματα',irreg:'Ανώμαλα',prep:'Prepositions',worder:'Word Order',qform:'Ερωτήσεις',tr:'Μετάφραση',fillin:'Fill-in',transform:'Μετατροπή',errcorrect:'Λάθη',story:'Mini-Story',quiz:`Quiz (${t.quiz.length})`};
     return `<button class="ttab ${TST.tab===id?'on':''}" onclick="TST.tab='${id}';resetTQ();rTM()">${ls[id]}</button>`;
   }).join('');
   let body='';
@@ -2988,6 +3209,108 @@ function rTM(){
         ?`<button onclick="submitTensesQuiz()" style="width:100%;padding:11px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;opacity:${allA2?1:0.4};background:linear-gradient(135deg,var(--bl),var(--vi));color:#fff;border:none;box-shadow:${allA2?'0 4px 16px rgba(79,142,247,.3)':''}">Ελέγξτε →</button>`
         :'');
     }
+
+  } else if(TST.tab==='fillin'){
+    const fi=t.fillin||[];
+    if(!fi.length){body=`<div class="card c-info"><div class="f12 c2">Δεν υπάρχουν fill-in ασκήσεις ακόμα.</div></div>`;}
+    else{
+      body=`<div class="f12 c2 mb12" style="line-height:1.7">✍ Γράψε τη σωστή μορφή του ρήματος:</div>`+
+      fi.map((f,i)=>`<div class="card mb10">
+        <div class="f12 c3 mb6" style="color:var(--am)">💡 ${f.h}</div>
+        <div class="f13 mb8" style="line-height:1.8;color:var(--t1)">${f.s.replace(/___/g,'<span style="display:inline-block;min-width:80px;border-bottom:2px solid var(--bl);margin:0 4px"></span>')}</div>
+        ${TST.ta&&TST.ta[i]!==undefined?
+          `<div style="padding:8px 12px;border-radius:8px;background:${(TST.ta[i]||'').toLowerCase().trim()===f.a.toLowerCase().trim()||f.a.toLowerCase().includes((TST.ta[i]||'').toLowerCase().trim())?'rgba(34,214,124,.07)':'rgba(240,56,112,.07)'}">
+            <div class="f12 mb2">Απάντησή σου: <strong>${TST.ta[i]}</strong></div>
+            <div class="f12 cgr">✓ ${f.a}</div>
+          </div>`
+          :`<div class="fx ac g8">
+            <input id="fi_${i}" placeholder="Γράψε εδώ..." style="flex:1;padding:8px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px" onkeydown="if(event.key==='Enter'){if(!TST.ta)TST.ta={};TST.ta[${i}]=this.value.trim();rTM();}" oninput="this.style.borderColor='var(--bl)'">
+            <button onclick="if(!TST.ta)TST.ta={};TST.ta[${i}]=document.getElementById('fi_${i}').value.trim();rTM()" class="btn bp bsm">✓</button>
+          </div>`}
+      </div>`).join('')+
+      (TST.ta&&Object.keys(TST.ta).length>=fi.length?
+        `<button onclick="TST.ta={};rTM()" class="btn bgh bsm mt8">🔄 Ξανά</button>`:
+        '');
+    }
+
+  } else if(TST.tab==='transform'){
+    const tf=t.transform||[];
+    if(!tf.length){body=`<div class="card c-info"><div class="f12 c2">Δεν υπάρχουν ασκήσεις μετατροπής ακόμα.</div></div>`;}
+    else{
+      body=`<div class="f12 c2 mb12">🔄 Μετέτρεψε κάθε πρόταση σύμφωνα με την οδηγία:</div>`+
+      tf.map((tf,i)=>`<div class="card mb10" style="border-left:3px solid var(--vi)">
+        <div class="fx ac g6 mb6">
+          <span class="tag f9" style="background:var(--vi)1a;border:1px solid var(--vi)33;color:var(--vi)">${tf.type}</span>
+        </div>
+        <div class="f13 b mb6" style="color:var(--t1)">${tf.orig}</div>
+        <div class="f11 c3 mb8">💡 ${tf.h}</div>
+        ${TST.tc&&TST.tc[i]!==undefined?
+          `<div style="padding:8px 12px;border-radius:8px;background:rgba(124,92,245,.06)">
+            <div class="f12 mb2">Απάντησή σου: ${TST.tc[i]}</div>
+            <div class="f12 cgr">✓ ${tf.ans}</div>
+          </div>`
+          :`<div class="fx ac g8">
+            <input id="tf_${i}" placeholder="Γράψε τη μετατροπή..." style="flex:1;padding:8px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:12px" onkeydown="if(event.key==='Enter'){if(!TST.tc)TST.tc={};TST.tc[${i}]=this.value.trim();rTM();}">
+            <button onclick="if(!TST.tc)TST.tc={};TST.tc[${i}]=document.getElementById('tf_${i}').value.trim();rTM()" class="btn bp bsm">✓</button>
+          </div>`}
+      </div>`).join('')+
+      (TST.tc&&Object.keys(TST.tc).length>=tf.length?
+        `<button onclick="TST.tc={};rTM()" class="btn bgh bsm mt8">🔄 Ξανά</button>`:
+        '');
+    }
+
+  } else if(TST.tab==='errcorrect'){
+    const ec=t.errcorrect||[];
+    if(!ec.length){body=`<div class="card c-info"><div class="f12 c2">Δεν υπάρχουν ασκήσεις error correction ακόμα.</div></div>`;}
+    else{
+      body=`<div class="f12 c2 mb12" style="line-height:1.7">🔍 Βρες και διόρθωσε το λάθος σε κάθε πρόταση:</div>`+
+      ec.map((e,i)=>{
+        const shown=TST.te&&TST.te[i];
+        return `<div class="card mb10" style="border-left:3px solid var(--ro)">
+          <div class="f13 mb6" style="color:var(--ro);line-height:1.7">✗ ${e.w}</div>
+          ${shown?
+            `<div style="padding:8px 12px;border-radius:8px;background:rgba(34,214,124,.06);margin-top:6px">
+              <div class="f12 cgr mb1">✓ ${e.r}</div>
+              <div class="f10 c3">→ ${e.why}</div>
+            </div>`
+            :`<button onclick="if(!TST.te)TST.te={};TST.te[${i}]=true;rTM()" class="btn bgh bsm mt4">👁 Δες Διόρθωση</button>`}
+        </div>`;
+      }).join('')+
+      (TST.te&&Object.keys(TST.te).length>=ec.length?
+        `<button onclick="TST.te={};rTM()" class="btn bgh bsm mt8">🔄 Ξανά</button>`:
+        '');
+    }
+
+  } else if(TST.tab==='story'){
+    const st=t.story||null;
+    if(!st){body=`<div class="card c-info"><div class="f12 c2">Δεν υπάρχει mini-story ακόμα.</div></div>`;}
+    else{
+      const parts=st.text.split(/\[[1-9]\]/);
+      const blanks=st.answers.length;
+      let built='';
+      for(let i=0;i<parts.length;i++){
+        built+=`<span>${parts[i]}</span>`;
+        if(i<blanks){
+          const ans=(TST.ts||{})[i];
+          if(ans!==undefined){
+            const correct=ans.toLowerCase().trim()===st.answers[i].toLowerCase().trim();
+            built+=`<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-weight:700;background:${correct?'rgba(34,214,124,.1)':'rgba(240,56,112,.1)'};color:${correct?'var(--gr)':'var(--ro)'};border-bottom:2px solid ${correct?'var(--gr)':'var(--ro)'}">
+              ${ans}${correct?'':' (✓'+st.answers[i]+')'}
+            </span>`;
+          } else {
+            built+=`<input id="st_${i}" placeholder="[${i+1}]" style="display:inline-block;width:90px;padding:2px 6px;background:var(--s2);border:none;border-bottom:2px solid var(--bl);color:var(--t1);font-size:13px;text-align:center" onkeydown="if(event.key==='Enter'||event.key==='Tab'){if(!TST.ts)TST.ts={};TST.ts[${i}]=this.value.trim();rTM();}">`;
+          }
+        }
+      }
+      const allFilled=TST.ts&&Object.keys(TST.ts).length>=blanks;
+      body=`<div class="card mb12"><div class="sl mb8 cbl">📖 MINI-STORY — ${t.name.toUpperCase()}</div>
+        <div class="f13" style="line-height:2.2">${built}</div>
+        ${!allFilled?`<button onclick="const ins=document.querySelectorAll('[id^=st_]');ins.forEach(inp=>{if(!TST.ts)TST.ts={};const idx=parseInt(inp.id.split('_')[1]);TST.ts[idx]=inp.value.trim();});rTM()" class="btn bp bsm mt12">✓ Έλεγχος</button>`
+        :`<button onclick="TST.ts={};rTM()" class="btn bgh bsm mt8">🔄 Ξανά</button>`}
+      </div>
+      ${st.tr?`<div class="card c-info"><div class="sl mb6 c3">🇬🇷 ΜΕΤΑΦΡΑΣΗ</div><div class="f12 c2" style="line-height:1.7">${st.tr}</div></div>`:''}`;
+    }
+
   }
   
   mn.innerHTML=`<div class="sec fu" style="max-width:780px">
@@ -3001,7 +3324,7 @@ function rTM(){
   </div>`;
 }
 
-function resetTQ(){TST.qa={};TST.qs=false;TST.qsc=null;TST.ta={};}
+function resetTQ(){TST.qa={};TST.qs=false;TST.qsc=null;TST.ta={};TST.tc={};TST.te={};TST.ts={};}
 
 const VERB_PATTERNS_DATA={
   gerund:['enjoy','avoid','finish','suggest','consider','keep','practise','mind','miss','deny','admit','involve','risk','delay','imagine','recommend','stop(=quit)','give up','put off','look forward to'],
