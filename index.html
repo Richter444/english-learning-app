@@ -2982,6 +2982,7 @@ function submitTensesQuiz(){
   let sc=0;
   t.quiz.forEach((q,i)=>{if(TST.qa[i]===q.a)sc++;});
   TST.qsc=sc;TST.qs=true;
+  addXP(sc*5);
   const tPct=Math.round(sc/t.quiz.length*100);
   const td=DB.get('tDone',[]);
   const _tid=t.id??TST.idx;
@@ -4583,6 +4584,12 @@ function getTodayLesson(){
   const errors=DB.get('errors',{});
   const wb=getWB();
   
+  // Smart word selection filtered by placement level:
+  const placeLv=DB.get('placement_lv','B1');
+  const lvOrder={'B1':['b1_daily','b1_verbs'],'B1+':['b1_daily','b1_verbs','b2_daily'],'B2':['b1_daily','b2_daily','b2_verbs','business'],'B2+':['b1_daily','b2_daily','b2_verbs','business','c1_adv','phrases']};
+  const prefCats=lvOrder[placeLv]||lvOrder['B1'];
+  const levelWords=allW.filter(w=>prefCats.includes(w.cat));
+  const workingPool=levelWords.length>=10?levelWords:allW;
   // Smart word selection:
   // Priority 1: Words with errors (chronic mistakes)
   // Priority 2: Words never seen (introduce new)  
@@ -5371,6 +5378,7 @@ function rStats(){
       <div class="fx g8 fw">
         <button onclick="showWeeklySummary()" class="btn bgh bsm">📊 Εβδομαδιαία Σύνοψη</button>
         <button onclick="showLeaderboard()" class="btn bgh bsm">🏆 Leaderboard</button>
+        <button onclick="runErrorAnalysis()" class="btn bgh bsm">🔍 Ανάλυση Λαθών</button>
         <button onclick="startCEFRTest()" class="btn bp bsm">🎓 CEFR Test</button>
         <button onclick="exportVocabCSV()" class="btn bgh bsm">📥 Export CSV</button>
         <button onclick="exportLearnedCSV()" class="btn bgh bsm">🃏 Export Anki</button>
@@ -5735,7 +5743,7 @@ function toggleTask(id){
     if(plan_item) addXP(5);
     toast('✓ '+( PLAN.find(p=>p.id===id)?.label||id),'var(--gr)');
   }
-  const s=calcStreak();if(s>=7)unlockAch('s7');if(s>=30)unlockAch('s30');
+  const s=calcStreak();if(s>=3)unlockAch('s3');if(s>=7)unlockAch('s7');if(s>=14)unlockAch('s14');if(s>=30)unlockAch('s30');
   const td=Object.keys(comp).filter(k=>(comp[k]||[]).length>=3).length;
   if(td>=10)unlockAch('st10');
   buildTRNav();rTRContent();
@@ -7223,7 +7231,7 @@ async function sendConvMsg(){
     if(isLast&&fbMatch){
       try{
         CONVST.feedback=JSON.parse(fbMatch[1]);
-        CONVST.done=true;
+        unlockAch('ai1');CONVST.done=true;
         addXP(30);
         toast('Συνομιλία ολοκληρώθηκε! +30 XP','var(--gr)');
       }catch(e){}
@@ -7364,7 +7372,12 @@ function cefrSelect(opt,optIdx){
 
 function cefrNext(){
   CEFRST.idx++;
-  if(CEFRST.idx>=CEFR_QUESTIONS.length)CEFRST.done=true;
+  if(CEFRST.idx>=CEFR_QUESTIONS.length)CEFRST.done=true;unlockAch('cefr1');
+  // Update displayed level based on CEFR result
+  const cefrPct=Math.round(CEFRST.score/CEFR_QUESTIONS.length*100);
+  const cefrLv=cefrPct>=85?'B2+':cefrPct>=70?'B2':cefrPct>=55?'B1+':'B1';
+  DB.set('placement_lv',cefrLv);
+  DB.set('placement_done',true);
   renderCEFRModal();
 }
 
@@ -9075,7 +9088,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Check achievements on load
   const lc=learnedW().length;
   if(lc>=10)unlockAch('w10');if(lc>=50)unlockAch('w50');if(lc>=100)unlockAch('w100');if(lc>=200)unlockAch('w200');
-  const s=calcStreak();if(s>=7)unlockAch('s7');if(s>=30)unlockAch('s30');
+  const s=calcStreak();if(s>=3)unlockAch('s3');if(s>=7)unlockAch('s7');if(s>=14)unlockAch('s14');if(s>=30)unlockAch('s30');
   const td=Object.keys(DB.get('comp',{})).filter(k=>(DB.get('comp',{})[k]||[]).length>=3).length;
   if(td>=10)unlockAch('st10');
   // Daily notification
