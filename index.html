@@ -6012,6 +6012,19 @@ function updateTimerDisplay(){
   }
 }
 
+function renderPlanTasks(comp,today){
+  const targets={vocab:'vocab',tenses:'tenses',grammar:'grammar',reading:'reading',writing:'writing',listening:'speaking'};
+  return PLAN.map(t=>{
+    const done=(comp[today]||[]).includes(t.id);
+    const target=targets[t.id]||'home';
+    const circle='<button onclick="toggleTask(\'' +t.id+ '\')" style="width:24px;height:24px;border-radius:50%;border:2px solid '+(done?'var(--gr)':'var(--ln2)')+';background:'+(done?'var(--gr)':'transparent')+';color:#fff;font-size:12px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s">'+(done?'✓':'')+'</button>';
+    const label='<div style="flex:1;cursor:pointer" onclick="go(\'' +target+ '\')">'
+      +'<div style="font-size:13px;font-weight:'+(done?400:600)+';color:'+(done?'var(--t3)':'var(--t1)')+';text-decoration:'+(done?'line-through':'none')+'">'+t.ic+' '+t.label+'</div>'
+      +'<div style="font-size:10px;color:var(--t3);margin-top:2px">'+t.mins+' λεπτά · '+t.tip+'</div></div>';
+    return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--ln)">'+circle+label+'<span style="font-size:11px;color:var(--t3)">›</span></div>';
+  }).join('');
+}
+
 function rHome(){
   unlockAch('start');
   const el=document.getElementById('home');
@@ -6029,112 +6042,40 @@ function rHome(){
     const timerObj=typeof TIMER!=='undefined'?TIMER:{active:false,secs:0};
     const studyMins=DB.get('study_mins_'+today,0)+(timerObj.active?Math.floor(timerObj.secs/60):0);
 
-    el.innerHTML=`<div style="max-width:900px;margin:0 auto;padding:20px">
+    el.innerHTML=`<div class="sec fu">
 
-      <!-- Header -->
-      <div class="fx ac jb mb16">
-        <div>
-          <div class="fp f20 b mb2">Καλώς ήρθες! 👋</div>
-          <div class="f11" style="color:var(--t3)">${new Date().toLocaleDateString('el-GR',{weekday:'long',day:'numeric',month:'long'})}</div>
-        </div>
-        <div class="fx ac g10">
-          ${streak>0?`<div class="${streak>=7?'streak-fire':''}" onclick="showStreakCelebration(${streak})" style="background:linear-gradient(135deg,var(--am),var(--or));border-radius:12px;padding:8px 14px;text-align:center;cursor:pointer">
-            <div class="fp f18 b" style="color:#1a0d00">${streak>=7?'🔥 ':''} ${streak}</div>
-            <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#1a0d00;opacity:.8">STREAK</div>
-          </div>`:''}
-          <div style="background:var(--s2);border:1px solid var(--ln);border-radius:12px;padding:8px 14px;text-align:center;cursor:pointer" onclick="go('settings')">
-            <div class="fp f18 b" style="color:var(--bl)">${DB.get('placement_lv','—')}</div>
-            <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--t3)">ΕΠΙΠΕΔΟ</div>
-            ${!DB.get('placement_done',false)?'<div style="font-size:8px;color:var(--am);margin-top:2px">Κάνε Placement →</div>':''}
-          </div>
-        </div>
+    ${!DB.get('placement_done',false)?'<div style="background:rgba(124,92,245,.1);border:1px solid rgba(124,92,245,.3);border-radius:var(--r2);padding:14px 16px;margin-bottom:14px;cursor:pointer" onclick="startPlacementQuiz()"><div class="fx ac g10"><span style="font-size:22px">🎯</span><div><div class="fp f13 b mb1">Κάνε το Placement Quiz</div><div class="f11 c3">10 ερωτήσεις · βρίσκουμε το επίπεδό σου</div></div><span class="btn bp bsm" style="margin-left:auto">Ξεκίνα →</span></div></div>':''}
+
+    <div class="hstats mb14">
+      ${[[lc,'Έμαθα','var(--gr)'],[due||0,'Επανάληψη','var(--bl)'],[streak,'Streak','var(--am)'],[DB.get('tDone',[]).length+'/9','Χρόνοι','var(--tl)'],[todayDone+'/'+todayTotal,'Σήμερα','var(--vi)'],[xp,'XP','var(--or)']].map(([v,l,col])=>`<div class="hs" onclick="go('stats')" style="cursor:pointer"><div class="fp f16 b" style="color:${col}">${v}</div><div class="hs-l">${l}</div></div>`).join('')}
+    </div>
+
+    <div style="background:linear-gradient(135deg,rgba(124,92,245,.1),rgba(79,142,247,.07));border:1px solid rgba(124,92,245,.2);border-radius:var(--r2);padding:16px;margin-bottom:14px;cursor:pointer" onclick="go('lessons')">
+      <div class="fx ac jb"><div class="fx ac g10"><span style="font-size:24px">🎯</span><div><div class="fp f14 b mb1">Σημερινό Μάθημα</div><div class="f11 c3">${lessonDone===0?'Ξεκίνα εδώ →':lessonDone===lessonTotal?'✓ Ολοκληρώθηκε!':lessonDone+'/'+lessonTotal+' βήματα'}</div></div></div><div class="fp f18 b" style="color:${lessonPct===100?'var(--gr)':'var(--vi)'}">${lessonPct}%</div></div>
+      <div style="height:4px;background:rgba(255,255,255,.08);border-radius:4px;margin-top:10px;overflow:hidden"><div style="height:100%;width:${lessonPct}%;background:linear-gradient(90deg,var(--vi),var(--bl));border-radius:4px;transition:width .4s"></div></div>
+    </div>
+
+    <div class="card mb14">
+      <div class="sl mb12">🗓 ΣΗΜΕΡΑ — ${todayDone}/${todayTotal}</div>
+      ${renderPlanTasks(comp,today)}
+      <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
+        <div style="flex:1;height:4px;background:var(--s3);border-radius:4px;overflow:hidden"><div style="height:100%;width:${todayPct}%;background:linear-gradient(90deg,var(--gr),var(--tl));border-radius:4px;transition:width .4s"></div></div>
+        <span style="font-size:10px;color:var(--t3)">${todayPct}%</span>
       </div>
+    </div>
 
-      <!-- Placement prompt if not done -->
-      ${!DB.get('placement_done',false)?`<div style="background:linear-gradient(135deg,rgba(246,188,24,.12),rgba(242,112,48,.08));border:1px solid rgba(246,188,24,.3);border-radius:var(--r2);padding:14px 16px;margin-bottom:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between" onclick="startPlacementQuiz()">
-        <div class="fx ac g10"><span style="font-size:22px">🎯</span>
-          <div><div class="f12 b" style="color:var(--am)">Κάνε Placement Quiz — βρες το επίπεδό σου!</div>
-          <div class="f10 c3">10 ερωτήσεις · B1/B1+/B2/B2+</div></div>
-        </div>
-        <span class="btn bp bsm">Ξεκίνα →</span>
-      </div>`:''}
+    <button onclick="startQuickMode()" style="width:100%;padding:13px;background:linear-gradient(135deg,var(--bl),var(--vi));border-radius:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;border:none;box-shadow:0 4px 20px rgba(79,142,247,.3)">
+      ⚡ Γρήγορη Πρόσβαση &amp; Πλοήγηση
+    </button>
 
-     <!-- Word of the Day -->
-      ${buildWOTD()}
+    ${buildWOTD()}
 
-      <!-- Quick Access button - prominent -->
-      <button onclick="startQuickMode()" style="width:100%;padding:12px 16px;background:linear-gradient(135deg,var(--bl),var(--vi));border-radius:12px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:var(--shadow-glow-bl);display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;border:none">
-        ⚡ Γρήγορη Πρόσβαση — Όλες οι Ενότητες
-      </button>
+    ${(()=>{try{const top=getAdaptiveRecommendation()[0];if(!top||due>0)return '';return '<div style="background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.2);border-radius:var(--r);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;cursor:pointer" onclick="'+top.action+'"><div class="f12 b" style="color:var(--bl)">🧠 '+top.msg+'</div><span class="btn bp bsm">Πάμε →</span></div>';}catch(e){return '';}})()} 
 
-      <!-- Primary: Today's Lesson -->
-      <div style="background:linear-gradient(135deg,rgba(124,92,245,.12),rgba(79,142,247,.08));border:1px solid rgba(124,92,245,.25);border-radius:var(--r2);padding:18px;margin-bottom:14px;cursor:pointer" onclick="go('lessons')">
-        <div class="fx ac jb mb10">
-          <div class="fx ac g10">
-            <span style="font-size:26px">🎯</span>
-            <div>
-              <div class="fp f15 b mb1">Σημερινό Μάθημα</div>
-              <div class="f11" style="color:var(--t3)">${lessonDone===0?'Ξεκίνα εδώ →':lessonDone===lessonTotal?'✓ Ολοκληρώθηκε!':lessonDone+'/'+lessonTotal+' βήματα'}</div>
-            </div>
-          </div>
-          <div class="fp f20 b" style="color:${lessonPct===100?'var(--gr)':'var(--vi)'}">${lessonPct}%</div>
-        </div>
-        <div style="height:6px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden">
-          <div style="height:100%;width:${lessonPct}%;background:linear-gradient(90deg,var(--vi),var(--bl));border-radius:6px;transition:width .4s"></div>
-        </div>
-      </div>
+    ${typeof getLearningPathHTML==='function'?getLearningPathHTML():''}
 
-      <!-- Stats -->
-      <div class="hstats mb14">
-        ${[
-          [lc,'Έμαθα','var(--gr)','📚'],
-          [due||0,'Επανάληψη','var(--bl)','📅'],
-          [streak,'Streak','var(--am)','🔥'],
-          [DB.get('tDone',[]).length+'/9','Χρόνοι','var(--tl)','⏱'],
-          [todayDone+'/'+todayTotal,'Σήμερα','var(--vi)','✅'],
-          [xp,'XP','var(--or)','⭐'],
-          [studyMins+'m','Μελέτη','var(--tl)','⏱'],
-        ].map(([v,l,col])=>`<div class="hs"><div class="fp f16 b" style="color:${col}">${v}</div><div class="hs-l">${l}</div></div>`).join('')}
-      </div>
+  </div>`
 
-      <!-- Two columns: Tasks + Quick Access -->
-      </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
-        <div class="card">
-          <div class="sl mb10">🎯 ΣΗΜΕΡΑ</div>
-          ${PLAN.map(t=>{
-            const done=(comp[today]||[]).includes(t.id);
-            const target={vocab:'vocab',tenses:'tenses',grammar:'grammar',reading:'reading',writing:'writing',listening:'speaking'}[t.id]||'home';
-            return `<div class="td-t ${done?'done':''}" style="cursor:pointer">
-              <div onclick="toggleTask('${t.id}')" class="tck" style="flex-shrink:0">${done?'✓':''}</div>
-              <div style="flex:1" onclick="go('${target}')">
-                <div class="f12 ${done?'':'b'}" style="${done?'color:var(--t3);text-decoration:line-through':'color:var(--t1)'}">${t.ic} ${t.label}</div>
-                <div class="f10" style="color:var(--t3)">${t.mins} λεπτά · ${t.tip}</div>
-              </div>
-              <span style="font-size:10px;color:var(--t3);opacity:.5">›</span>
-            </div>`;
-          }).join('')}
-        </div>      </div>
-
-      <!-- Adaptive recommendation -->
-      ${(()=>{
-        const top=getAdaptiveRecommendation()[0];
-        if(!top||due>0)return '';
-        return '<div style="background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.2);border-radius:var(--r);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;cursor:pointer" onclick="'+top.action+'">'
-          +'<div class="f12 b" style="color:var(--bl)">🧠 '+top.msg+'</div>'
-          +'<span style="color:var(--bl)">→</span>'
-          +'</div>';
-      })()}
-      <!-- Review alert -->
-      ${due>0?`<div style="background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.2);border-radius:var(--r);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="VS.mode='review';VS.cat='all';go('vocab')">
-        <div class="fx ac g8"><span>📅</span>
-          <div><div class="f12 b" style="color:var(--bl)">${due} λέξεις για επανάληψη</div>
-          <div class="f10" style="color:var(--t3)">Κάνε review τώρα</div></div>
-        </div>
-        <button class="btn bp bsm">→</button>
-      </div>`:''}
-    </div>`;
   }catch(e){
     el.innerHTML='<div style="padding:40px;text-align:center"><div class="fp f16 mb8">Φορτώνει...</div><button onclick="rHome()" class="btn bp">🔄 Ανανέωση</button></div>';
     console.error('rHome error:',e);
