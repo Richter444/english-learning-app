@@ -8448,52 +8448,43 @@ function placementNext(){
 
 /* ══ 5-MINUTE QUICK MODE ══ */
 function startQuickMode(){
-  const due=dueW();
-  const lc=learnedW().length;
   const modal=document.createElement('div');
   modal.id='quick-modal';
-  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9997;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.onclick=(e)=>{if(e.target===modal)modal.remove();};
 
-  // Pick best quick activity
-  const options=[];
-  if(due.length>0)options.push({id:'review',ic:'📅',title:'Vocabulary Review',desc:due.length+' λέξεις για επανάληψη',score:10,action:()=>{modal.remove();VS.mode='review';VS.cat='all';go('vocab');}});
-  options.push({id:'fc',ic:'🃏',title:'5 Flashcards',desc:'Γρήγορη εξάσκηση με flashcards',score:8,action:()=>{modal.remove();VS.mode='fc';VS.cat='all';go('vocab');}});
-  options.push({id:'interleaved',ic:'⚡',title:'Mixed Practice',desc:'5 ερωτήσεις Grammar + Tenses',score:9,action:()=>{modal.remove();ILST.shuffled=[...INTERLEAVED_BANK].sort(()=>Math.random()-.5).slice(0,5);ILST.idx=0;ILST.sel=null;ILST.score=0;ILST.total=0;ILST.done=false;renderILModal();}});
-  options.push({id:'tenses',ic:'⏱',title:'Tenses Quiz',desc:'Quiz για τον τρέχοντα χρόνο',score:8,action:()=>{modal.remove();TST.tab='quiz';go('tenses');}});
-  options.push({id:'lesson',ic:'🎯',title:'Daily Lesson',desc:'Συνέχισε το σημερινό μάθημα',score:7,action:()=>{modal.remove();go('lessons');}});
+  const navItems=[
+    {ic:'🏠',lb:'Home',p:'home'},{ic:'📚',lb:'Vocabulary',p:'vocab'},
+    {ic:'🎯',lb:'Daily Lesson',p:'lessons'},{ic:'⏱',lb:'Tenses',p:'tenses'},
+    {ic:'✏',lb:'Grammar',p:'grammar'},{ic:'✍',lb:'Writing',p:'writing'},
+    {ic:'📄',lb:'Reading',p:'reading'},{ic:'🗣',lb:'Speaking',p:'speaking'},
+    {ic:'🔤',lb:'Builder',p:'builder'},{ic:'⚠',lb:'False Friends',p:'falsefriends'},
+    {ic:'📊',lb:'Stats',p:'stats'},{ic:'📅',lb:'Tracker',p:'tracker'},
+    {ic:'⚙',lb:'Settings',p:'settings'},
+  ];
 
-  const best=options.sort((a,b)=>b.score-a.score)[0];
+  const due=dueW().length;
+  const exItems=[
+    {ic:'📅',lb:'Vocabulary Review',desc:'Επανάληψη SM-2',fn:"VS.mode=\'review\';VS.cat=\'all\';go(\'vocab\');"},
+    {ic:'🃏',lb:'Flashcards',desc:'5 γρήγορες κάρτες',fn:"VS.mode=\'fc\';VS.cat=\'all\';go(\'vocab\');"},
+    due>0?{ic:'🔥',lb:'Due ('+due+')',desc:'Λέξεις για σήμερα',fn:"VS.mode=\'mc\';VS.cat=\'all\';go(\'vocab\');"}:null,
+    {ic:'⚡',lb:'Mixed Practice',desc:'Grammar + Tenses',fn:"startInterleaved();"},
+    {ic:'⏱',lb:'Tenses Quiz',desc:'Quiz χρόνων',fn:"TST.tab=\'quiz\';go(\'tenses\');"},
+    {ic:'🌙',lb:'Evening Recall',desc:'Βραδινή επανάληψη',fn:"startEveningRecall();"},
+  ].filter(Boolean);
 
-  modal.innerHTML=`<div style="background:var(--s1);border:1px solid var(--ln2);border-radius:var(--r2);padding:24px;max-width:440px;width:100%">
-    <div class="fx ac jb mb16">
-      <div>
-        <div class="fp f18 b mb2">⚡ Quick 5 λεπτά</div>
-        <div class="f11 c3">Γρήγορη εξάσκηση — χωρίς χάσιμο χρόνου</div>
-      </div>
-      <button onclick="document.getElementById('quick-modal').remove()" style="color:var(--t3);font-size:18px;background:none;border:none;cursor:pointer">✕</button>
-    </div>
+  const navHTML=navItems.map(item=>'<button onclick="document.getElementById(\'quick-modal\').remove();go(\''+item.p+'\')" style="padding:10px 6px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .13s" onmouseover="this.style.background=\'var(--s3)\'" onmouseout="this.style.background=\'var(--s2)\'"><span style="font-size:20px">'+item.ic+'</span><span style="font-size:9px;color:var(--t3);font-weight:600;text-align:center;line-height:1.3">'+item.lb+'</span></button>').join('');
 
-    <!-- Recommended -->
-    <div style="background:linear-gradient(135deg,rgba(79,142,247,.12),rgba(124,92,245,.08));border:1px solid rgba(79,142,247,.3);border-radius:var(--r);padding:14px;margin-bottom:12px;cursor:pointer" onclick="(${best.action})()">
-      <div class="sl mb4 cbl">⭐ ΠΡΟΤΕΙΝΕΤΑΙ</div>
-      <div class="fx ac g10">
-        <span style="font-size:28px">${best.ic}</span>
-        <div><div class="fp f14 b mb1">${best.title}</div>
-        <div class="f12 c3">${best.desc}</div></div>
-        <span style="margin-left:auto;color:var(--bl);font-size:18px">→</span>
-      </div>
-    </div>
+  const exHTML=exItems.map(ex=>'<button onclick="document.getElementById(\'quick-modal\').remove();'+ex.fn+'" style="padding:12px 14px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:10px;text-align:left;transition:all .13s" onmouseover="this.style.background=\'var(--s3)\'" onmouseout="this.style.background=\'var(--s2)\'"><span style="font-size:22px">'+ex.ic+'</span><div><div style="font-size:12px;font-weight:600;color:var(--t1)">'+ex.lb+'</div><div style="font-size:10px;color:var(--t3)">'+ex.desc+'</div></div></button>').join('');
 
-    <!-- Other options -->
-    <div class="sl mb8 c3">Ή επίλεξε άλλη δραστηριότητα:</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      ${options.filter(o=>o.id!==best.id).map(o=>`<button onclick="(${o.action})()" style="padding:10px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:9px;text-align:left;cursor:pointer;transition:.15s" onmouseover="this.style.borderColor='var(--ln2)'" onmouseout="this.style.borderColor='var(--ln)'">
-        <div style="font-size:20px;margin-bottom:4px">${o.ic}</div>
-        <div class="f11 b" style="color:var(--t1)">${o.title}</div>
-        <div class="f10 c3">${o.desc}</div>
-      </button>`).join('')}
-    </div>
-  </div>`;
+  modal.innerHTML='<div style="background:var(--s1);border:1px solid var(--ln2);border-radius:16px;padding:24px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.5)">'
+    +'<div class="fx ac jb mb16"><div class="fp f16 b">⚡ Γρήγορη Πρόσβαση</div>'
+    +'<button onclick="document.getElementById(\'quick-modal\').remove()" style="background:none;border:none;color:var(--t3);font-size:18px;cursor:pointer;padding:2px 6px">✕</button></div>'
+    +'<div class="sl mb8 c3">ΠΛΟΗΓΗΣΗ — ΟΛΕΣ ΟΙ ΕΝΟΤΗΤΕΣ</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:20px">'+navHTML+'</div>'
+    +'<div class="sl mb8 c3">ΓΡΗΓΟΡΗ ΕΞΑΣΚΗΣΗ</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+exHTML+'</div>'
+    +'</div>';
 
   document.body.appendChild(modal);
 }
