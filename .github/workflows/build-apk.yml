@@ -3,9 +3,6 @@ name: Build Android APK
 on:
   workflow_dispatch:
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,12 +15,9 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
 
       - name: Setup Android SDK
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y wget unzip
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdtools.zip
           mkdir -p $HOME/android-sdk/cmdline-tools
           unzip -q cmdtools.zip -d $HOME/android-sdk/cmdline-tools
@@ -39,9 +33,7 @@ jobs:
         run: chmod +x android/gradlew
 
       - name: Build Debug APK
-        run: |
-          cd android
-          ./gradlew assembleDebug --stacktrace
+        run: cd android && ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
