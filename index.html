@@ -5920,12 +5920,13 @@ function buildWOTD(){
   const tk=todayK();
   const allW=getAllW();
   let wotd=DB.get('wotd_'+tk,null);
+  if(!allW.length)return '';
   if(!wotd||!allW.find(w=>w.id===wotd.id)){
     const idx=(new Date().getDate()*37)%allW.length;
-    wotd=allW[idx]||allW[0];
-    DB.set('wotd_'+tk,wotd);
+    wotd=allW[idx]||allW[0]||null;
+    if(wotd)DB.set('wotd_'+tk,wotd);
   }
-  if(!wotd)return '';
+  if(!wotd||!wotd.id)return '';
   const cat=VCATS[wotd.cat]||VCATS.b1_daily;
   const wid=wotd.id;
   const ws=getWS(wid);
@@ -6061,11 +6062,10 @@ function rHome(){
      <!-- Word of the Day -->
       ${buildWOTD()}
 
-      <!-- Quick 5-min button -->
-      <div class="fx ac jb mb14">
-        <div class="f12 b" style="color:var(--t3)">Λίγος χρόνος;</div>
-        <button onclick="startQuickMode()" style="padding:6px 16px;background:linear-gradient(135deg,var(--bl),var(--vi));border-radius:20px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;box-shadow:var(--shadow-glow-bl)">⚡ Quick 5 λεπτά</button>
-      </div>
+      <!-- Quick Access button - prominent -->
+      <button onclick="startQuickMode()" style="width:100%;padding:12px 16px;background:linear-gradient(135deg,var(--bl),var(--vi));border-radius:12px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:var(--shadow-glow-bl);display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;border:none">
+        ⚡ Γρήγορη Πρόσβαση — Όλες οι Ενότητες
+      </button>
 
       <!-- Primary: Today's Lesson -->
       <div style="background:linear-gradient(135deg,rgba(124,92,245,.12),rgba(79,142,247,.08));border:1px solid rgba(124,92,245,.25);border-radius:var(--r2);padding:18px;margin-bottom:14px;cursor:pointer" onclick="go('lessons')">
@@ -6098,34 +6098,24 @@ function rHome(){
       </div>
 
       <!-- Two columns: Tasks + Quick Access -->
-      <!-- Quick Nav shortcuts -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
-      ${[{ic:'📚',lb:'Vocab',p:'vocab'},{ic:'⏱',lb:'Tenses',p:'tenses'},{ic:'✏',lb:'Grammar',p:'grammar'},{ic:'🗣',lb:'Speaking',p:'speaking'}].map(b=>`
-        <button onclick="go('${b.p}')" style="padding:10px 6px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;transition:all .15s" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
-          <span style="font-size:20px">${b.ic}</span>
-          <span style="font-size:10px;color:var(--t3);font-weight:600">${b.lb}</span>
-        </button>`).join('')}
-    </div>
+      </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
         <div class="card">
           <div class="sl mb10">🎯 ΣΗΜΕΡΑ</div>
           ${PLAN.map(t=>{
             const done=(comp[today]||[]).includes(t.id);
-            return `<div class="td-t ${done?'done':''}" onclick="toggleTask('${t.id}')">
-              <div class="tck">${done?'✓':''}</div>
-              <div><div class="f12 ${done?'':'b'}" style="${done?'color:var(--t3);text-decoration:line-through':'color:var(--t1)'}">${t.label}</div>
-              <div class="f10" style="color:var(--t3)">${t.mins} λεπτά</div></div>
+            const target={vocab:'vocab',tenses:'tenses',grammar:'grammar',reading:'reading',writing:'writing',listening:'speaking'}[t.id]||'home';
+            return `<div class="td-t ${done?'done':''}" style="cursor:pointer">
+              <div onclick="toggleTask('${t.id}')" class="tck" style="flex-shrink:0">${done?'✓':''}</div>
+              <div style="flex:1" onclick="go('${target}')">
+                <div class="f12 ${done?'':'b'}" style="${done?'color:var(--t3);text-decoration:line-through':'color:var(--t1)'}">${t.ic} ${t.label}</div>
+                <div class="f10" style="color:var(--t3)">${t.mins} λεπτά · ${t.tip}</div>
+              </div>
+              <span style="font-size:10px;color:var(--t3);opacity:.5">›</span>
             </div>`;
           }).join('')}
-        </div>
-        <div>
-          <div class="sl mb10">⚡ ΓΡΗΓΟΡΗ ΠΡΟΣΒΑΣΗ</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
-            ${[['vocab','📚','Vocab'],['tenses','⏱','Tenses'],['grammar','✏','Grammar'],['writing','✍','Writing'],['reading','📄','Reading'],['speaking','🗣','Speaking']].map(([id,ic,lb])=>`<button onclick="go('${id}')" class="quick-btn" style="padding:9px 8px;background:var(--s2);border:1px solid var(--ln);border-radius:9px;color:var(--t2);font-size:11px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px"><span>${ic}</span>${lb}</button>`).join('')}
-          </div>
-        </div>
-      </div>
+        </div>      </div>
 
       <!-- Adaptive recommendation -->
       ${(()=>{
