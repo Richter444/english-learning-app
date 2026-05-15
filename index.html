@@ -625,6 +625,25 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
 </div>
 <div id="achpop"></div>
 <script>
+/* ══ SPEECH SUPPORT ══ */
+function speechSupported(){ return 'speechSynthesis' in window; }
+
+/* ══ QUIZ TIMER ══ */
+let _qTimer = null;
+function startQTimer(secs, onTick, onEnd){
+  stopQTimer();
+  let remaining = secs||0;
+  if(onTick) onTick(remaining);
+  if(!secs){ if(onEnd) onEnd(); return; }
+  _qTimer = setInterval(()=>{
+    remaining--;
+    if(onTick) onTick(remaining);
+    if(remaining<=0){ stopQTimer(); if(onEnd) onEnd(); }
+  }, 1000);
+}
+function stopQTimer(){
+  if(_qTimer){ clearInterval(_qTimer); _qTimer=null; }
+}
 'use strict';
 
 /* ══ STORAGE ══ */
@@ -1415,7 +1434,7 @@ function sortedW(cat='all'){
 }
 
 /* ══ VOCAB UI ══ */
-let VS={mode:'home',cat:'all',search:'',sbOpen:true,q:{mode:'mixed',sess:[],idx:0,res:[],fl:false,opts:[],sel:-1,fill:'',fd:false}};
+let VS={mode:'all',cat:'all',search:'',sbOpen:true,q:{mode:'mixed',sess:[],idx:0,res:[],fl:false,opts:[],sel:-1,fill:'',fd:false}};
 function rVocab(){
   const el=document.getElementById('vocab');
   const lc=learnedW().length,due=dueW().length,all=getAllW().length;
@@ -1482,29 +1501,6 @@ function rVDash(el){
       <div class="pb" style="height:3px"><div class="pf" style="width:${pct}%;background:${cat.col}"></div></div>
     </div>`;
   }).join('');
-  // Empty state for new users
-  const totalSeen=getAllW().filter(w=>getWS(w.id).seen>0).length;
-  if(totalSeen===0){
-    el.innerHTML=`<div style="max-width:460px;margin:40px auto;text-align:center;padding:24px" class="fu">
-      <div style="font-size:56px;margin-bottom:16px">📚</div>
-      <div class="fp f22 b mb8" style="color:var(--t1)">Καλώς ήρθες στο Vocabulary!</div>
-      <div class="f13 mb20" style="color:var(--t3);line-height:1.7">Ξεκίνα ένα quiz για να αρχίσεις να μαθαίνεις λέξεις με Spaced Repetition.</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-        <button onclick="VS.mode='fc';VS.cat='all';startQ(document.getElementById('vm'),'fc')" style="padding:16px;background:linear-gradient(135deg,rgba(79,142,247,.15),rgba(124,92,245,.1));border:1px solid rgba(124,92,245,.3);border-radius:var(--r);cursor:pointer;text-align:center">
-          <div style="font-size:28px;margin-bottom:6px">🃏</div>
-          <div class="f12 b" style="color:var(--vi)">Flashcards</div>
-          <div class="f10" style="color:var(--t3);margin-top:3px">Ιδανικό για αρχή</div>
-        </button>
-        <button onclick="VS.mode='mc';VS.cat='all';startQ(document.getElementById('vm'),'mc')" style="padding:16px;background:linear-gradient(135deg,rgba(34,214,124,.1),rgba(32,200,200,.1));border:1px solid rgba(34,214,124,.2);border-radius:var(--r);cursor:pointer;text-align:center">
-          <div style="font-size:28px;margin-bottom:6px">✔</div>
-          <div class="f12 b" style="color:var(--gr)">Multiple Choice</div>
-          <div class="f10" style="color:var(--t3);margin-top:3px">Γρήγορο</div>
-        </button>
-      </div>
-      <button onclick="go('lessons')" class="btn bp" style="width:100%;justify-content:center">🎯 Ή ξεκίνα με το Daily Lesson →</button>
-    </div>`;
-    return;
-  }
   el.innerHTML=`<div style="max-width:760px;margin:0 auto">
     <div class="fx ac jb mb16">
       <div><div class="sl mb2">VOCABULAR DASHBOARD</div><div class="fp f16 b">Λεξιλόγιό μου</div></div>
@@ -6288,7 +6284,7 @@ function showCelebration(title,msg,xp,actionCode,actionLabel){
     +'<div style="font-size:12px;color:var(--t3);margin-bottom:6px">'+msg+'</div>'
     +(xp?'<div style="font-size:14px;color:var(--am);font-weight:700;margin-bottom:20px">+'+xp+' XP</div>':'<div style="margin-bottom:20px"></div>')
     +(actionCode&&actionLabel?'<button onclick="'+actionCode+';this.closest(\'div\').parentElement.remove()" style="padding:8px 20px;background:var(--bl);border-radius:8px;color:#fff;font-weight:600;cursor:pointer;border:none;margin-right:8px">'+actionLabel+'</button>':'')
-    +'<button onclick="this.closest(\'[style*=fixed]\').remove()" style="padding:8px 20px;background:var(--s3);border-radius:8px;color:var(--t2);cursor:pointer;border:1px solid var(--ln)">OK</button>'
+    +'<button onclick="closeTopModal()" style="padding:8px 20px;background:var(--s3);border-radius:8px;color:var(--t2);cursor:pointer;border:1px solid var(--ln)">OK</button>'
     +'</div>';
   document.body.appendChild(modal);
   setTimeout(()=>{if(modal.parentElement)modal.remove();},8000);
@@ -6399,7 +6395,7 @@ function showLeaderboard(){
   const html='<div style="background:var(--s1);border-radius:16px;padding:24px;max-width:400px;width:100%">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
     +'<div style="font-size:16px;font-weight:700">🏆 Leaderboard</div>'
-    +'<button onclick="this.closest(\'[style*=fixed]\').remove()" style="background:none;border:none;color:var(--t3);cursor:pointer">✕</button></div>'
+    +'<button onclick="closeTopModal()" style="background:none;border:none;color:var(--t3);cursor:pointer">✕</button></div>'
     +'<div style="font-size:10px;color:var(--t3);margin-bottom:12px">Τοπικό (αυτή η συσκευή)</div>'
     +entries.map((e,i)=>'<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--ln);'+(e.me?'color:var(--bl);font-weight:700':'')+'">'
       +'<span style="font-size:14px;width:24px;text-align:center">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'.')+'</span>'
@@ -6428,7 +6424,7 @@ function runErrorAnalysis(){
     m.innerHTML='<div style="background:var(--s1);border-radius:16px;padding:24px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto">'
       +'<div style="font-size:16px;font-weight:700;margin-bottom:12px">🔍 Ανάλυση Λαθών</div>'
       +'<div style="font-size:13px;line-height:1.8;color:var(--t2)">'+result+'</div>'
-      +'<button onclick="this.closest(\'[style*=fixed]\').remove()" style="margin-top:16px;padding:8px 20px;background:var(--bl);border-radius:8px;color:#fff;cursor:pointer;border:none">OK</button>'
+      +'<button onclick="closeTopModal()" style="margin-top:16px;padding:8px 20px;background:var(--bl);border-radius:8px;color:#fff;cursor:pointer;border:none">OK</button>'
       +'</div>';
     document.body.appendChild(m);
   }).catch(()=>toast('Σφάλμα AI','var(--ro)'));
@@ -6638,6 +6634,233 @@ function rpSend(){
   callAI(userText,'You are roleplaying as: '+RPST.scenario+'. Stay in character. Respond in English.',RPST.history.slice(-6))
     .then(r=>{RPST.history.push({role:'assistant',content:r});RPST.loading=false;rRoleplay();})
     .catch(()=>{RPST.loading=false;toast('Σφάλμα AI','var(--ro)');});
+}
+
+/* ══ MISSING FUNCTIONS ══ */
+
+function getWordNetwork(word){
+  const w=getAllW().find(x=>x.w===word||x.id===word);
+  if(!w)return{word,related:[]};
+  const related=getAllW().filter(x=>x.id!==w.id&&(
+    x.cat===w.cat||(w.f&&w.f.some(f=>x.w.includes(f)||x.g.includes(f.substring(0,4))))
+  )).slice(0,6).map(x=>({word:x.w,type:'related'}));
+  return{word:w.w,related};
+}
+
+function showWordNetwork(wordId){
+  const w=getAllW().find(x=>x.id===wordId||x.w===wordId);
+  if(!w){toast('Λέξη δεν βρέθηκε','var(--am)');return;}
+  const net=getWordNetwork(w.w);
+  const m=document.createElement('div');
+  m.id='wn-modal';
+  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9997;display:flex;align-items:center;justify-content:center;padding:20px';
+  m.onclick=(e)=>{if(e.target===m)m.remove();};
+  const related=net.related.length
+    ?net.related.map(r=>'<div style="padding:8px 12px;background:var(--s2);border-radius:8px;margin-bottom:6px;font-size:13px">'+r.word+'</div>').join('')
+    :'<div style="color:var(--t3);font-size:12px">Δεν βρέθηκαν σχετικές λέξεις</div>';
+  m.innerHTML='<div style="background:var(--s1);border-radius:16px;padding:24px;max-width:400px;width:100%">'
+    +'<div style="font-size:16px;font-weight:700;margin-bottom:16px">🔗 '+w.w+' — Word Network</div>'
+    +related
+    +'<button onclick="closeTopModal()" style="margin-top:16px;padding:8px 20px;background:var(--bl);border-radius:8px;color:#fff;cursor:pointer;border:none;width:100%">Κλείσιμο</button>'
+    +'</div>';
+  document.body.appendChild(m);
+}
+
+function getCustomWords(){
+  return DB.get('customW',[]);
+}
+
+function showAddWordModal(){
+  const m=document.createElement('div');
+  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9997;display:flex;align-items:center;justify-content:center;padding:20px';
+  m.onclick=(e)=>{if(e.target===m)m.remove();};
+  m.innerHTML='<div style="background:var(--s1);border-radius:16px;padding:24px;max-width:420px;width:100%">'
+    +'<div style="font-size:16px;font-weight:700;margin-bottom:16px">➕ Νέα Λέξη</div>'
+    +'<input id="nw-en" placeholder="English word" style="width:100%;padding:10px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:14px;box-sizing:border-box;margin-bottom:8px">'
+    +'<input id="nw-gr" placeholder="Ελληνική μετάφραση" style="width:100%;padding:10px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:14px;box-sizing:border-box;margin-bottom:8px">'
+    +'<input id="nw-ex" placeholder="Παράδειγμα (προαιρετικό)" style="width:100%;padding:10px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:14px;box-sizing:border-box;margin-bottom:16px">'
+    +'<div style="display:flex;gap:8px">'
+    +'<button onclick="closeTopModal()" style="flex:1;padding:10px;background:var(--s3);border:1px solid var(--ln);border-radius:8px;color:var(--t2);cursor:pointer">Άκυρο</button>'
+    +'<button onclick="saveNewWord(this)" style="flex:1;padding:10px;background:var(--bl);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none">Αποθήκευση</button>'
+    +'</div></div>';
+  document.body.appendChild(m);
+}
+
+function saveNewWord(btn){
+  const en=document.getElementById('nw-en')?.value?.trim();
+  const gr=document.getElementById('nw-gr')?.value?.trim();
+  const ex=document.getElementById('nw-ex')?.value?.trim();
+  if(!en||!gr){toast('Συμπλήρωσε Αγγλική και Ελληνική λέξη','var(--am)');return;}
+  const id='cw_'+Date.now();
+  const words=DB.get('customW',[]);
+  words.push({id,w:en,g:gr,e:ex||en+' is a useful word.',p:'custom',cat:'custom',lv:'B1',d:1,f:[]});
+  DB.set('customW',words);
+  closeTopModal();
+  toast('✅ Λέξη αποθηκεύτηκε!','var(--gr)');
+  rVocab();
+}
+
+function vFill(el){
+  if(!el)return;
+  const q=VS.q;
+  if(!q||!q.sess||!q.sess[q.idx])return;
+  const cw=q.sess[q.idx];
+  const w=getAllW().find(x=>x.id===cw.id);
+  if(!w)return;
+  const sentence=w.e||w.w+' is a common English word.';
+  const blank=sentence.replace(new RegExp('\\b'+w.w+'\\b','i'),'_____');
+  el.innerHTML='';
+  const div=document.createElement('div');
+  div.style.cssText='max-width:600px;margin:0 auto';
+  div.innerHTML='<div style="font-size:12px;color:var(--t3);margin-bottom:12px">FILL IN THE BLANK</div>'
+    +'<div style="font-size:16px;font-weight:600;margin-bottom:8px;color:var(--vi)">'+w.g+'</div>'
+    +'<div style="font-size:14px;margin-bottom:20px;line-height:1.8;background:var(--s2);padding:12px;border-radius:8px">'+blank+'</div>';
+  const inp=document.createElement('input');
+  inp.id='fill-inp';
+  inp.placeholder='Type the missing word...';
+  inp.style.cssText='width:100%;padding:10px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:14px;box-sizing:border-box;margin-bottom:10px';
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')checkFill();});
+  const btn=document.createElement('button');
+  btn.textContent='Έλεγχος →';
+  btn.style.cssText='width:100%;padding:10px;background:var(--bl);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none';
+  btn.onclick=checkFill;
+  div.appendChild(inp);
+  div.appendChild(btn);
+  el.appendChild(div);
+  setTimeout(()=>inp.focus(),100);
+}
+
+function checkFill(){
+  const inp=document.getElementById('fill-inp');
+  if(!inp)return;
+  const q=VS.q;
+  const cw=q.sess[q.idx];
+  const w=getAllW().find(x=>x.id===cw.id);
+  if(!w)return;
+  const ans=inp.value.trim().toLowerCase();
+  const correct=ans===w.w.toLowerCase();
+  setWS(w.id,correct);
+  addXP(correct?15:3);
+  vRec(correct,w,document.getElementById('vm'));
+}
+
+function closeTopModal(){
+  const modals=['quick-modal','placement-modal','cefr-modal','il-modal','er-modal','onboard-modal'];
+  for(const id of modals){
+    const m=document.getElementById(id);
+    if(m){m.remove();return;}
+  }
+  // Try generic fixed modal
+  const fixed=document.querySelector('[style*="position:fixed"][style*="z-index"]');
+  if(fixed)fixed.remove();
+}
+
+function exportVocabCSV(){
+  const words=getAllW();
+  const wb=getWB();
+  const rows=[['Word','Greek','Example','Category','Score','Seen']];
+  words.forEach(w=>{
+    const s=wb[w.id]||{sc:0,seen:0};
+    rows.push([w.w,w.g,w.e||'',w.cat,s.sc,s.seen||0]);
+  });
+  const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='vocabulary.csv';
+  a.click();
+  toast('✅ CSV εξαχθηκε!','var(--gr)');
+}
+
+function exportLearnedCSV(){
+  const words=learnedW();
+  const rows=[['Word','Greek','Example','Category']];
+  words.forEach(w=>rows.push([w.w,w.g,w.e||'',w.cat]));
+  const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='learned_words.csv';
+  a.click();
+  toast('✅ CSV εξαχθηκε!','var(--gr)');
+}
+
+function rAviation(){
+  if(typeof AVIATION_VOCAB==='undefined'){
+    toast('Aviation vocab δεν είναι διαθέσιμο','var(--am)');return;
+  }
+  VS.mode='all';VS.cat='aviation';rVocab();
+}
+
+function rSentenceMining(){
+  const el=document.getElementById('builder');
+  if(el){go('builder');}
+}
+
+function saveSentence(sentence){
+  if(!sentence)return;
+  const saved=DB.get('saved_sentences',[]);
+  if(!saved.includes(sentence)){
+    saved.push(sentence);
+    DB.set('saved_sentences',saved);
+    toast('✅ Πρόταση αποθηκεύτηκε!','var(--gr)');
+  }
+}
+
+function requestNotifications(){
+  if('Notification' in window){
+    Notification.requestPermission().then(p=>{
+      if(p==='granted'){
+        DB.set('notif_enabled',true);
+        toast('✅ Ειδοποιήσεις ενεργοποιήθηκαν!','var(--gr)');
+      } else {
+        toast('Οι ειδοποιήσεις δεν επιτράπηκαν','var(--am)');
+      }
+    });
+  } else {
+    toast('Δεν υποστηρίζονται ειδοποιήσεις','var(--am)');
+  }
+}
+
+function disableNotifications(){
+  DB.set('notif_enabled',false);
+  toast('Ειδοποιήσεις απενεργοποιήθηκαν','var(--t3)');
+}
+
+function showPronunciationInListeningState(word){
+  if(speechSupported()&&word){
+    const u=new SpeechSynthesisUtterance(word);
+    u.lang='en-US';u.rate=0.85;
+    speechSynthesis.speak(u);
+  }
+}
+
+function showWeeklySummary(){
+  const xpd=DB.get('xpd',{});
+  const today=new Date();
+  let totalXP=0,days=0;
+  const rows=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date(today);d.setDate(d.getDate()-i);
+    const k=d.toISOString().split('T')[0];
+    const dayXP=xpd[k]||0;
+    if(dayXP>0)days++;
+    totalXP+=dayXP;
+    rows.push('<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--ln)">'
+      +'<span style="font-size:12px;color:var(--t3)">'+d.toLocaleDateString('el',{weekday:'short',month:'short',day:'numeric'})+'</span>'
+      +'<span style="font-size:12px;font-weight:600;color:'+(dayXP>0?'var(--am)':'var(--t3)')+'">'+dayXP+' XP</span>'
+      +'</div>');
+  }
+  const m=document.createElement('div');
+  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9997;display:flex;align-items:center;justify-content:center;padding:20px';
+  m.onclick=(e)=>{if(e.target===m)m.remove();};
+  m.innerHTML='<div style="background:var(--s1);border-radius:16px;padding:24px;max-width:400px;width:100%">'
+    +'<div style="font-size:16px;font-weight:700;margin-bottom:4px">📊 Εβδομαδιαία Σύνοψη</div>'
+    +'<div style="font-size:11px;color:var(--t3);margin-bottom:16px">'+days+'/7 ημέρες · '+totalXP+' XP σύνολο</div>'
+    +rows.join('')
+    +'<button onclick="closeTopModal()" style="margin-top:16px;padding:10px;background:var(--bl);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none;width:100%">OK</button>'
+    +'</div>';
+  document.body.appendChild(m);
 }
 </script>
 </body>
