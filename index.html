@@ -623,7 +623,9 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
 /* ══ STORAGE ══ */
 const DB={
   get:(k,d=null)=>{try{const v=localStorage.getItem(k);return v!==null?JSON.parse(v):d}catch{return d}},
-  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}},
+  delete:(k)=>{try{localStorage.removeItem(k)}catch{}},
+  clear:(prefix='')=>{try{Object.keys(localStorage).filter(k=>k.startsWith(prefix)).forEach(k=>localStorage.removeItem(k))}catch{}}
 };
 
 /* ══ SPEECH API ══ */
@@ -797,19 +799,30 @@ function updXP(){
 
 /* ══ ACHIEVEMENTS ══ */
 const ACHS=[
-  {id:'w1',n:'Πρώτη Λέξη!',i:'🌱',d:'Η αρχή έγινε'},
+  {id:'start',n:'Ξεκίνησε!',i:'🚀',d:'Άνοιξες την εφαρμογή για πρώτη φορά'},
+  {id:'w1',n:'Πρώτη Λέξη!',i:'🌱',d:'Η αρχή έγινε — 1η λέξη εκμαθημένη'},
   {id:'w10',n:'10 Λέξεις',i:'📖',d:'10 λέξεις εκμαθημένες'},
   {id:'w50',n:'50 Λέξεις',i:'📚',d:'Εξαιρετική πρόοδος!'},
-  {id:'w100',n:'100 Λέξεις',i:'🎯',d:'100 λέξεις!'},
-  {id:'w200',n:'200 Λέξεις',i:'🏆',d:'200 λέξεις εκμαθημένες!'},
-  {id:'s7',n:'7 Μέρες',i:'🔥',d:'7 ημέρες streak'},
-  {id:'s30',n:'Μήνας!',i:'👑',d:'30 ημέρες streak!'},
-  {id:'pq',n:'Τέλειο Quiz',i:'⭐',d:'100% σε quiz'},
-  {id:'gr1',n:'Grammar Pro',i:'✏',d:'Πρώτο grammar chapter'},
-  {id:'rd1',n:'Αναγνώστης',i:'📄',d:'Πρώτο reading text'},
-  {id:'wr1',n:'Συγγραφέας',i:'✍',d:'Writing practice'},
-  {id:'sp1',n:'Ομιλητής',i:'🗣',d:'Speaking guide'},
-  {id:'st10',n:'Συνέπεια',i:'📅',d:'10 μέρες μελέτης'}
+  {id:'w100',n:'Εκατοντάδα!',i:'💯',d:'100 λέξεις εκμαθημένες'},
+  {id:'w200',n:'200 Λέξεις',i:'🏆',d:'200 λέξεις — C1 επίπεδο!'},
+  {id:'s3',n:'3 Μέρες!',i:'🔥',d:'3 συνεχόμενες ημέρες μελέτης'},
+  {id:'s7',n:'Εβδομάδα!',i:'🔥🔥',d:'7 ημέρες streak'},
+  {id:'s14',n:'2 Εβδομάδες',i:'⚡',d:'14 ημέρες streak!'},
+  {id:'s30',n:'Μήνας!',i:'👑',d:'30 ημέρες streak — legend!'},
+  {id:'pq',n:'Τέλειο Quiz',i:'⭐',d:'100% σε vocabulary quiz'},
+  {id:'gr1',n:'Grammar Start',i:'✏',d:'Πρώτο grammar chapter ολοκληρώθηκε'},
+  {id:'gr5',n:'Grammar Pro',i:'📐',d:'5 grammar chapters ολοκληρωμένα'},
+  {id:'t1',n:'Πρώτος Χρόνος',i:'⏱',d:'Πρώτο tenses quiz ολοκληρώθηκε'},
+  {id:'t9',n:'Tenses Master',i:'🏅',d:'Και οι 9 χρόνοι ολοκληρωμένοι!'},
+  {id:'rd1',n:'Αναγνώστης',i:'📄',d:'Πρώτο reading comprehension'},
+  {id:'rd5',n:'Βιβλιοφάγος',i:'📚',d:'5 reading texts ολοκληρωμένα'},
+  {id:'wr1',n:'Συγγραφέας',i:'✍',d:'Πρώτη writing practice'},
+  {id:'sp1',n:'Ομιλητής',i:'🗣',d:'Speaking module ανοίχτηκε'},
+  {id:'ai1',n:'AI Partner',i:'🤖',d:'Πρώτη AI Conversation ολοκληρώθηκε'},
+  {id:'st10',n:'Συνέπεια',i:'📅',d:'10 μέρες σύνολο μελέτης'},
+  {id:'er1',n:'Βραδινό Recap',i:'🌙',d:'Πρώτο Evening Recall'},
+  {id:'cefr1',n:'CEFR Test',i:'🎓',d:'Πρώτο CEFR test ολοκληρώθηκε'},
+  {id:'pl1',n:'Placement Done',i:'🎯',d:'Placement quiz ολοκληρώθηκε'},
 ];
 function getAchs(){return DB.get('achs',[])}
 function unlockAch(id){
@@ -957,8 +970,9 @@ function getLast90(){const d=[];for(let i=89;i>=0;i--){const x=new Date();x.setD
 function getLast7(){const d=[];for(let i=6;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);d.push(x.toISOString().split('T')[0])}return d}
 function calcStreak(){
   const comp=DB.get('comp',{});let s=0;const d=new Date();
-  if((comp[todayK()]||[]).length<3)d.setDate(d.getDate()-1);
-  while(true){const k=d.toISOString().split('T')[0];if((comp[k]||[]).length<3)break;s++;d.setDate(d.getDate()-1)}
+  // Any activity counts for streak (≥1 task)
+  if((comp[todayK()]||[]).length<1)d.setDate(d.getDate()-1);
+  while(true){const k=d.toISOString().split('T')[0];if((comp[k]||[]).length<1)break;s++;d.setDate(d.getDate()-1)}
   return s
 }
 
@@ -1378,7 +1392,9 @@ function getMobileVSBToggle(){
 }
 
 function rVDash(el){
-  const lc=learnedW().length,due=dueW().length,all=getAllW().length;
+  const allW=getAllW();
+  if(!allW.length){el.innerHTML=`<div class="sec"><div class="card c-info"><div class="fp f14 b mb8">📚 Ξεκίνα!</div><div class="f12 c2 mb10">Κάνε το Daily Lesson για να φτιάξεις το λεξιλόγιό σου.</div><button onclick="go('lessons')" class="btn bp" style="justify-content:center">🎯 Daily Lesson</button></div></div>`;return;}
+  const lc=learnedW().length,due=dueW().length,all=allW.length;
   const catCards=Object.entries(VCATS).map(([id,cat])=>{
     const ws=getAllW().filter(w=>w.cat===id);
     const lrn=ws.filter(w=>getWS(w.id).sc>=3).length;
@@ -1724,6 +1740,10 @@ function showQRes(el){
 
 function rVLearned(el){
   const allW=getAllW();
+  if(!allW.length){
+    el.innerHTML=`<div class="sec"><div class="card c-info"><div class="fp f14 b mb8">📚 Λεξιλόγιο κενό</div><div class="f12 c2 mb10">Δεν βρέθηκαν λέξεις. Ξεκίνα με το Daily Lesson!</div><button onclick="go('lessons')" class="btn bp" style="justify-content:center">🎯 Πήγαινε στο Daily Lesson</button></div></div>`;
+    return;
+  }
   const wb=getWB();
   const learned=allW.filter(w=>{const s=wb[w.id];return s&&s.sc>=3;});
   const learning=allW.filter(w=>{const s=wb[w.id];return s&&s.seen>0&&s.sc<3;});
@@ -2956,6 +2976,7 @@ function submitTensesQuiz(){
   const td=DB.get('tDone',[]);
   const _tid=t.id??TST.idx;
   if(!td.includes(_tid)){td.push(_tid);DB.set('tDone',td);}
+  unlockAch('t1');if(td.length>=9)unlockAch('t9');
   if(tPct===100){
     setTimeout(()=>showCelebration('🏆 '+t.name+'!','Τέλειο σκορ! '+sc+'/'+t.quiz.length+' απαντήσεις.',sc*5,
       'TST.idx=(TST.idx+1)%TENSES.length;TST.tab=\'theory\';resetTQ();rTM()','Επόμενος χρόνος'),400);
@@ -2971,10 +2992,6 @@ function submitTensesQuiz(){
 function rTM(){
   const mn=document.getElementById('tmn');if(!mn)return;
   buildTSB();
-  if(TST.tab==='theory'||TST.tab==='forms'||TST.tab==='ex'||TST.tab==='tr'||TST.tab==='quiz'){
-    // handled below
-  }
-  
   // Handle confusable pairs
   if(typeof TST.idx==='string'){
     const pairs={
@@ -3584,7 +3601,7 @@ const GRAM=[
 
 let GST={topic:null,ea:{},es:false,esc:null};
 function rGrammar(){
-  unlockAch('gr1');
+  unlockAch('gr1');{const gd=DB.get('gramDone',[]);const gt=GST.topic;if(gt&&!gd.includes(gt)){gd.push(gt);DB.set('gramDone',gd);}if(gd.length>=5)unlockAch('gr5');}
   const el=document.getElementById('grammar');
   if(!GST.topic){
     el.innerHTML=`<div class="sec fu">
@@ -3961,12 +3978,44 @@ const READINGS=[
      {q:'What mechanism links social media to negative mental health outcomes?',opts:['Addiction to notifications','Unfavourable social comparisons from curated images','Too much screen time generally','Lack of real-life friends'],a:'Unfavourable social comparisons from curated images',ex:'"seeing carefully curated images of others lives can generate feelings of inadequacy and low self-worth"'},
      {q:'What is the positive aspect of social media for isolated individuals?',opts:['It replaces real friendships','It provides entertainment','It provides a vital sense of belonging','It improves physical health'],a:'It provides a vital sense of belonging',ex:'"For individuals in isolated circumstances, online communities can provide a vital sense of belonging"'},
      {q:'What approach do experts recommend?',opts:['Complete avoidance of social media','Mindful use with clear limits and active engagement','Using only one platform','Only using social media for work'],a:'Mindful use with clear limits and active engagement',ex:'"Experts recommend a mindful approach rather than complete abstinence. Setting clear time limits... actively engaging rather than passively consuming"'},
+   ]},,
+  {id:'r9',t:'Aviation Safety Management',lv:'B1',col:'var(--bl)',time:'6 min',
+   vocab:['safety management','risk assessment','corrective action','compliance','mitigation'],
+   text:'Aviation safety is not the absence of accidents — it is the active management of risk. Every airline and CAMO must maintain a Safety Management System (SMS), which identifies hazards before they become incidents. The process involves four key steps: hazard identification, risk assessment, risk mitigation, and performance monitoring. When a defect or near-miss occurs, a corrective action is raised and tracked until it is closed. Regulators such as EASA and HCAA require evidence that organisations are not only identifying problems, but also learning from them. The goal is a just culture — one where people report issues without fear of punishment, so that systemic problems can be addressed before they cause harm.',
+   qs:[
+     {q:'What does SMS stand for?',opts:['Safety Maintenance Schedule','Safety Management System','Standard Monitoring Service','System Maintenance Standard'],a:'Safety Management System'},
+     {q:'What is a just culture in aviation?',opts:['A culture with strict punishment','A culture encouraging reporting without fear','A culture focused only on compliance','A culture that ignores minor incidents'],a:'A culture encouraging reporting without fear'},
+     {q:'Which step comes AFTER risk assessment in the SMS process?',opts:['Hazard identification','Performance monitoring','Risk mitigation','Corrective action'],a:'Risk mitigation'},
    ]},
+  {id:'r10',t:'CAMO Responsibilities Under EASA Part-CAMO',lv:'B2',col:'var(--vi)',time:'7 min',
+   vocab:['continuing airworthiness','maintenance programme','airworthiness review','subcontract','findings'],
+   text:'A Continuing Airworthiness Management Organisation (CAMO) is responsible for ensuring that aircraft remain airworthy throughout their operational life. Under EASA Part-CAMO, organisations must develop and maintain an Aircraft Maintenance Programme (AMP), coordinate with approved maintenance organisations, and conduct regular Airworthiness Reviews. The CAMO must also monitor the implementation of Airworthiness Directives (ADs) and Service Bulletins. When the competent authority — such as HCAA in Greece — conducts an audit and raises findings, the organisation must respond with corrective actions within defined timeframes. Failure to comply can result in suspension of the CAMO approval. Good documentation, accurate records, and proactive communication with the authority are essential for maintaining compliance.',
+   qs:[
+     {q:'What does AMP stand for?',opts:['Aviation Maintenance Procedure','Aircraft Maintenance Programme','Approved Maintenance Plan','Airworthiness Monitoring Protocol'],a:'Aircraft Maintenance Programme'},
+     {q:'What happens if a CAMO fails to respond to audit findings?',opts:['They receive a warning letter','Their approval may be suspended','They must pay a fine','Nothing happens'],a:'Their approval may be suspended'},
+     {q:'What must a CAMO do when a new AD is issued?',opts:['Wait for the authority','Assess its impact within a defined timeframe','Immediately ground all aircraft','Only act if marked Emergency'],a:'Assess its impact within a defined timeframe'},
+   ]},
+  {id:'r11',t:'Effective Communication in Aviation',lv:'B1',col:'var(--gr)',time:'5 min',
+   vocab:['miscommunication','standard phraseology','readback','crew resource management','ambiguity'],
+   text:'Communication failures are a leading cause of aviation incidents. When instructions are ambiguous, the consequences can be serious. This is why aviation uses standard phraseology — precise, internationally agreed expressions that reduce misunderstanding. Pilots and controllers use the readback technique: the recipient repeats critical information to confirm understanding. In maintenance, clear written communication is equally important. A poorly worded maintenance record can lead to repeated defects or missed inspections. Crew Resource Management (CRM) training teaches aviation professionals to speak up, question assumptions, and share information openly — even when speaking to a senior colleague.',
+   qs:[
+     {q:'What is the readback technique?',opts:['Reading the manual','Repeating critical information to confirm understanding','Writing a summary','Asking a colleague to repeat'],a:'Repeating critical information to confirm understanding'},
+     {q:'What can a poorly worded maintenance record cause?',opts:['Improved communication','Repeated defects or missed inspections','Better documentation','No significant problems'],a:'Repeated defects or missed inspections'},
+     {q:'What does CRM training teach?',opts:['Technical aircraft systems','How to speak up and share information openly','Standard phraseology only','Emergency procedures'],a:'How to speak up and share information openly'},
+   ]},
+  {id:'r12',t:'Airworthiness Directives: What You Need to Know',lv:'B2',col:'var(--am)',time:'6 min',
+   vocab:['mandatory','compliance deadline','amendment','unsafe condition','applicability'],
+   text:'An Airworthiness Directive (AD) is a mandatory document issued by a national aviation authority when an unsafe condition is identified on an aircraft type. Unlike Service Bulletins, which are generally optional, ADs must be complied with by the stated deadline or the aircraft cannot legally fly. ADs describe the unsafe condition, specify which aircraft are affected (the applicability), and detail the required action — which may be an inspection, a modification, or a component replacement. The CAMO is responsible for tracking all applicable ADs, incorporating them into the Aircraft Maintenance Programme, and ensuring compliance.',
+   qs:[
+     {q:'What is the key difference between an AD and a Service Bulletin?',opts:['ADs are optional','ADs are mandatory, SBs are generally optional','There is no difference','ADs apply only to engines'],a:'ADs are mandatory, SBs are generally optional'},
+     {q:'What does applicability refer to in an AD?',opts:['The deadline for compliance','Which aircraft are affected','The required action','The authority that issued it'],a:'Which aircraft are affected'},
+     {q:'What must a CAMO do with applicable ADs?',opts:['Wait for instructions','Incorporate them into the AMP and ensure compliance','Only act on Emergency ADs','Report them to pilots'],a:'Incorporate them into the AMP and ensure compliance'},
+   ]}
 ];
 
 let RST={art:null,ra:{},rs:false,rsc:null};
 function rReading(){
-  unlockAch('rd1');
+  unlockAch('rd1');{const rd2=DB.get('rdDone',[]);if(rd2.length>=5)unlockAch('rd5');}
   const el=document.getElementById('reading');
   if(!RST.art){
     el.innerHTML=`<div class="sec fu">
@@ -4556,7 +4605,12 @@ function getTodayLesson(){
   if(!wordPick){
     // Fallback: word with lowest score
     const sorted=sortedW('all');
-    wordPick=sorted[0]||allW[0];
+    wordPick=sorted[0]||allW[0]||null;
+  }
+  if(!wordPick){
+    // No words at all — return stub lesson
+    return {date:tk,word:null,gramTopic:GRAM[0]?.id||'modals',isReview:false,
+      steps:[{id:'lesson',label:'Ξεκίνα',desc:'Πήγαινε στο Vocabulary',done:false,xp:5}]};
   }
   
   // Smart grammar selection: pick chapter with most errors
@@ -4597,7 +4651,7 @@ function saveTodayLesson(lesson){
 function rLessons(){
   const el=document.getElementById('lessons');
   const lesson=getTodayLesson();
-  const word=lesson.word;
+  const word=lesson.word||getAllW()[0]||{id:'placeholder',w:'No words yet',g:'Δεν υπάρχουν λέξεις',e:'Please add words.',cat:'b1_daily',lv:'B1',d:1,f:[]};
   const cat=VCATS[word?.cat]||VCATS.b1_daily;
   const gram=GRAM.find(g=>g.id===lesson.gramTopic)||GRAM[0];
   const donePct=Math.round((lesson.steps.filter(s=>s.done).length/lesson.steps.length)*100);
@@ -6018,6 +6072,7 @@ function rHome(){
           [lc,'Έμαθα','var(--gr)','📚'],
           [due||0,'Επανάληψη','var(--bl)','📅'],
           [streak,'Streak','var(--am)','🔥'],
+          [DB.get('tDone',[]).length+'/9','Χρόνοι','var(--tl)','⏱'],
           [todayDone+'/'+todayTotal,'Σήμερα','var(--vi)','✅'],
           [xp,'XP','var(--or)','⭐'],
           [studyMins+'m','Μελέτη','var(--tl)','⏱'],
@@ -6112,11 +6167,15 @@ function showOnboarding(){
 function renderOnboardStep(step){
   const steps=[
     {ico:'👋',title:'Καλώς ήρθες στο English Master!',
-     body:'Σε βοηθάει να περάσεις από <strong>Passive B1</strong> σε <strong>Active B2→C1</strong>.<br><br>Η εφαρμογή χρησιμοποιεί <strong>Spaced Repetition</strong> — επαναλαμβάνει αυτόματα ό,τι ξεχνάς, μέχρι να το μάθεις σωστά.',btn:'Ξεκινάμε →'},
-    {ico:'📅',title:'Το Πρόγραμμά σου',
-     body:'<strong>Κάθε μέρα — μόλις 30-45 λεπτά:</strong><br><br>1️⃣ Ξεκίνα πάντα με το <strong>🎯 Daily Lesson</strong> (10 λεπτά)<br>2️⃣ Κάνε <strong>📚 Vocabulary</strong> review (10 λεπτά)<br>3️⃣ Ένα <strong>✏ Grammar</strong> ή <strong>⏱ Tenses</strong> κεφάλαιο<br>4️⃣ Τελείωσε με <strong>📄 Reading</strong> ή <strong>✍ Writing</strong><br><br>Η συνέπεια > η διάρκεια. <strong>Κάθε μέρα λίγο!</strong>',btn:'Κατάλαβα →'},
-    {ico:'🎯',title:'Ορισε τον ημερήσιο στόχο σου',
-     body:'Πόσες λέξεις θέλεις να μαθαίνεις κάθε μέρα;<br><div style="display:flex;gap:8px;justify-content:center;margin:16px 0">'+[5,10,15,20].map(n=>`<button onclick="DB.set('gw',${n});document.querySelectorAll('.ob-goal').forEach(b=>{b.style.background='var(--s3)';b.style.color='var(--t2)';});this.style.background='var(--bl)';this.style.color='#fff'" class="ob-goal" style="padding:8px 16px;border:1px solid var(--ln);border-radius:8px;cursor:pointer;background:${n===10?'var(--bl)':'var(--s3)'};color:${n===10?'#fff':'var(--t2)'}">${n}</button>`).join('')+'</div><div class="f11 c3 tc">Συνιστάται: <strong>10/μέρα</strong></div>',btn:'Ξεκίνα! 🚀'},
+     body:'Σε βοηθάει να περάσεις από <strong>Passive B1</strong> σε <strong>Active B2→C1</strong> με επιστημονικές μεθόδους μάθησης.<br><br><strong>Spaced Repetition:</strong> Η εφαρμογή θυμάται τι δυσκολεύεσαι και το επαναλαμβάνει ακριβώς όταν πρέπει.',btn:'Ξεκινάμε →'},
+    {ico:'🎯',title:'Πρώτο Βήμα: Placement Quiz',
+     body:'Πριν ξεκινήσεις, κάνε το <strong>Placement Quiz</strong> (10 ερωτήσεις, ~3 λεπτά).<br><br>Θα βρούμε το ακριβές επίπεδό σου (B1/B1+/B2/B2+) και θα προσαρμόσουμε το πρόγραμμα ανάλογα.<br><br><span style="color:var(--am)">⚡ Το βρίσκεις και στο Settings αν θέλεις να το κάνεις αργότερα.</span>',btn:'Το ξέρω →'},
+    {ico:'📅',title:'Το Ημερήσιο Πρόγραμμα',
+     body:'<strong>Κάθε μέρα — μόλις 30 λεπτά:</strong><br><br>1️⃣ <strong>🎯 Daily Lesson</strong> — ξεκίνα πάντα από εδώ<br>2️⃣ <strong>📚 Vocabulary</strong> — 10 λέξεις την ημέρα<br>3️⃣ <strong>⏱ Tenses</strong> ή <strong>✏ Grammar</strong> — 1 θέμα<br><br><span style="color:var(--gr)">✓ 10-15 λεπτά ανά ενότητα είναι αρκετά!</span>',btn:'Κατάλαβα →'},
+    {ico:'⏱',title:'Οι Χρόνοι — Πλήρες Σύστημα',
+     body:'Η ενότητα <strong>Tenses</strong> έχει <strong>9 χρόνους × 13 tabs</strong> ο καθένας:<br><br>📖 Θεωρία · 📋 Ανώμαλα · ⏰ Prepositions · 📐 Word Order · ❓ Ερωτήσεις · ✍ Fill-in · 🔄 Μετατροπή · 🔍 Λάθη · 📖 Mini-Story · 🎯 Quiz<br><br><span style="color:var(--bl)">Ξεκίνα με Simple Present και προχώρα με τη σειρά.</span>',btn:'Ωραία →'},
+    {ico:'🚀',title:'Έτοιμος; Πάμε!',
+     body:'<strong>Συμβουλή #1:</strong> Κάνε πρώτα το Placement Quiz.<br><strong>Συμβουλή #2:</strong> Στόχευσε σε streak — ακόμα και 10 λεπτά μετράνε!<br><strong>Συμβουλή #3:</strong> Για AI features (AI Chat, Email Improver) πρόσθεσε API Key στο Settings.<br><br><span style="color:var(--gr)">🔥 Καλή επιτυχία!</span>',btn:'Αρχίζουμε! 🎯',action:'placement'},
   ];
   const s=steps[step];
   const isLast=step===steps.length-1;
@@ -6242,6 +6301,7 @@ function checkWeeklySummary(){
 
 /* ══ AI WRITING FEEDBACK ══ */
 async function getAIWritingFeedback(){
+  if(!hasAPIKey()){showAPIKeyModal();return;}
   const text=document.getElementById('wptx')?.value?.trim();
   if(!text||text.length<20){
     toast('Γράψε τουλάχιστον μια πρόταση πρώτα!','var(--am)');
@@ -6642,7 +6702,7 @@ function renderERModal(){
       <button onclick="document.getElementById('er-modal').remove();ERST.active=false" class="btn bp w100" style="justify-content:center">Εντάξει! ✓</button>
     </div>`;
     addXP(scored*8);
-    DB.set('er_done_'+todayK(),true);
+    DB.set('er_done_'+todayK(),true);unlockAch('er1');
     return;
   }
   
@@ -6844,6 +6904,7 @@ function rClozeTest(){
 
 /* ══ ERROR PATTERN ANALYSIS ══ */
 async function runErrorAnalysis(){
+  if(!hasAPIKey()){showAPIKeyModal();return;}
   const errors=DB.get('errors',{});
   const gramErrors=DB.get('gramErr',{});
   const allW=getAllW();
@@ -6977,6 +7038,17 @@ const CONV_SCENARIOS=[
 let CONVST={scenario:null,history:[],turn:0,done:false,feedback:null,loading:false};
 
 function rAIConversation(){
+  if(!hasAPIKey()){
+    const el=document.getElementById('speaking');
+    el.innerHTML=`<div class="sec fu" style="max-width:600px;text-align:center;padding-top:40px">
+      <div style="font-size:48px;margin-bottom:16px">🤖</div>
+      <div class="fp f16 b mb8">AI Conversation Partner</div>
+      <div class="f12 c2 mb20" style="line-height:1.7">Για να χρησιμοποιήσεις τον AI Conversation Partner χρειάζεσαι Anthropic API Key.</div>
+      <button onclick="showAPIKeyModal()" class="btn bp" style="justify-content:center">🔑 Προσθήκη API Key</button>
+      <button onclick="SPST.tab='conversations';rSpeaking()" class="btn bgh mt8" style="justify-content:center">← Πίσω</button>
+    </div>`;
+    return;
+  }
   const el=document.getElementById('speaking');
   
   if(!CONVST.scenario){
@@ -7080,6 +7152,7 @@ function rAIConversation(){
 }
 
 async function sendConvMsg(){
+  if(!hasAPIKey()){showAPIKeyModal();return;}
   const input=document.getElementById('conv-input')?.value?.trim();
   if(!input||CONVST.loading)return;
   
@@ -8166,6 +8239,7 @@ function rRoleplay(){
 }
 
 async function rpSend(){
+  if(!hasAPIKey()){showAPIKeyModal();return;}
   const input=document.getElementById('rp-input');
   if(!input||!input.value.trim()||RPST.loading)return;
   
@@ -8283,6 +8357,7 @@ function renderPlacementModal(){
     const res=getPlacementResult();
     DB.set('placement_done',true);
     DB.set('placement_lv',res.lv);
+    unlockAch('pl1');
     modal.innerHTML=`<div style="background:var(--s1);border:1px solid var(--ln2);border-radius:var(--r2);padding:28px;max-width:420px;width:100%;text-align:center;animation:celebPop .4s ease">
       <div style="font-size:48px;margin-bottom:12px">🎯</div>
       <div class="fp f20 b mb6">Αποτέλεσμα Placement</div>
@@ -8352,6 +8427,7 @@ function startQuickMode(){
   if(due.length>0)options.push({id:'review',ic:'📅',title:'Vocabulary Review',desc:due.length+' λέξεις για επανάληψη',score:10,action:()=>{modal.remove();VS.mode='review';VS.cat='all';go('vocab');}});
   options.push({id:'fc',ic:'🃏',title:'5 Flashcards',desc:'Γρήγορη εξάσκηση με flashcards',score:8,action:()=>{modal.remove();VS.mode='fc';VS.cat='all';go('vocab');}});
   options.push({id:'interleaved',ic:'⚡',title:'Mixed Practice',desc:'5 ερωτήσεις Grammar + Tenses',score:9,action:()=>{modal.remove();ILST.shuffled=[...INTERLEAVED_BANK].sort(()=>Math.random()-.5).slice(0,5);ILST.idx=0;ILST.sel=null;ILST.score=0;ILST.total=0;ILST.done=false;renderILModal();}});
+  options.push({id:'tenses',ic:'⏱',title:'Tenses Quiz',desc:'Quiz για τον τρέχοντα χρόνο',score:8,action:()=>{modal.remove();TST.tab='quiz';go('tenses');}});
   options.push({id:'lesson',ic:'🎯',title:'Daily Lesson',desc:'Συνέχισε το σημερινό μάθημα',score:7,action:()=>{modal.remove();go('lessons');}});
 
   const best=options.sort((a,b)=>b.score-a.score)[0];
@@ -8756,6 +8832,7 @@ function rAviation(){
 
 /* ══ EMAIL IMPROVER ══ */
 async function improveEmail(){
+  if(!hasAPIKey()){showAPIKeyModal();return;}
   const modal=document.createElement('div');
   modal.id='email-improve-modal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px';
