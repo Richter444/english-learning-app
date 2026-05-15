@@ -4107,7 +4107,8 @@ function rReading(){
     </div>`;
   } else {
     const a=READINGS.find(x=>x.id===RST.art);
-    const qRows=a.qs.map((q,i)=>{
+    if(!a){RST.art=null;rReading();return;}
+    const qRows=(a.qs||[]).map((q,i)=>{
       const opts=q.opts.map(opt=>{
         let bg='var(--s2)',br='var(--ln)',col='var(--t2)';
         if(RST.ra[i]===opt){bg='var(--s3)';br=a.col;col=a.col;}
@@ -6142,31 +6143,6 @@ function rHome(){
       ${renderPlanTasks(comp,today)}
     </div>
 
-    <!-- LEARNING PATH (compact) -->
-    <div class="card mb12">
-      <div class="sl mb10">📈 LEARNING PATH</div>
-      ${(()=>{
-        const current=getCurrentStage();
-        return LEARNING_PATH.map((stage,i)=>{
-          const done=stage.milestones.every(m=>m.check());
-          const active=i===current;
-          const prog=stage.milestones.filter(m=>m.check()).length;
-          const pct=Math.round(prog/stage.milestones.length*100);
-          const col=stage.col;
-          return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;'+(i<LEARNING_PATH.length-1?'border-bottom:1px solid var(--ln)':'')+';opacity:'+(i>current+1?.4:1)+'">'
-            +'<div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;background:'+(done?col:active?col+'22':'var(--s3)')+';flex-shrink:0">'+(done?'✓':stage.ic)+'</div>'
-            +'<div style="flex:1;min-width:0">'
-              +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">'
-                +'<span style="font-size:11px;font-weight:600;color:'+(active?col:'var(--t2)')+'">'+stage.title+'</span>'
-                +'<span style="font-size:9px;background:'+col+'1a;border:1px solid '+col+'33;color:'+col+';padding:1px 6px;border-radius:10px">'+stage.lv+'</span>'
-              +'</div>'
-              +'<div style="height:3px;background:var(--s3);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:3px;transition:width .5s"></div></div>'
-              +'<div style="font-size:9px;color:var(--t3);margin-top:2px">'+prog+'/'+stage.milestones.length+' milestones'+(active?' — τρέχον επίπεδο':'')+(done?' ✓':'')+'</div>'
-            +'</div>'
-          +'</div>';
-        }).join('');
-      })()}
-    </div>
 
 
     <!-- ADAPTIVE REC -->
@@ -6292,53 +6268,119 @@ function showCelebration(title,msg,xp,actionCode,actionLabel){
 
 /* ══ EVENING RECALL ══ */
 function startEveningRecall(){
-  const wb=getWB();const errors=DB.get('errors',{});const allW=getAllW();
+  const allW=getAllW();
+  const errors=DB.get('errors',{});
+  const wb=getWB();
   const errWords=allW.filter(w=>errors[w.id]&&errors[w.id].count>=2).slice(0,3);
-  const recentW=allW.filter(w=>wb[w.id]&&wb[w.id].seen>0).sort((a,b)=>(wb[b.id]?.seen||0)-(wb[a.id]?.seen||0)).slice(0,5);
-  const pool=[...new Set([...errWords,...recentW])].slice(0,5);
+  const recentW=allW.filter(w=>wb[w.id]&&wb[w.id].seen>0)
+    .sort((a,b)=>(wb[b.id]?.seen||0)-(wb[a.id]?.seen||0)).slice(0,5);
+  const pool=[...new Map([...errWords,...recentW].map(w=>[w.id,w])).values()].slice(0,5);
   if(!pool.length){toast('Δεν υπάρχουν λέξεις για επανάληψη ακόμα!','var(--am)');return;}
-  DB.set('er_state',{});DB.set('er_words',pool.map(w=>w.id));
-  // Show in a modal
-  const modal=document.createElement('div');
-  modal.id='er-modal';
-  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9997;display:flex;align-items:center;justify-content:center;padding:20px';
-  renderERModal(modal,pool,0);
-  document.body.appendChild(modal);
+
+  // Store state globally
+  DB.set('er_pool', pool.map(w=>w.id));
+  DB.set('er_state', {});
+  DB.set('er_idx', 0);
+
+  let modal=document.getElementById('er-modal');
+  if(!modal){
+    modal=document.createElement('div');
+    modal.id='er-modal';
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9997;display:flex;align-items:center;justify-content:center;padding:20px';
+    document.body.appendChild(modal);
+  }
+  renderERModal();
 }
-function renderERModal(modal,pool,idx){
+
+function renderERModal(){
+  const modal=document.getElementById('er-modal');
+  if(!modal)return;
+
+  const poolIds=DB.get('er_pool',[]);
+  const idx=DB.get('er_idx',0);
+  const allW=getAllW();
+  const pool=poolIds.map(id=>allW.find(w=>w.id===id)).filter(Boolean);
+
   if(idx>=pool.length){
     const state=DB.get('er_state',{});
     const correct=Object.values(state).filter(x=>x.correct).length;
-    DB.set('er_done_'+todayK(),true);unlockAch('er1');addXP(correct*12+5);
+    DB.set('er_done_'+todayK(),true);
+    unlockAch('er1');
+    addXP(correct*12+5);
     modal.innerHTML='<div style="background:var(--s1);border-radius:16px;padding:28px;max-width:400px;text-align:center">'
       +'<div style="font-size:40px;margin-bottom:12px">🌙</div>'
       +'<div style="font-size:16px;font-weight:700;margin-bottom:8px">Evening Recall ολοκληρώθηκε!</div>'
       +'<div style="font-size:13px;color:var(--t3);margin-bottom:20px">'+correct+'/'+pool.length+' σωστές · +'+(correct*12+5)+' XP</div>'
-      +'<button onclick="document.getElementById(\'er-modal\').remove()" style="padding:10px 24px;background:var(--bl);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none">Κλείσιμο</button></div>';
+      +'<button onclick="closeTopModal()" style="padding:10px 24px;background:var(--bl);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none">Κλείσιμο</button></div>';
     return;
   }
+
   const w=pool[idx];
-  modal.innerHTML='<div style="background:var(--s1);border-radius:16px;padding:28px;max-width:400px;width:100%">'
-    +'<div style="font-size:11px;color:var(--t3);margin-bottom:16px">🌙 EVENING RECALL · '+(idx+1)+'/'+pool.length+'</div>'
-    +'<div style="font-size:22px;font-weight:700;text-align:center;margin-bottom:8px;color:var(--t1)">'+w.g+'</div>'
-    +'<div style="font-size:12px;color:var(--t3);text-align:center;margin-bottom:24px">Γράψε στα Αγγλικά:</div>'
-    +'<input id="er-inp" placeholder="English..." style="width:100%;padding:10px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:14px;box-sizing:border-box" onkeydown="if(event.key===\'Enter\'){checkERAnswer(\''+w.id+'\',this.value,pool,'+idx+',modal);}">'
-    +'<button onclick="checkERAnswer(\''+w.id+'\',document.getElementById(\'er-inp\').value,pool,'+idx+',modal)" style="width:100%;margin-top:10px;padding:10px;background:var(--bl);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none">Έλεγχος →</button>'
-    +'</div>';
+  modal.innerHTML='';
+  const div=document.createElement('div');
+  div.style.cssText='background:var(--s1);border-radius:16px;padding:28px;max-width:400px;width:100%';
+
+  const hdr=document.createElement('div');
+  hdr.style.cssText='font-size:11px;color:var(--t3);margin-bottom:16px';
+  hdr.textContent='🌙 EVENING RECALL · '+(idx+1)+'/'+pool.length;
+
+  const word=document.createElement('div');
+  word.style.cssText='font-size:22px;font-weight:700;text-align:center;margin-bottom:8px;color:var(--t1)';
+  word.textContent=w.g;
+
+  const hint=document.createElement('div');
+  hint.style.cssText='font-size:12px;color:var(--t3);text-align:center;margin-bottom:24px';
+  hint.textContent='Γράψε στα Αγγλικά:';
+
+  const inp=document.createElement('input');
+  inp.id='er-inp';
+  inp.placeholder='English...';
+  inp.style.cssText='width:100%;padding:10px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:14px;box-sizing:border-box;margin-bottom:10px';
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')submitERAnswer();});
+
+  const btn=document.createElement('button');
+  btn.textContent='Έλεγχος →';
+  btn.style.cssText='width:100%;padding:10px;background:var(--bl);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none';
+  btn.onclick=submitERAnswer;
+
+  div.appendChild(hdr);div.appendChild(word);div.appendChild(hint);
+  div.appendChild(inp);div.appendChild(btn);
+  modal.appendChild(div);
+  setTimeout(()=>inp.focus(),100);
 }
-function checkERAnswer(wordId,answer,pool,idx,modal){
-  const word=getAllW().find(w=>w.id===wordId);if(!word)return;
-  const correct=answer.toLowerCase().trim()===word.w.toLowerCase().trim();
-  setWS(wordId,correct);addXP(correct?12:3);
-  const state=DB.get('er_state',{});state[wordId]={correct};DB.set('er_state',state);
-  // Show result briefly then next
-  const div=modal.querySelector('div');
-  if(div)div.innerHTML='<div style="text-align:center;padding:20px">'
-    +'<div style="font-size:32px">'+(correct?'✅':'❌')+'</div>'
-    +'<div style="font-size:16px;font-weight:700;margin:12px 0;color:'+(correct?'var(--gr)':'var(--ro)')+'">'+word.w+'</div>'
-    +'<div style="font-size:12px;color:var(--t3)">'+word.g+' · '+word.e+'</div></div>';
-  setTimeout(()=>renderERModal(modal,pool,idx+1),1500);
+
+function submitERAnswer(){
+  const inp=document.getElementById('er-inp');
+  if(!inp)return;
+  const poolIds=DB.get('er_pool',[]);
+  const idx=DB.get('er_idx',0);
+  const allW=getAllW();
+  const w=allW.find(x=>x.id===poolIds[idx]);
+  if(!w)return;
+  const correct=inp.value.trim().toLowerCase()===w.w.toLowerCase();
+  setWS(w.id,correct);
+  addXP(correct?12:3);
+  const state=DB.get('er_state',{});
+  state[w.id]={correct};
+  DB.set('er_state',state);
+  DB.set('er_idx',idx+1);
+
+  // Show result
+  const modal=document.getElementById('er-modal');
+  if(modal){
+    modal.innerHTML='<div style="background:var(--s1);border-radius:16px;padding:28px;max-width:400px;text-align:center">'
+      +'<div style="font-size:32px;margin-bottom:12px">'+(correct?'✅':'❌')+'</div>'
+      +'<div style="font-size:16px;font-weight:700;margin:12px 0;color:'+(correct?'var(--gr)':'var(--ro)')+'">'+w.w+'</div>'
+      +'<div style="font-size:12px;color:var(--t3)">'+w.g+'</div></div>';
+    setTimeout(()=>renderERModal(),1500);
+  }
 }
+
+function checkERAnswer(wordId,answer){
+  // Legacy compatibility
+  submitERAnswer();
+}
+
 
 /* ══ INTERLEAVED PRACTICE ══ */
 let ILST={shuffled:[],idx:0,sel:null,score:0,total:0,done:false};
@@ -6861,6 +6903,233 @@ function showWeeklySummary(){
     +'<button onclick="closeTopModal()" style="margin-top:16px;padding:10px;background:var(--bl);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none;width:100%">OK</button>'
     +'</div>';
   document.body.appendChild(m);
+}
+
+/* ══ SPEAKING MODULE FUNCTIONS ══ */
+/* ══ MISSING STATE OBJECTS ══ */
+let CONVST={scenario:null,history:[],turn:0,loading:false,done:false};
+let RPST={scenario:null,history:[],turn:0,loading:false,done:false,scores:[]};
+let CLST={art:null,answers:{},checked:false};
+
+function rAIConversation(){
+  const sp=document.querySelector('#speaking .vm');
+  if(!sp)return;
+  if(!hasAPIKey()){
+    sp.innerHTML='<div style="text-align:center;padding:40px 20px"><div style="font-size:48px;margin-bottom:16px">🤖</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">AI Conversation</div><div style="font-size:13px;color:var(--t3);margin-bottom:20px">Χρειάζεσαι API Key.</div><button onclick="showAPIKeyModal()" class="btn bp">🔑 API Key</button></div>';
+    return;
+  }
+  if(CONVST.scenario===null){
+    const scenarios=(typeof CONV_SCENARIOS!=='undefined'?CONV_SCENARIOS:[
+      {id:'job',title:'Job Interview',desc:'Συνέντευξη εργασίας',ic:'💼'},
+      {id:'travel',title:'At the Airport',desc:'Στο αεροδρόμιο',ic:'✈️'},
+      {id:'hotel',title:'Hotel Check-in',desc:'Check-in ξενοδοχείου',ic:'🏨'},
+      {id:'restaurant',title:'At a Restaurant',desc:'Σε εστιατόριο',ic:'🍽️'},
+      {id:'business',title:'Business Meeting',desc:'Επαγγελματική συνάντηση',ic:'📊'},
+    ]);
+    sp.innerHTML='';
+    const wrap=document.createElement('div');
+    wrap.style.cssText='max-width:600px;margin:0 auto';
+    wrap.innerHTML='<div class="sl mb16">🗣 ΕΠΕΛΕΞΕ ΣΕΝΑΡΙΟ</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="conv-scenarios"></div>';
+    sp.appendChild(wrap);
+    const grid=document.getElementById('conv-scenarios');
+    scenarios.forEach(s=>{
+      const btn=document.createElement('button');
+      btn.style.cssText='padding:16px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;text-align:left;transition:all .15s';
+      btn.innerHTML='<div style="font-size:24px;margin-bottom:8px">'+s.ic+'</div><div style="font-size:13px;font-weight:600;margin-bottom:4px">'+s.title+'</div><div style="font-size:11px;color:var(--t3)">'+s.desc+'</div>';
+      btn.onclick=()=>{CONVST.scenario=s.id;CONVST.history=[];CONVST.turn=0;CONVST.done=false;rAIConversation();};
+      grid.appendChild(btn);
+    });
+    return;
+  }
+  if(CONVST.done){
+    sp.innerHTML='<div style="text-align:center;padding:40px 20px"><div style="font-size:48px;margin-bottom:16px">✅</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">Conversation Complete!</div><button onclick="CONVST.scenario=null;rAIConversation()" class="btn bp">Νέα Συνομιλία</button></div>';
+    return;
+  }
+  sp.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.style.cssText='max-width:600px;margin:0 auto;display:flex;flex-direction:column;min-height:400px';
+  const hdr=document.createElement('div');
+  hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px';
+  hdr.innerHTML='<div class="sl">🗣 AI CONVERSATION</div><button onclick="CONVST.scenario=null;rAIConversation()" style="font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer">← Αλλαγή</button>';
+  const msgs=document.createElement('div');
+  msgs.style.cssText='flex:1;overflow-y:auto;margin-bottom:12px;min-height:200px';
+  CONVST.history.forEach(m=>{
+    const d=document.createElement('div');
+    d.style.cssText='display:flex;justify-content:'+(m.role==='user'?'flex-end':'flex-start')+';margin-bottom:10px';
+    const bubble=document.createElement('div');
+    bubble.style.cssText='max-width:80%;padding:10px 14px;background:'+(m.role==='user'?'var(--bl)':'var(--s2)')+';border-radius:12px;font-size:13px;line-height:1.6';
+    bubble.textContent=m.content;
+    d.appendChild(bubble);msgs.appendChild(d);
+  });
+  wrap.appendChild(hdr);wrap.appendChild(msgs);
+  if(!CONVST.loading){
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;gap:8px';
+    const inp=document.createElement('input');
+    inp.id='conv-input';inp.placeholder='Type your message...';
+    inp.style.cssText='flex:1;padding:10px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px';
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')sendConvMsg();});
+    const btn=document.createElement('button');
+    btn.textContent='→';btn.style.cssText='padding:10px 16px;background:var(--bl);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none';
+    btn.onclick=sendConvMsg;
+    row.appendChild(inp);row.appendChild(btn);wrap.appendChild(row);
+  } else {
+    const loading=document.createElement('div');
+    loading.style.cssText='text-align:center;color:var(--t3);font-size:12px;padding:10px';
+    loading.textContent='⏳ Πληκτρολογεί...';
+    wrap.appendChild(loading);
+  }
+  sp.appendChild(wrap);
+  setTimeout(()=>{msgs.scrollTop=msgs.scrollHeight;},50);
+}
+
+function rRoleplay(){
+  const sp=document.querySelector('#speaking .vm');
+  if(!sp)return;
+  if(!hasAPIKey()){
+    sp.innerHTML='<div style="text-align:center;padding:40px 20px"><div style="font-size:48px;margin-bottom:16px">🎭</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">Roleplay</div><div style="font-size:13px;color:var(--t3);margin-bottom:20px">Χρειάζεσαι API Key.</div><button onclick="showAPIKeyModal()" class="btn bp">🔑 API Key</button></div>';
+    return;
+  }
+  if(!RPST.scenario){
+    const roles=['Teacher','Doctor','Colleague','Customer Service','Friend','Job Interviewer'];
+    sp.innerHTML='';
+    const wrap=document.createElement('div');
+    wrap.style.cssText='max-width:600px;margin:0 auto';
+    wrap.innerHTML='<div class="sl mb16">🎭 ΕΠΕΛΕΞΕ ΡΟΛΟ</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="rp-roles"></div>';
+    sp.appendChild(wrap);
+    const grid=document.getElementById('rp-roles');
+    roles.forEach(r=>{
+      const btn=document.createElement('button');
+      btn.style.cssText='padding:14px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s';
+      btn.textContent=r;
+      btn.onclick=()=>{RPST.scenario=r;RPST.history=[];rpSend();};
+      grid.appendChild(btn);
+    });
+    return;
+  }
+  sp.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.style.cssText='max-width:600px;margin:0 auto;display:flex;flex-direction:column;min-height:400px';
+  const hdr=document.createElement('div');
+  hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px';
+  hdr.innerHTML='<div class="sl">🎭 '+RPST.scenario+'</div><button onclick="RPST.scenario=null;rRoleplay()" style="font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer">← Αλλαγή</button>';
+  const msgs=document.createElement('div');
+  msgs.style.cssText='flex:1;overflow-y:auto;margin-bottom:12px;min-height:200px';
+  RPST.history.forEach(m=>{
+    const d=document.createElement('div');
+    d.style.cssText='display:flex;justify-content:'+(m.role==='user'?'flex-end':'flex-start')+';margin-bottom:10px';
+    const bubble=document.createElement('div');
+    bubble.style.cssText='max-width:80%;padding:10px 14px;background:'+(m.role==='user'?'var(--vi)':'var(--s2)')+';border-radius:12px;font-size:13px;line-height:1.6';
+    bubble.textContent=m.content;
+    d.appendChild(bubble);msgs.appendChild(d);
+  });
+  wrap.appendChild(hdr);wrap.appendChild(msgs);
+  if(!RPST.loading){
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;gap:8px';
+    const inp=document.createElement('input');
+    inp.id='rp-input';inp.placeholder='Your response...';
+    inp.style.cssText='flex:1;padding:10px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px';
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')rpSend();});
+    const btn=document.createElement('button');
+    btn.textContent='→';btn.style.cssText='padding:10px 16px;background:var(--vi);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none';
+    btn.onclick=rpSend;
+    row.appendChild(inp);row.appendChild(btn);wrap.appendChild(row);
+  } else {
+    const loading=document.createElement('div');
+    loading.style.cssText='text-align:center;color:var(--t3);font-size:12px;padding:10px';
+    loading.textContent='⏳...';
+    wrap.appendChild(loading);
+  }
+  sp.appendChild(wrap);
+  setTimeout(()=>{msgs.scrollTop=msgs.scrollHeight;},50);
+}
+
+
+function rClozeTest(){
+  const el=document.querySelector('#reading .vm')||document.getElementById('reading');
+  if(!el)return;
+  const arts=READINGS||[];
+  if(CLST.art===null){
+    el.innerHTML='<div style="max-width:700px;margin:0 auto">'
+      +'<div class="sl mb16">📝 CLOZE TESTS</div>'
+      +'<div style="display:grid;gap:8px">'
+      +arts.map(a=>'<button onclick="startCloze(this)" data-id="'+a.id+'" style="padding:14px 16px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;text-align:left;transition:all .15s">'
+        +'<div style="font-size:13px;font-weight:600">'+a.t+'</div>'
+        +'<div style="font-size:11px;color:var(--t3);margin-top:4px">'+a.lv+' · '+a.time+'</div>'
+        +'</button>').join('')
+      +'</div></div>';
+    return;
+  }
+  const art=arts.find(a=>a.id===CLST.art);
+  if(!art){CLST.art=null;rClozeTest();return;}
+  const vocab=art.vocab||[];
+  const stripped=(typeof art.text==='string'?art.text.replace(/<[^>]+>/g,''):art.text);
+  let clozed=stripped;
+  vocab.forEach((w,i)=>{
+    const re=new RegExp('\\b'+w+'\\b','i');
+    clozed=clozed.replace(re,'<input id="clz-'+i+'" data-ans="'+w+'" placeholder="____" style="width:80px;padding:2px 6px;background:var(--s2);border:1px solid var(--ln);border-radius:4px;color:var(--t1);font-size:13px">');
+  });
+  el.innerHTML='<div style="max-width:700px;margin:0 auto">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
+    +'<div class="sl">📝 '+art.t+'</div>'
+    +'<button onclick="CLST.art=null;rClozeTest()" style="font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer">← Πίσω</button>'
+    +'</div>'
+    +'<div style="font-size:14px;line-height:2;margin-bottom:20px">'+clozed+'</div>'
+    +'<button onclick="checkCloze()" class="btn bp">Έλεγχος ✓</button>'
+    +'</div>';
+}
+function checkCloze(){
+  let correct=0,total=0;
+  document.querySelectorAll('[id^=clz-]').forEach(inp=>{
+    total++;
+    const ans=inp.dataset.ans.toLowerCase();
+    const val=inp.value.trim().toLowerCase();
+    if(val===ans){correct++;inp.style.borderColor='var(--gr)';}
+    else{inp.style.borderColor='var(--ro)';inp.placeholder=inp.dataset.ans;}
+  });
+  addXP(correct*5);
+  toast(correct+'/'+total+' σωστές! +'+correct*5+' XP','var(--gr)');
+}
+
+function startConvScenario(btn){
+  CONVST.scenario=btn.dataset.id;
+  CONVST.history=[];CONVST.turn=0;CONVST.done=false;
+  rAIConversation();
+}
+function startRoleplay(btn){
+  RPST.scenario=btn.dataset.role;
+  RPST.history=[];
+  rRoleplay();
+}
+function startCloze(btn){
+  CLST.art=btn.dataset.id;
+  CLST.answers={};CLST.checked=false;
+  rClozeTest();
+}
+
+/* ══ RESET PROGRESS ══ */
+function resetAllProgress(){
+  if(!confirm('Είσαι σίγουρος; Θα χαθούν ΟΛΟΙ οι βαθμοί, XP και πρόοδος!'))return;
+  // Clear all progress keys
+  const keep=['light_mode','player_name','notif_time','api_key','onboarded','placement_done','placement_lv'];
+  const allKeys=Object.keys(localStorage);
+  allKeys.forEach(k=>{
+    if(!keep.some(kk=>k===kk||k.startsWith('persist_'))){
+      localStorage.removeItem(k);
+    }
+  });
+  // Reset state objects
+  CONVST={scenario:null,history:[],turn:0,loading:false,done:false};
+  RPST={scenario:null,history:[],turn:0,loading:false,done:false,scores:[]};
+  CLST={art:null,answers:{},checked:false};
+  CEFRST={active:false,idx:0,answers:{},done:false,score:0};
+  PLST={active:false,idx:0,answers:{},done:false};
+  TST={idx:0,tab:'theory',qa:{},qs:false,qsc:null,ta:{},tc:{},te:{},ts:{},tips:false,cmp:0};
+  GST={topic:null,ea:{},es:false};
+  VS={mode:'all',cat:'all',search:'',sbOpen:true,q:{mode:'mixed',sess:[],idx:0,res:[],fl:false,opts:[],sel:-1,fill:'',fd:false}};
+  toast('✅ Πρόοδος επαναφέρθηκε!','var(--gr)');
+  go('home');
 }
 </script>
 </body>
