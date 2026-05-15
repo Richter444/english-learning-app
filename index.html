@@ -6525,6 +6525,49 @@ function getAdaptiveRecommendation(){
   return recs.sort((a,b)=>b.priority-a.priority);
 }
 
+
+// ══ APP INITIALIZATION ══
+function initApp(){
+  // Apply theme
+  if(DB.get('light_mode',false)){
+    document.documentElement.setAttribute('data-theme','light');
+  }
+  // Update XP display
+  updXP();
+  // Show home
+  go('home');
+  // Check onboarding
+  if(!DB.get('onboarded',false)){
+    setTimeout(()=>showOnboarding(),500);
+  }
+  // Check achievements on load
+  const lc=learnedW().length;
+  if(lc>=1)unlockAch('w1');
+  if(lc>=10)unlockAch('w10');
+  if(lc>=50)unlockAch('w50');
+  if(lc>=100)unlockAch('w100');
+  if(lc>=200)unlockAch('w200');
+  unlockAch('start');
+  const s=calcStreak();
+  if(s>=3)unlockAch('s3');
+  if(s>=7)unlockAch('s7');
+  if(s>=14)unlockAch('s14');
+  if(s>=30)unlockAch('s30');
+}
+
+// Initialize when DOM is ready
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
+// Android WebView fallback
+window.addEventListener('load', function(){
+  const home = document.getElementById('home');
+  if(home && (home.style.display==='none' || home.innerHTML.trim()==='')) {
+    initApp();
+  }
+});
 </script>
 </body>
 </html>
