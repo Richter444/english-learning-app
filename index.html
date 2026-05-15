@@ -521,6 +521,8 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
 .streak-fire{display:inline-block;animation:streakPop .6s ease,streakGlow 2s ease 0.6s infinite}
 @keyframes xpFloat{0%{transform:translateY(0);opacity:1}80%{transform:translateY(-50px);opacity:.4}100%{transform:translateY(-60px);opacity:0}}
 .xp-float{animation:xpFloat .9s ease forwards;position:fixed;font-size:14px;font-weight:700;color:var(--am);pointer-events:none;z-index:9999;text-shadow:0 2px 8px rgba(246,188,24,.5)}
+.more-item-new{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;color:var(--t2);text-align:left;transition:all .15s}
+.more-item-new:hover{background:var(--s3);border-color:var(--ln2);transform:translateY(-1px);color:var(--t1)}
 @keyframes celebPop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
 </style>
 </head>
@@ -543,8 +545,8 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
   <div class="nav-r">
     <span class="lv-b" id="xp-lv">Lv 1</span>
     <div class="xpw"><div class="xpt" id="xp-txt">0 XP</div><div class="xpb"><div class="xpf" id="xp-f" style="width:0%"></div></div></div>
-    <button id="pwab" onclick="doPWA()" title="Εγκατάσταση εφαρμογής">📲 Εγκατάσταση</button>
-  <button id="timer-btn" onclick="toggleTimer()" title="Χρονόμετρο μελέτης" style="padding:4px 10px;border:1px solid var(--ln);border-radius:20px;color:var(--t3);font-size:12px;margin-left:8px;transition:all .2s">⏱</button>
+    <button id="timer-btn" onclick="toggleTimer()" title="Χρονόμετρο μελέτης" style="padding:4px 10px;border:1px solid var(--ln);border-radius:20px;color:var(--t3);font-size:12px;transition:all .2s">⏱</button>
+    <button onclick="go('settings')" title="Ρυθμίσεις" style="padding:4px 12px;border:1px solid var(--ln);border-radius:20px;color:var(--t3);font-size:13px;background:none;cursor:pointer;transition:all .2s" onmouseover="this.style.color='var(--t1)';this.style.borderColor='var(--ln2)'" onmouseout="this.style.color='var(--t3)';this.style.borderColor='var(--ln)'">⚙</button>
   </div>
 </nav>
 <div id="cnt">
@@ -602,15 +604,20 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
 
 <div id="toast"></div>
 
-<div id="desktop-more" onclick="event.stopPropagation()" style="display:none;position:fixed;top:54px;right:0;background:var(--s1);border:1px solid var(--ln2);border-radius:0 0 var(--r2) var(--r2);padding:10px;z-index:8888;box-shadow:var(--shadow-lg);min-width:220px">
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:4px">
-    <button onclick="go('writing');hideDesktopMore()" class="more-item"><span>✍</span><span>Writing</span></button>
-    <button onclick="go('reading');hideDesktopMore()" class="more-item"><span>📄</span><span>Reading</span></button>
-    <button onclick="go('speaking');hideDesktopMore()" class="more-item"><span>🗣</span><span>Speaking</span></button>
-    <button onclick="go('tracker');hideDesktopMore()" class="more-item"><span>📅</span><span>Tracker</span></button>
-    <button onclick="go('builder');hideDesktopMore()" class="more-item"><span>🔤</span><span>Builder</span></button>
-    <button onclick="go('falsefriends');hideDesktopMore()" class="more-item"><span>⚠</span><span>False Fr.</span></button>
-    <button onclick="go('settings');hideDesktopMore()" class="more-item"><span>⚙</span><span>Settings</span></button>
+<div id="desktop-more" onclick="event.stopPropagation()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:8888;align-items:center;justify-content:center">
+  <div style="background:var(--s1);border:1px solid var(--ln2);border-radius:16px;padding:24px;min-width:340px;box-shadow:0 24px 60px rgba(0,0,0,.4)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:13px;font-weight:700;color:var(--t3);letter-spacing:1px">ΥΠΟΛΟΙΠΕΣ ΕΝΟΤΗΤΕΣ</div>
+      <button onclick="hideDesktopMore()" style="background:none;border:none;color:var(--t3);font-size:18px;cursor:pointer;padding:2px 6px;border-radius:6px" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='none'">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button onclick="go('writing');hideDesktopMore()" class="more-item-new"><span style="font-size:24px">✍</span><div><div style="font-weight:600;font-size:13px">Writing</div><div style="font-size:10px;color:var(--t3)">Γραφή & Email</div></div></button>
+      <button onclick="go('reading');hideDesktopMore()" class="more-item-new"><span style="font-size:24px">📄</span><div><div style="font-weight:600;font-size:13px">Reading</div><div style="font-size:10px;color:var(--t3)">Κατανόηση κειμένου</div></div></button>
+      <button onclick="go('speaking');hideDesktopMore()" class="more-item-new"><span style="font-size:24px">🗣</span><div><div style="font-weight:600;font-size:13px">Speaking</div><div style="font-size:10px;color:var(--t3)">AI Conversation</div></div></button>
+      <button onclick="go('tracker');hideDesktopMore()" class="more-item-new"><span style="font-size:24px">📅</span><div><div style="font-weight:600;font-size:13px">Tracker</div><div style="font-size:10px;color:var(--t3)">Ημερήσια πρόοδος</div></div></button>
+      <button onclick="go('builder');hideDesktopMore()" class="more-item-new"><span style="font-size:24px">🔤</span><div><div style="font-weight:600;font-size:13px">Sentence Builder</div><div style="font-size:10px;color:var(--t3)">Κατασκευή προτάσεων</div></div></button>
+      <button onclick="go('falsefriends');hideDesktopMore()" class="more-item-new"><span style="font-size:24px">⚠</span><div><div style="font-weight:600;font-size:13px">False Friends</div><div style="font-size:10px;color:var(--t3)">Παγίδες λέξεων</div></div></button>
+    </div>
   </div>
 </div>
 <div id="offline-banner" style="display:none;position:fixed;top:52px;left:0;right:0;background:var(--am);color:#1a0d00;padding:6px;text-align:center;font-size:11px;font-weight:600;z-index:9990">
@@ -843,10 +850,13 @@ function showDesktopMore(e){
   if(e) e.stopPropagation();
   const m=document.getElementById('desktop-more');
   if(!m)return;
-  const isOpen=m.style.display!=='none';
-  m.style.display=isOpen?'none':'block';
+  const isOpen=m.style.display==='flex';
+  m.style.display=isOpen?'none':'flex';
   if(!isOpen){
-    setTimeout(()=>document.addEventListener('click',hideDesktopMore,{once:true}),10);
+    setTimeout(()=>document.addEventListener('click',function handler(ev){
+      if(!m.contains(ev.target)){m.style.display='none';}
+      else{document.addEventListener('click',handler,{once:true});}
+    },{once:true}),10);
   }
 }
 function hideDesktopMore(){
@@ -6080,7 +6090,16 @@ function rHome(){
       </div>
 
       <!-- Two columns: Tasks + Quick Access -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <!-- Quick Nav shortcuts -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+      ${[{ic:'📚',lb:'Vocab',p:'vocab'},{ic:'⏱',lb:'Tenses',p:'tenses'},{ic:'✏',lb:'Grammar',p:'grammar'},{ic:'🗣',lb:'Speaking',p:'speaking'}].map(b=>`
+        <button onclick="go('${b.p}')" style="padding:10px 6px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;transition:all .15s" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
+          <span style="font-size:20px">${b.ic}</span>
+          <span style="font-size:10px;color:var(--t3);font-weight:600">${b.lb}</span>
+        </button>`).join('')}
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
         <div class="card">
           <div class="sl mb10">🎯 ΣΗΜΕΡΑ</div>
           ${PLAN.map(t=>{
