@@ -780,6 +780,9 @@ const LVLS=[
 ];
 function getXP(){return DB.get('xp',0)}
 function addXP(n){
+  const streak=calcStreak();
+  const mult=streak>=14?1.5:streak>=7?1.25:streak>=3?1.1:1;
+  n=Math.round(n*mult);
   const old=getXP(),nw=old+n;DB.set('xp',nw);
   if(getLv(nw)>getLv(old))showAch('🎉 Level Up! '+LVLS[getLv(nw)].n);
   updXP();
@@ -3813,7 +3816,7 @@ const EMAIL_TEMPLATES=[
   {id:'et5',title:'Declining Politely',level:'B1-B2',lines:['Dear [NAME],','','Thank you very much for your kind invitation to [EVENT] on [DATE].','','Unfortunately, I am unable to attend on this occasion due to a prior commitment. I am sorry for any inconvenience.','','I hope the event is a great success, and I look forward to meeting at a future occasion.','','Kind regards,','[YOUR NAME]']},
 ];
 
-function rWriting(){
+function rWriting(){unlockAch('wr1');
   const el=document.getElementById('writing');
   if(!WST.topic){
     el.innerHTML=`<div class="sec fu">
@@ -6171,6 +6174,8 @@ function rHome(){
 
 
     <!-- ADAPTIVE REC -->
+    ${typeof getLearningPathHTML==='function'?getLearningPathHTML():''}
+
     ${(()=>{try{const top=getAdaptiveRecommendation()[0];if(!top)return '';return '<div onclick="'+top.action+'" style="background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.2);border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:10px"><div class="f12 b" style="color:var(--bl)">🧠 '+top.msg+'</div><span class="btn bp bsm">Πάμε →</span></div>';}catch(e){return '';}})()}
 
   </div>`;
@@ -6526,6 +6531,11 @@ function getAdaptiveRecommendation(){
 }
 
 
+// ══ SERVICE WORKER ══
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/english-learning-app/sw.js').catch(()=>{});
+}
+
 // ══ APP INITIALIZATION ══
 function initApp(){
   // Apply theme
@@ -6568,6 +6578,67 @@ window.addEventListener('load', function(){
     initApp();
   }
 });
+
+/* ══ AI WRITING FEEDBACK ══ */
+async function getAIWritingFeedback(){
+  if(!hasAPIKey()){showAPIKeyModal();return;}
+  const text=document.getElementById('wptx')?.value?.trim();
+  if(!text||text.length<20){toast('Γράψε τουλάχιστον μια πρόταση!','var(--am)');return;}
+  const btn=document.getElementById('ai-write-btn');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Αναλύω...';}
+  DB.set('writing_count',(DB.get('writing_count',0))+1);
+  unlockAch('wr1');addXP(20);
+  try{
+    const result=await callAI('You are an English teacher. Analyze this text written by a Greek learner and give feedback in Greek (grammar, vocabulary, style). Be encouraging. Max 150 words.\n\nText: '+text);
+    const fb=document.getElementById('write-feedback');
+    if(fb){fb.innerHTML='<div class="card c-info mt10"><div class="sl mb6 cbl">🤖 AI Feedback</div><div class="f12 c2" style="line-height:1.8">'+result+'</div></div>';}
+  }catch(e){toast('Σφάλμα AI','var(--ro)');}
+  if(btn){btn.disabled=false;btn.textContent='🤖 AI Feedback';}
+}
+
+async function improveEmail(){
+  if(!hasAPIKey()){showAPIKeyModal();return;}
+  const text=document.getElementById('email-text')?.value?.trim();
+  if(!text){toast('Γράψε κάτι πρώτα!','var(--am)');return;}
+  try{
+    const result=await callAI('Improve this email to be more professional and natural in English. Show the improved version only, no explanations.\n\n'+text);
+    const out=document.getElementById('email-output');
+    if(out){out.innerHTML='<div class="card mt10"><div class="sl mb6 cgr">✓ Improved Version</div><div class="f13" style="line-height:1.8;white-space:pre-wrap">'+result+'</div></div>';}
+  }catch(e){toast('Σφάλμα AI','var(--ro)');}
+}
+
+async function sendConvMsg(){
+  if(!hasAPIKey()){showAPIKeyModal();return;}
+  const input=document.getElementById('conv-input');
+  if(!input||!input.value.trim()||CONVST.loading)return;
+  const userText=input.value.trim();
+  input.value='';
+  CONVST.history.push({role:'user',content:userText});
+  CONVST.turn++;CONVST.loading=true;
+  rAIConversation();
+  const sc=CONV_SCENARIOS?.find(x=>x.id===CONVST.scenario);
+  const sys=sc?'You are a conversation partner. Scenario: '+sc.title+'. Respond naturally in English. After 6 turns, give brief feedback in Greek.':'You are a helpful English conversation partner.';
+  try{
+    const msgs=CONVST.history.map(m=>({role:m.role,content:m.content}));
+    const result=await callAI(userText,sys,msgs.slice(-6));
+    CONVST.history.push({role:'assistant',content:result});
+    CONVST.loading=false;
+    if(CONVST.turn>=6){unlockAch('ai1');CONVST.done=true;}
+    rAIConversation();
+  }catch(e){CONVST.loading=false;toast('Σφάλμα AI','var(--ro)');}
+}
+
+function rpSend(){
+  if(!hasAPIKey()){showAPIKeyModal();return;}
+  const input=document.getElementById('rp-input');
+  if(!input||!input.value.trim()||RPST.loading)return;
+  const userText=input.value.trim();input.value='';
+  RPST.history.push({role:'user',content:userText});
+  RPST.loading=true;rRoleplay();
+  callAI(userText,'You are roleplaying as: '+RPST.scenario+'. Stay in character. Respond in English.',RPST.history.slice(-6))
+    .then(r=>{RPST.history.push({role:'assistant',content:r});RPST.loading=false;rRoleplay();})
+    .catch(()=>{RPST.loading=false;toast('Σφάλμα AI','var(--ro)');});
+}
 </script>
 </body>
 </html>
