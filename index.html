@@ -656,15 +656,43 @@ const DB={
 
 /* ══ SPEECH API ══ */
 function speak(text,lang='en-GB'){
+  // Android native TTS bridge (most reliable on APK)
+  if(window.AndroidTTS){
+    window.AndroidTTS.speak(text);
+    return;
+  }
+  // Web Speech API (browser / PWA)
   if(!window.speechSynthesis)return;
   window.speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(text);
-  u.lang=lang;u.rate=0.85;u.pitch=1;
-  // Try to find a good English voice
+  u.lang=lang;u.rate=0.85;u.pitch=1;u.volume=1;
+
+  function doSpeak(){
+    const voices=window.speechSynthesis.getVoices();
+    if(voices.length>0){
+      const en=voices.find(v=>v.lang.startsWith('en-GB'))
+        ||voices.find(v=>v.lang.startsWith('en-US'))
+        ||voices.find(v=>v.lang.startsWith('en'))
+        ||voices[0];
+      if(en)u.voice=en;
+    }
+    window.speechSynthesis.speak(u);
+  }
+
   const voices=window.speechSynthesis.getVoices();
-  const en=voices.find(v=>v.lang.startsWith('en-GB'))||voices.find(v=>v.lang.startsWith('en'));
-  if(en)u.voice=en;
-  window.speechSynthesis.speak(u);
+  if(voices.length>0){
+    doSpeak();
+  } else {
+    window.speechSynthesis.onvoiceschanged=()=>{
+      window.speechSynthesis.onvoiceschanged=null;
+      doSpeak();
+    };
+    setTimeout(()=>{
+      if(!window.speechSynthesis.speaking&&!window.speechSynthesis.pending){
+        doSpeak();
+      }
+    },500);
+  }
 }
 
 
@@ -4045,7 +4073,7 @@ const READINGS=[
      {q:'What mechanism links social media to negative mental health outcomes?',opts:['Addiction to notifications','Unfavourable social comparisons from curated images','Too much screen time generally','Lack of real-life friends'],a:'Unfavourable social comparisons from curated images',ex:'"seeing carefully curated images of others lives can generate feelings of inadequacy and low self-worth"'},
      {q:'What is the positive aspect of social media for isolated individuals?',opts:['It replaces real friendships','It provides entertainment','It provides a vital sense of belonging','It improves physical health'],a:'It provides a vital sense of belonging',ex:'"For individuals in isolated circumstances, online communities can provide a vital sense of belonging"'},
      {q:'What approach do experts recommend?',opts:['Complete avoidance of social media','Mindful use with clear limits and active engagement','Using only one platform','Only using social media for work'],a:'Mindful use with clear limits and active engagement',ex:'"Experts recommend a mindful approach rather than complete abstinence. Setting clear time limits... actively engaging rather than passively consuming"'},
-   ]},,
+   ]},
   {id:'r9',t:'Aviation Safety Management',lv:'B1',col:'var(--bl)',time:'6 min',
    vocab:['safety management','risk assessment','corrective action','compliance','mitigation'],
    text:'Aviation safety is not the absence of accidents — it is the active management of risk. Every airline and CAMO must maintain a Safety Management System (SMS), which identifies hazards before they become incidents. The process involves four key steps: hazard identification, risk assessment, risk mitigation, and performance monitoring. When a defect or near-miss occurs, a corrective action is raised and tracked until it is closed. Regulators such as EASA and HCAA require evidence that organisations are not only identifying problems, but also learning from them. The goal is a just culture — one where people report issues without fear of punishment, so that systemic problems can be addressed before they cause harm.',
@@ -4127,8 +4155,8 @@ function rReading(){
       <div class="fp f16 b mb4" style="color:${a.col}">${a.t}</div>
       ${a.vocab.length?`<div class="card c-ok mb12 fx ac g8 fw"><span class="f10 c2">💡 Κλικ για αποθήκευση στο Vocabular:</span>${a.vocab.map(v=>`<button onclick="saveFromR('${v}')" style="padding:3px 9px;border-radius:20px;border:1px solid var(--gr)44;background:var(--gr)1a;color:var(--gr);font-size:10px;font-weight:600;cursor:pointer">+ ${v}</button>`).join('')}</div>`:''}
       <div class="fx ac g8 mb8">
-        <button onclick="speak(a.t+'. '+a.text.replace(/<[^>]+>/g,''),'en-GB')" style="padding:4px 12px;background:none;border:1px solid var(--tl)44;border-radius:20px;color:var(--tl);font-size:11px;cursor:pointer">🔊 Άκουσε το κείμενο</button>
-        <button onclick="saveSentence(a.text.replace(/<[^>]+>/g,'').substring(0,200),'Reading '+a.t,'');toast('📌 Αποθηκεύτηκε στο Sentence Mining!','var(--gr)')" style="padding:4px 12px;background:none;border:1px solid var(--vi)44;border-radius:20px;color:var(--vi);font-size:11px;cursor:pointer">📌 Αποθήκευσε</button>
+        <button onclick="speakCurrentReading()" style="padding:4px 12px;background:none;border:1px solid var(--tl)44;border-radius:20px;color:var(--tl);font-size:11px;cursor:pointer">🔊 Άκουσε το κείμενο</button>
+        <button onclick="saveCurrentReading()" style="padding:4px 12px;background:none;border:1px solid var(--vi)44;border-radius:20px;color:var(--vi);font-size:11px;cursor:pointer">📌 Αποθήκευσε</button>
       </div>
       <div class="card mb20 rbody">${a.text}</div>
       <div class="sl mb12">COMPREHENSION QUESTIONS</div>
@@ -4560,9 +4588,21 @@ function rSpeaking(){
     }
 
   } else if(SPST.tab==='aiconv'){
-    CONVST.scenario=null;rAIConversation();return;
+    el.innerHTML=`<div class="sec fu" style="max-width:840px">
+    <div class="sl mb4" style="color:var(--gr)">SPEAKING</div>
+    <div class="fp f16 b mb16">Ομιλία & Προφορά</div>
+    <div class="fx mb16" style="border-bottom:1px solid var(--ln)">${tabs}</div>
+    <div class="vm" style="min-height:400px"></div>
+    </div>`;
+    rAIConversation();return;
   } else if(SPST.tab==='roleplay'){
-    RPST.scenario=null;rRoleplay();return;
+    el.innerHTML=`<div class="sec fu" style="max-width:840px">
+    <div class="sl mb4" style="color:var(--gr)">SPEAKING</div>
+    <div class="fp f16 b mb16">Ομιλία & Προφορά</div>
+    <div class="fx mb16" style="border-bottom:1px solid var(--ln)">${tabs}</div>
+    <div class="vm" style="min-height:400px"></div>
+    </div>`;
+    rRoleplay();return;
   } else if(SPST.tab==='simulator'){
     const simDiv=document.createElement('div');
     rSimulator(simDiv);
@@ -7130,6 +7170,19 @@ function resetAllProgress(){
   VS={mode:'all',cat:'all',search:'',sbOpen:true,q:{mode:'mixed',sess:[],idx:0,res:[],fl:false,opts:[],sel:-1,fill:'',fd:false}};
   toast('✅ Πρόοδος επαναφέρθηκε!','var(--gr)');
   go('home');
+}
+
+/* ══ READING HELPERS ══ */
+function speakCurrentReading(){
+  const a=READINGS.find(x=>x.id===RST.art);
+  if(!a)return;
+  speak((a.t+'. '+a.text.replace(/<[^>]+>/g,'')).substring(0,500),'en-GB');
+}
+function saveCurrentReading(){
+  const a=READINGS.find(x=>x.id===RST.art);
+  if(!a)return;
+  saveSentence(a.text.replace(/<[^>]+>/g,'').substring(0,200));
+  toast('Αποθηκεύτηκε!','var(--gr)');
 }
 </script>
 </body>
