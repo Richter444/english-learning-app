@@ -718,7 +718,11 @@ function hasAPIKey(){
 
 async function callAI(promptOrUser, systemOrExtra, messagesOrTokens){
   const key = getAPIKey();
-  if(!key){ showAPIKeyModal(); throw new Error('NO_API_KEY'); }
+  if(!key){
+    toast('⚠ Δεν έχεις API Key — πήγαινε στα Settings για να το προσθέσεις.','var(--am)');
+    setTimeout(()=>go('settings'),1500);
+    throw new Error('NO_API_KEY');
+  }
 
   // Support two call styles:
   // Style A (simple): callAI(userPrompt) or callAI(userPrompt, systemPrompt)
@@ -760,12 +764,20 @@ async function callAI(promptOrUser, systemOrExtra, messagesOrTokens){
   });
 
   if(!response.ok){
-    const err = await response.json().catch(()=>({error:{message:'Unknown error'}}));
     if(response.status===401){
       showAPIKeyModal('invalid');
       throw new Error('INVALID_KEY');
     }
-    throw new Error(err.error?.message||'API error '+response.status);
+    if(response.status===429){
+      throw new Error('Έχεις εξαντλήσει το usage limit. Δοκίμασε σε λίγη ώρα.');
+    }
+    let errMsg='API error '+response.status;
+    try{
+      const err=await response.json();
+      if(err.type==='exceeded_limit')errMsg='Usage limit εξαντλήθηκε. Επαναφέρεται σε λίγες ώρες.';
+      else errMsg=err.error?.message||errMsg;
+    }catch{}
+    throw new Error(errMsg);
   }
 
   const data = await response.json();
@@ -6528,7 +6540,7 @@ function showLeaderboard(){
 
 /* ══ ERROR ANALYSIS ══ */
 function runErrorAnalysis(){
-  if(!hasAPIKey()){showAPIKeyModal();return;}
+  if(!hasAPIKey()){toast('⚠ Χρειάζεσαι API Key — πήγαινε στα ⚙ Settings.','var(--am)');setTimeout(()=>go('settings'),1500);return;}
   const errors=DB.get('errors',{});
   const allW=getAllW();
   const errWords=allW.filter(w=>errors[w.id]?.count>=2).sort((a,b)=>(errors[b.id]?.count||0)-(errors[a.id]?.count||0)).slice(0,5);
@@ -6696,7 +6708,7 @@ window.addEventListener('load', function(){
 
 /* ══ AI WRITING FEEDBACK ══ */
 async function getAIWritingFeedback(){
-  if(!hasAPIKey()){showAPIKeyModal();return;}
+  if(!hasAPIKey()){toast('⚠ Χρειάζεσαι API Key — πήγαινε στα ⚙ Settings.','var(--am)');setTimeout(()=>go('settings'),1500);return;}
   const ta=document.getElementById('wptx')
     ||document.querySelector('#writing textarea');
   const text=ta?.value?.trim();
@@ -6742,13 +6754,14 @@ Be specific - quote the EXACT text that is wrong. Max 200 words.`;
     toast('+'+xpBonus+' XP για το γράψιμο!','var(--am)');
   }catch(e){
     if(fb)fb.innerHTML='';
-    toast('Σφάλμα AI: '+e.message,'var(--ro)');
+    const msg=e.message.startsWith('{')?'Σφάλμα API — δοκίμασε σε λίγο':e.message;
+    toast('⚠ '+msg,'var(--am)');
   }
   if(btn){btn.disabled=false;btn.textContent='🤖 AI Feedback';}
 }
 
 async function improveEmail(){
-  if(!hasAPIKey()){showAPIKeyModal();return;}
+  if(!hasAPIKey()){toast('⚠ Χρειάζεσαι API Key — πήγαινε στα ⚙ Settings.','var(--am)');setTimeout(()=>go('settings'),1500);return;}
   const text=document.getElementById('email-text')?.value?.trim();
   if(!text){toast('Γράψε κάτι πρώτα!','var(--am)');return;}
   try{
@@ -6759,7 +6772,7 @@ async function improveEmail(){
 }
 
 async function sendConvMsg(){
-  if(!hasAPIKey()){showAPIKeyModal();return;}
+  if(!hasAPIKey()){toast('⚠ Χρειάζεσαι API Key — πήγαινε στα ⚙ Settings.','var(--am)');setTimeout(()=>go('settings'),1500);return;}
   const input=document.getElementById('conv-input');
   if(!input||!input.value.trim()||CONVST.loading)return;
   const userText=input.value.trim();
@@ -6783,16 +6796,17 @@ async function sendConvMsg(){
     if(CONVST.turn>=6){unlockAch('ai1');CONVST.done=true;}
     rAIConversation();
   }catch(e){
-    CONVST.history.pop(); // remove failed user message
+    CONVST.history.pop();
     CONVST.turn--;
     CONVST.loading=false;
-    toast('Σφάλμα AI: '+e.message,'var(--ro)');
+    const msg=e.message.startsWith('{')||e.message.length>80?'Σφάλμα API — δοκίμασε σε λίγο':e.message;
+    toast('⚠ '+msg,'var(--am)');
     rAIConversation();
   }
 }
 
 function rpSend(){
-  if(!hasAPIKey()){showAPIKeyModal();return;}
+  if(!hasAPIKey()){toast('⚠ Χρειάζεσαι API Key — πήγαινε στα ⚙ Settings.','var(--am)');setTimeout(()=>go('settings'),1500);return;}
   const input=document.getElementById('rp-input');
   if(!input||!input.value.trim()||RPST.loading)return;
   const userText=input.value.trim();
@@ -7069,7 +7083,7 @@ function rAIConversation(){
   const sp=document.querySelector('#speaking .vm');
   if(!sp)return;
   if(!hasAPIKey()){
-    sp.innerHTML='<div style="text-align:center;padding:40px 20px"><div style="font-size:48px;margin-bottom:16px">🤖</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">AI Conversation</div><div style="font-size:13px;color:var(--t3);margin-bottom:20px">Χρειάζεσαι API Key.</div><button onclick="showAPIKeyModal()" class="btn bp">🔑 API Key</button></div>';
+    sp.innerHTML='<div style="text-align:center;padding:40px 20px"><div style="font-size:48px;margin-bottom:16px">🤖</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">AI Conversation</div><div style="font-size:13px;color:var(--t3);margin-bottom:20px">Χρειάζεσαι API Key.</div><button onclick="go(&quot;settings&quot;)" class="btn bp">⚙ Πήγαινε στα Settings</button></div>';
     return;
   }
   if(CONVST.scenario===null){
@@ -7149,7 +7163,7 @@ function rRoleplay(){
   const sp=document.querySelector('#speaking .vm');
   if(!sp)return;
   if(!hasAPIKey()){
-    sp.innerHTML='<div style="text-align:center;padding:40px 20px"><div style="font-size:48px;margin-bottom:16px">🎭</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">Roleplay</div><div style="font-size:13px;color:var(--t3);margin-bottom:20px">Χρειάζεσαι API Key.</div><button onclick="showAPIKeyModal()" class="btn bp">🔑 API Key</button></div>';
+    sp.innerHTML='<div style="text-align:center;padding:40px 20px"><div style="font-size:48px;margin-bottom:16px">🎭</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">Roleplay</div><div style="font-size:13px;color:var(--t3);margin-bottom:20px">Χρειάζεσαι API Key.</div><button onclick="go(&quot;settings&quot;)" class="btn bp">⚙ Πήγαινε στα Settings</button></div>';
     return;
   }
   if(!RPST.scenario){
@@ -7369,6 +7383,19 @@ function downloadFile(content, filename, mime){
       toast('📋 Αντιγράφηκε στο clipboard!','var(--gr)');
     }
   }
+}
+
+function saveAPIKeyFromSettings(){
+  const inp=document.getElementById('settings-api-input');
+  if(!inp)return;
+  const key=inp.value.trim();
+  if(!key||!key.startsWith('sk-ant')){
+    toast('Το key πρέπει να αρχίζει με sk-ant-...','var(--ro)');
+    return;
+  }
+  DB.set('anthropic_key',key);
+  toast('✅ API Key αποθηκεύτηκε! Τα AI features είναι τώρα διαθέσιμα.','var(--gr)');
+  rSettings();
 }
 </script>
 </body>
