@@ -658,7 +658,17 @@ const DB={
 function speak(text,lang='en-GB'){
   if(!text||!text.trim())return;
   // Android native TTS bridge
-  if(window.AndroidTTS){try{window.AndroidTTS.speak(text.substring(0,300));}catch(e){}return;}
+  if(window.AndroidTTS){
+    try{
+      if(window.AndroidTTS.isReady&&!window.AndroidTTS.isReady()){
+        // TTS not ready yet - retry after 1s
+        setTimeout(()=>speak(text,lang),1000);
+        return;
+      }
+      window.AndroidTTS.speak(text.substring(0,400));
+    }catch(e){console.log('TTS error:',e);}
+    return;
+  }
   // Web Speech API
   if(!window.speechSynthesis)return;
   try{
