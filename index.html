@@ -657,46 +657,40 @@ const DB={
 /* ══ SPEECH API ══ */
 function speak(text,lang='en-GB'){
   if(!text||!text.trim())return;
-  // Android native TTS bridge (most reliable on APK)
-  if(window.AndroidTTS){
-    window.AndroidTTS.speak(text.substring(0,300));
-    return;
-  }
-  // Web Speech API (browser / PWA)
-  if(!window.speechSynthesis){
-    toast('Η προφορά δεν υποστηρίζεται σε αυτή τη συσκευή','var(--am)');
-    return;
-  }
-  window.speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text);
-  u.lang=lang;u.rate=0.85;u.pitch=1;u.volume=1;
-
-  function doSpeak(){
-    const voices=window.speechSynthesis.getVoices();
-    if(voices.length>0){
-      const en=voices.find(v=>v.lang.startsWith('en-GB'))
-        ||voices.find(v=>v.lang.startsWith('en-US'))
-        ||voices.find(v=>v.lang.startsWith('en'))
-        ||voices[0];
-      if(en)u.voice=en;
-    }
-    window.speechSynthesis.speak(u);
-  }
-
-  const voices=window.speechSynthesis.getVoices();
-  if(voices.length>0){
-    doSpeak();
-  } else {
-    window.speechSynthesis.onvoiceschanged=()=>{
-      window.speechSynthesis.onvoiceschanged=null;
-      doSpeak();
-    };
-    setTimeout(()=>{
-      if(!window.speechSynthesis.speaking&&!window.speechSynthesis.pending){
-        doSpeak();
-      }
-    },500);
-  }
+  // Android native TTS bridge
+  if(window.AndroidTTS){try{window.AndroidTTS.speak(text.substring(0,300));}catch(e){}return;}
+  // Web Speech API
+  if(!window.speechSynthesis)return;
+  try{
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text.substring(0,400));
+    u.lang=lang;u.rate=0.85;u.pitch=1;u.volume=1;
+    // Non-blocking voice selection
+    requestAnimationFrame(()=>{
+      try{
+        const voices=window.speechSynthesis.getVoices();
+        if(voices.length){
+          const en=voices.find(v=>v.lang.startsWith('en-GB'))
+            ||voices.find(v=>v.lang.startsWith('en-US'))
+            ||voices.find(v=>v.lang.startsWith('en'));
+          if(en)u.voice=en;
+          window.speechSynthesis.speak(u);
+        } else {
+          // Wait for voices to load
+          window.speechSynthesis.onvoiceschanged=function(){
+            this.onvoiceschanged=null;
+            const vs=window.speechSynthesis.getVoices();
+            const en=vs.find(v=>v.lang.startsWith('en-GB'))||vs.find(v=>v.lang.startsWith('en'))||vs[0];
+            if(en)u.voice=en;
+            window.speechSynthesis.speak(u);
+          };
+          setTimeout(()=>{
+            if(!window.speechSynthesis.speaking)window.speechSynthesis.speak(u);
+          },600);
+        }
+      }catch(e){}
+    });
+  }catch(e){}
 }
 
 
@@ -829,7 +823,11 @@ function saveAPIKey(){
   }
   DB.set('anthropic_key',key);
   document.getElementById('apikey-modal')?.remove();
-  toast('✓ API Key αποθηκεύτηκε! Τώρα μπορείς να χρησιμοποιήσεις τα AI features.','var(--gr)');
+  toast('✓ API Key αποθηκεύτηκε!','var(--gr)');
+  // Re-render current panel so AI features activate immediately
+  if(SPST.tab==='aiconv') rAIConversation();
+  else if(SPST.tab==='roleplay') rRoleplay();
+  else if(document.getElementById('writing')?.style.display!=='none') rWriting();
 }
 
 /* ══ PWA ══ */
@@ -1627,7 +1625,7 @@ function rVAll(el){
           <span class="f9" style="color:${s.sc>=3?'var(--gr)':s.sc>=1?'var(--am)':'var(--t3)'}" title="Βαθμός εκμάθησης: ${s.sc>=3?'Εκμαθημένη ✓':s.sc>=1?'Σε πρόοδο':'Νέα λέξη'}">${s.sc>=3?'⭐'.repeat(Math.min(s.sc,3)):s.sc>=1?'○'.repeat(s.sc)+'◉':'◯'} ${s.sc>=3?'Εκμαθημένη':s.sc>=1?s.sc+'/5':'Νέα'}</span>
           <button onclick="speak('${w.w.split(' → ')[0]}')" class="tag f9" style="background:var(--tl)1a;border:1px solid var(--tl)33;color:var(--tl);cursor:pointer">🔊</button>
           <a href="https://youglish.com/pronounce/${encodeURIComponent(w.w.split(' ')[0])}/english" target="_blank" class="tag f9" style="background:var(--bl)1a;border:1px solid var(--bl)33;color:var(--bl);text-decoration:none">YG</a>
-          ${speechSupported()?`<button onclick="showPronunciationInListeningState(document.createElement('div'),'${w.w.replace(/'/g,"\'")}','${w.g.replace(/'/g,"\'")}',null);let m=document.createElement('div');m.id='pron-modal';m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px';document.body.appendChild(m);showPronunciationInListeningState(m,'${w.w.replace(/'/g,"\'")}','${w.g.replace(/'/g,"\'")}',null)" class="tag f9" style="background:var(--ro)1a;border:1px solid var(--ro)33;color:var(--ro);cursor:pointer">🎤</button>`:''}
+
           ${getWordNetwork(w.w)?'<button onclick="showWordNetwork(\''+w.w.split(' ')[0]+'\')" class="tag f9" style="background:var(--vi)1a;border:1px solid var(--vi)33;color:var(--vi);cursor:pointer">🕸</button>':''}
         </div>
         <div class="fx ac jb mt8">
@@ -6959,12 +6957,10 @@ function disableNotifications(){
   toast('Ειδοποιήσεις απενεργοποιήθηκαν','var(--t3)');
 }
 
-function showPronunciationInListeningState(word){
-  if(speechSupported()&&word){
-    const u=new SpeechSynthesisUtterance(word);
-    u.lang='en-US';u.rate=0.85;
-    speechSynthesis.speak(u);
-  }
+function showPronunciationInListeningState(wordOrEl, word){
+  // Handle both old (modal, word) and new (word) call signatures
+  const text = typeof wordOrEl==='string' ? wordOrEl : (word||'');
+  if(text) speak(text,'en-US');
 }
 
 function showWeeklySummary(){
@@ -7026,7 +7022,15 @@ function rAIConversation(){
       const btn=document.createElement('button');
       btn.style.cssText='padding:16px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;text-align:left;transition:all .15s';
       btn.innerHTML='<div style="font-size:24px;margin-bottom:8px">'+s.ic+'</div><div style="font-size:13px;font-weight:600;margin-bottom:4px">'+s.title+'</div><div style="font-size:11px;color:var(--t3)">'+s.desc+'</div>';
-      btn.onclick=()=>{CONVST.scenario=s.id;CONVST.history=[];CONVST.turn=0;CONVST.done=false;rAIConversation();};
+      btn.onclick=()=>{
+        CONVST.scenario=s.id;CONVST.history=[];CONVST.turn=0;CONVST.done=false;CONVST.loading=true;
+        rAIConversation();
+        if(!hasAPIKey()){return;}
+        const greetSys='You are a friendly English conversation partner. Scenario: '+s.title+'. Start with a natural greeting in English (1-2 sentences only).';
+        callAI('Hello, lets start!',greetSys,[])
+          .then(r=>{CONVST.history.push({role:'assistant',content:r});CONVST.loading=false;rAIConversation();})
+          .catch(()=>{CONVST.loading=false;rAIConversation();});
+      };
       grid.appendChild(btn);
     });
     return;
@@ -7092,7 +7096,15 @@ function rRoleplay(){
       const btn=document.createElement('button');
       btn.style.cssText='padding:14px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s';
       btn.textContent=r;
-      btn.onclick=()=>{RPST.scenario=r;RPST.history=[];rpSend();};
+      btn.onclick=()=>{
+        RPST.scenario=r;RPST.history=[];RPST.loading=true;
+        rRoleplay();
+        if(!hasAPIKey()){return;}
+        const rpSys='You are roleplaying as a '+r+'. Start the roleplay with a natural opening line in English (1-2 sentences only).';
+        callAI('Hello.',rpSys,[])
+          .then(res=>{RPST.history.push({role:'assistant',content:res});RPST.loading=false;rRoleplay();})
+          .catch(()=>{RPST.loading=false;rRoleplay();});
+      };
       grid.appendChild(btn);
     });
     return;
