@@ -656,13 +656,17 @@ const DB={
 
 /* ══ SPEECH API ══ */
 function speak(text,lang='en-GB'){
+  if(!text||!text.trim())return;
   // Android native TTS bridge (most reliable on APK)
   if(window.AndroidTTS){
-    window.AndroidTTS.speak(text);
+    window.AndroidTTS.speak(text.substring(0,300));
     return;
   }
   // Web Speech API (browser / PWA)
-  if(!window.speechSynthesis)return;
+  if(!window.speechSynthesis){
+    toast('Η προφορά δεν υποστηρίζεται σε αυτή τη συσκευή','var(--am)');
+    return;
+  }
   window.speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(text);
   u.lang=lang;u.rate=0.85;u.pitch=1;u.volume=1;
@@ -708,12 +712,33 @@ function hasAPIKey(){
   return !!getAPIKey();
 }
 
-async function callAI(systemPrompt, userContent, maxTokens=800){
+async function callAI(promptOrUser, systemOrExtra, messagesOrTokens){
   const key = getAPIKey();
-  if(!key){
-    showAPIKeyModal();
-    throw new Error('NO_API_KEY');
+  if(!key){ showAPIKeyModal(); throw new Error('NO_API_KEY'); }
+
+  // Support two call styles:
+  // Style A (simple): callAI(userPrompt) or callAI(userPrompt, systemPrompt)
+  // Style B (conversation): callAI(userText, systemPrompt, historyArray)
+  let system = 'You are a helpful English learning assistant.';
+  let messages = [];
+  let maxTokens = 800;
+
+  if(Array.isArray(messagesOrTokens)){
+    // Style B: conversation with history
+    system = systemOrExtra || system;
+    const history = messagesOrTokens;
+    messages = [...history, {role:'user', content: promptOrUser}];
+  } else if(typeof messagesOrTokens === 'number'){
+    // Style A with custom maxTokens
+    system = systemOrExtra || system;
+    messages = [{role:'user', content: promptOrUser}];
+    maxTokens = messagesOrTokens;
+  } else {
+    // Style A: simple prompt
+    system = systemOrExtra || system;
+    messages = [{role:'user', content: promptOrUser}];
   }
+
   const response = await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
     headers:{
@@ -725,8 +750,8 @@ async function callAI(systemPrompt, userContent, maxTokens=800){
     body:JSON.stringify({
       model:'claude-haiku-4-5-20251001',
       max_tokens: maxTokens,
-      system: systemPrompt,
-      messages:[{role:'user',content: userContent}]
+      system: system,
+      messages: messages
     })
   });
 
