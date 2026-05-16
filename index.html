@@ -6801,7 +6801,7 @@ function showWordNetwork(wordId){
   m.innerHTML='<div style="background:var(--s1);border-radius:16px;padding:24px;max-width:400px;width:100%">'
     +'<div style="font-size:16px;font-weight:700;margin-bottom:16px">🔗 '+w.w+' — Word Network</div>'
     +related
-    +'<button onclick="closeTopModal()" style="margin-top:16px;padding:8px 20px;background:var(--bl);border-radius:8px;color:#fff;cursor:pointer;border:none;width:100%">Κλείσιμο</button>'
+    +'<button onclick="document.getElementById(\'wn-modal\').remove()" style="margin-top:16px;padding:8px 20px;background:var(--bl);border-radius:8px;color:#fff;cursor:pointer;border:none;width:100%">Κλείσιμο</button>'
     +'</div>';
   document.body.appendChild(m);
 }
