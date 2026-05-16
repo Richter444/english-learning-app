@@ -762,7 +762,6 @@ async function callAI(promptOrUser, systemOrExtra, messagesOrTokens){
   if(!response.ok){
     const err = await response.json().catch(()=>({error:{message:'Unknown error'}}));
     if(response.status===401){
-      DB.set('anthropic_key','');
       showAPIKeyModal('invalid');
       throw new Error('INVALID_KEY');
     }
@@ -1108,7 +1107,11 @@ function go(id){
 
 function showMobileMenu(){
   const el=document.getElementById('mobile-more');
-  if(el)el.style.display='flex';
+  if(!el)return;
+  el.style.display='flex';
+  el.style.zIndex='9990';
+  // Force repaint for Android WebView
+  el.getBoundingClientRect();
 }
 function hideMobileMenu(){
   const el=document.getElementById('mobile-more');
@@ -6534,6 +6537,7 @@ function runErrorAnalysis(){
   const prompt='You are an English teacher. Briefly analyze why a Greek learner makes mistakes with these words and give tips in Greek (max 120 words): '+wordList;
   callAI(prompt,'Ανάλυση λαθών...').then(result=>{
     const m=document.createElement('div');
+    m.id='error-analysis-modal';
     m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9997;display:flex;align-items:center;justify-content:center;padding:20px';
     m.onclick=(e)=>{if(e.target===m)m.remove();};
     m.innerHTML='<div style="background:var(--s1);border-radius:16px;padding:24px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto">'
@@ -6693,17 +6697,53 @@ window.addEventListener('load', function(){
 /* ══ AI WRITING FEEDBACK ══ */
 async function getAIWritingFeedback(){
   if(!hasAPIKey()){showAPIKeyModal();return;}
-  const text=document.getElementById('wptx')?.value?.trim();
-  if(!text||text.length<20){toast('Γράψε τουλάχιστον μια πρόταση!','var(--am)');return;}
-  const btn=document.getElementById('ai-write-btn');
+  const ta=document.getElementById('wptx')
+    ||document.querySelector('#writing textarea');
+  const text=ta?.value?.trim();
+  if(!text||text.length<10){toast('Γράψε τουλάχιστον μια πρόταση!','var(--am)');return;}
+
+  // Update button state
+  const btn=document.getElementById('ai-feedback-btn');
   if(btn){btn.disabled=true;btn.textContent='⏳ Αναλύω...';}
-  DB.set('writing_count',(DB.get('writing_count',0))+1);
-  unlockAch('wr1');addXP(20);
+
+  // Show loading in result area
+  const fb=document.getElementById('ai-feedback-result');
+  if(fb)fb.innerHTML='<div class="f12 c3" style="padding:12px;text-align:center">⏳ Αναλύω το κείμενό σου...</div>';
+
   try{
-    const result=await callAI('You are an English teacher. Analyze this text written by a Greek learner and give feedback in Greek (grammar, vocabulary, style). Be encouraging. Max 150 words.\n\nText: '+text);
-    const fb=document.getElementById('write-feedback');
-    if(fb){fb.innerHTML='<div class="card c-info mt10"><div class="sl mb6 cbl">🤖 AI Feedback</div><div class="f12 c2" style="line-height:1.8">'+result+'</div></div>';}
-  }catch(e){toast('Σφάλμα AI','var(--ro)');}
+    const sys=`You are an experienced English teacher correcting a Greek learner's writing.
+Analyze the text and respond ONLY in Greek with this EXACT format:
+
+🔴 ΛΑΘΗ:
+• [Quote the EXACT wrong phrase] → Σωστό: [correct version] — [brief explanation in Greek]
+(List each error separately. If no errors: "Δεν βρέθηκαν λάθη! ✅")
+
+🟡 ΒΕΛΤΙΩΣΕΙΣ:
+• [Specific suggestion to improve style/vocabulary]
+• [Another suggestion if needed]
+
+🟢 ΒΑΘΜΟΣ: [X/10]
+[One encouraging sentence in Greek]
+
+Be specific - quote the EXACT text that is wrong. Max 200 words.`;
+
+    const result=await callAI(text, sys);
+    if(fb){
+      fb.innerHTML='<div style="background:var(--s2);border:1px solid var(--ln);border-radius:10px;padding:16px;margin-top:12px">'
+        +'<div style="font-size:12px;font-weight:700;color:var(--bl);margin-bottom:12px">🤖 AI Grammar Check</div>'
+        +'<div style="font-size:12px;color:var(--t2);line-height:1.9;white-space:pre-line">'+result+'</div>'
+        +'</div>';
+    }
+    // XP based on text quality (length proxy)
+    const xpBonus=Math.min(Math.floor(text.split(' ').length/3),25)+5;
+    addXP(xpBonus);
+    DB.set('writing_count',(DB.get('writing_count',0))+1);
+    unlockAch('wr1');
+    toast('+'+xpBonus+' XP για το γράψιμο!','var(--am)');
+  }catch(e){
+    if(fb)fb.innerHTML='';
+    toast('Σφάλμα AI: '+e.message,'var(--ro)');
+  }
   if(btn){btn.disabled=false;btn.textContent='🤖 AI Feedback';}
 }
 
@@ -6885,7 +6925,7 @@ function checkFill(){
 }
 
 function closeTopModal(){
-  const modals=['quick-modal','placement-modal','cefr-modal','il-modal','er-modal','onboard-modal'];
+  const modals=['quick-modal','placement-modal','cefr-modal','il-modal','er-modal','onboard-modal','error-analysis-modal','weekly-summary-modal','aviation-modal','wn-modal'];
   for(const id of modals){
     const m=document.getElementById(id);
     if(m){m.remove();return;}
@@ -6904,32 +6944,51 @@ function exportVocabCSV(){
     rows.push([w.w,w.g,w.e||'',w.cat,s.sc,s.seen||0]);
   });
   const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const blob=new Blob([csv],{type:'text/csv'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='vocabulary.csv';
-  a.click();
-  toast('✅ CSV εξαχθηκε!','var(--gr)');
+  downloadFile(csv,'vocabulary.csv','text/csv');
 }
 
 function exportLearnedCSV(){
   const words=learnedW();
+  if(!words.length){toast('Δεν υπάρχουν μαθημένες λέξεις ακόμα!','var(--am)');return;}
   const rows=[['Word','Greek','Example','Category']];
   words.forEach(w=>rows.push([w.w,w.g,w.e||'',w.cat]));
   const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const blob=new Blob([csv],{type:'text/csv'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='learned_words.csv';
-  a.click();
-  toast('✅ CSV εξαχθηκε!','var(--gr)');
+  downloadFile(csv,'learned_words.csv','text/csv');
 }
 
 function rAviation(){
-  if(typeof AVIATION_VOCAB==='undefined'){
-    toast('Aviation vocab δεν είναι διαθέσιμο','var(--am)');return;
-  }
-  VS.mode='all';VS.cat='aviation';rVocab();
+  // Show aviation readings + vocab in a modal
+  const aviationReadings=READINGS.filter(r=>r.t.toLowerCase().includes('aviation')||
+    ['r9','r10','r11','r12'].includes(r.id));
+  const m=document.createElement('div');
+  m.id='aviation-modal';
+  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9997;display:flex;align-items:center;justify-content:center;padding:20px';
+  m.onclick=(e)=>{if(e.target===m)m.remove();};
+  const cards=aviationReadings.map(r=>
+    '<div data-rid="'+r.id+'" style="padding:14px;background:var(--s2);border:1px solid rgba(79,142,247,.3);border-radius:10px;cursor:pointer;margin-bottom:8px">'
+    +'<div style="font-size:13px;font-weight:700;color:var(--bl)">'+r.t+'</div>'
+    +'<div style="font-size:11px;color:var(--t3);margin-top:4px">'+r.lv+' · '+r.time+'</div>'
+    +'</div>'
+  ).join('');
+  m.innerHTML='<div style="background:var(--s1);border-radius:16px;padding:24px;max-width:480px;width:100%;max-height:85vh;overflow-y:auto">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
+    +'<div style="font-size:16px;font-weight:700">✈ Aviation English</div>'
+    +'<button onclick="closeTopModal()" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:18px">✕</button>'
+    +'</div>'
+    +'<div style="font-size:12px;color:var(--t3);margin-bottom:16px">Aviation reading texts για CAMO & maintenance professionals</div>'
+    +cards
+    +'<button onclick="closeTopModal()" style="width:100%;margin-top:8px;padding:10px;background:var(--s3);border:1px solid var(--ln);border-radius:8px;color:var(--t2);cursor:pointer">Κλείσιμο</button>'
+    +'</div>';
+  document.body.appendChild(m);
+  // Event delegation for reading cards
+  m.querySelectorAll('[data-rid]').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const rid=el.dataset.rid;
+      m.remove();
+      RST.art=rid;RST.ra={};RST.rs=false;RST.rsc=null;
+      go('reading');
+    });
+  });
 }
 
 function rSentenceMining(){
@@ -6948,18 +7007,16 @@ function saveSentence(sentence){
 }
 
 function requestNotifications(){
-  if('Notification' in window){
-    Notification.requestPermission().then(p=>{
-      if(p==='granted'){
-        DB.set('notif_enabled',true);
-        toast('✅ Ειδοποιήσεις ενεργοποιήθηκαν!','var(--gr)');
-      } else {
-        toast('Οι ειδοποιήσεις δεν επιτράπηκαν','var(--am)');
-      }
-    });
+  // PWA notifications require HTTPS + service worker
+  // For APK: Android handles notifications natively
+  if(DB.get('notif_enabled',false)){
+    DB.set('notif_enabled',false);
+    toast('Ειδοποιήσεις απενεργοποιήθηκαν','var(--t3)');
   } else {
-    toast('Δεν υποστηρίζονται ειδοποιήσεις','var(--am)');
+    DB.set('notif_enabled',true);
+    toast('✅ Ειδοποιήσεις ενεργοποιήθηκαν! Άνοιξε την εφαρμογή κάθε μέρα για το streak σου.','var(--gr)');
   }
+  rSettings();
 }
 
 function disableNotifications(){
@@ -6990,13 +7047,14 @@ function showWeeklySummary(){
       +'</div>');
   }
   const m=document.createElement('div');
+  m.id='weekly-summary-modal';
   m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9997;display:flex;align-items:center;justify-content:center;padding:20px';
   m.onclick=(e)=>{if(e.target===m)m.remove();};
   m.innerHTML='<div style="background:var(--s1);border-radius:16px;padding:24px;max-width:400px;width:100%">'
     +'<div style="font-size:16px;font-weight:700;margin-bottom:4px">📊 Εβδομαδιαία Σύνοψη</div>'
     +'<div style="font-size:11px;color:var(--t3);margin-bottom:16px">'+days+'/7 ημέρες · '+totalXP+' XP σύνολο</div>'
     +rows.join('')
-    +'<button onclick="closeTopModal()" style="margin-top:16px;padding:10px;background:var(--bl);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none;width:100%">OK</button>'
+    +'<button onclick="document.getElementById(\'weekly-summary-modal\').remove()" style="margin-top:16px;padding:10px;background:var(--bl);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none;width:100%">OK</button>'
     +'</div>';
   document.body.appendChild(m);
 }
@@ -7273,6 +7331,44 @@ function saveCurrentReading(){
   if(!a)return;
   saveSentence(a.text.replace(/<[^>]+>/g,'').substring(0,200));
   toast('Αποθηκεύτηκε!','var(--gr)');
+}
+
+function exportAnki(){
+  const words=learnedW();
+  if(!words.length){toast('Δεν υπάρχουν μαθημένες λέξεις ακόμα!','var(--am)');return;}
+  const rows=['Front	Back	Tags'];
+  words.forEach(w=>{
+    const front=w.w+(w.e?' '+w.e:'');
+    const back=w.g;
+    const tags='EnglishMaster '+w.lv+' '+w.cat;
+    rows.push(front+'	'+back+'	'+tags);
+  });
+  downloadFile(rows.join('\n'),'EnglishMaster_Anki.txt','text/plain');
+}
+
+/* ══ FILE DOWNLOAD HELPER ══ */
+function downloadFile(content, filename, mime){
+  try{
+    // Try Blob URL first (most compatible)
+    const blob=new Blob([content],{type:mime+';charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=filename;a.style.display='none';
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);document.body.removeChild(a);},200);
+    toast('✅ '+filename+' αποθηκεύτηκε!','var(--gr)');
+  }catch(e){
+    // Fallback: copy to clipboard
+    const text=content;
+    if(navigator.clipboard){
+      navigator.clipboard.writeText(text).then(()=>toast('📋 Αντιγράφηκε! Επικόλλησε σε αρχείο .csv','var(--gr)'));
+    } else {
+      const ta=document.createElement('textarea');
+      ta.value=text;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);
+      toast('📋 Αντιγράφηκε στο clipboard!','var(--gr)');
+    }
+  }
 }
 </script>
 </body>
