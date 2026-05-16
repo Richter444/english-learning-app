@@ -4423,7 +4423,117 @@ const CONVERSATIONS=[
                "Maybe cut costs somewhere?"],correct:1,
       feedback:"✓ 'I would propose that we...' = formal suggestion. Specific and actionable."},
    ]},
-];
+,
+  {id:'cv4',title:'Ordering Coffee',level:'A2-B1',ic:'☕',
+   turns:[
+     {speaker:'Barista',text:'Hi there! What can I get for you today?',
+      options:['Can I get a large flat white, please?','Give me coffee.','I want the biggest one you have.'],correct:0},
+     {speaker:'Barista',text:'Sure! Would you like any sugar or syrup with that?',
+      options:['No thanks, I like it as it is.','No sugar please.','Just plain is fine, thank you.'],correct:2},
+     {speaker:'Barista',text:'That is three fifty. Would you like to pay by card?',
+      options:['Yes, contactless please.','Card is fine.','I have cash actually, here you go.'],correct:0},
+     {speaker:'Barista',text:'Your name for the order?',
+      options:['Just put Evan, thanks.','My name.','E-V-A-N, Evan please.'],correct:2},
+   ]},
+  {id:'cv5',title:'Small Talk — Weather',level:'A2-B1',ic:'🌤',
+   turns:[
+     {speaker:'Colleague',text:'Can you believe this weather? It has been raining all week!',
+      options:['I know, absolutely miserable, is not it?','Yes, rain.','It is very wet outside.'],correct:0},
+     {speaker:'Colleague',text:'I am desperate for some sunshine. Are you more of a summer or winter person?',
+      options:['Definitely summer — I love being outside.','Summer is better.','I prefer warm weather.'],correct:0},
+     {speaker:'Colleague',text:'Me too! Any holidays planned this year?',
+      options:['I am thinking about Greece in August — fingers crossed!','Maybe yes.','I want to travel somewhere warm.'],correct:0},
+   ]},
+  {id:'cv6',title:'At a Hotel',level:'B1',ic:'🏨',
+   turns:[
+     {speaker:'Receptionist',text:'Good evening! Welcome. Do you have a reservation?',
+      options:['Yes, I booked a room for two nights under Papadopoulos.','Yes I have booking.','I reserved a room.'],correct:0},
+     {speaker:'Receptionist',text:'Perfect. Would you prefer a room on a higher floor?',
+      options:['That would be great — the view is always nicer.','Higher is fine.','Yes, higher floor please.'],correct:0},
+     {speaker:'Receptionist',text:'Breakfast is from 7 to 10. Anything else I can help with?',
+      options:['Could you also tell me where I can park my car?','Where is parking?','I need to park.'],correct:0},
+   ]},
+  {id:'cv7',title:'Phone Call — Appointment',level:'B1-B2',ic:'📞',
+   turns:[
+     {speaker:'Receptionist',text:'Good morning, City Dental, how can I help?',
+      options:['Hello, I would like to book a check-up appointment please.','I want appointment.','Hello, I need dentist.'],correct:0},
+     {speaker:'Receptionist',text:'Are you an existing patient?',
+      options:['Yes, I have been coming for a few years. My name is Papadopoulos.','Yes I am patient.','Yes, I come here before.'],correct:0},
+     {speaker:'Receptionist',text:'We have Tuesday at 3pm or Thursday at 10am — which suits you?',
+      options:['Thursday at 10 would be perfect, thank you.','Thursday is good.','I prefer Thursday morning.'],correct:0},
+   ]},
+  {id:'cv8',title:'Grocery Shopping',level:'A2-B1',ic:'🛒',
+   turns:[
+     {speaker:'Assistant',text:'Can I help you find anything?',
+      options:['Yes — do you stock oat milk? I cannot seem to find it.','Where is oat milk?','I am looking for oat milk.'],correct:0},
+     {speaker:'Assistant',text:'Yes, aisle 4 with the dairy alternatives. Any particular brand?',
+      options:['I usually go for Oatly but any brand is fine really.','Oatly please.','Any brand is OK.'],correct:0},
+     {speaker:'Assistant',text:'We have Oatly and Alpro. Anything else?',
+      options:['No, that is everything — thank you so much!','No thanks.','That is all, thanks.'],correct:0},
+   ]},
+  {id:'cv9',title:'Asking for Directions',level:'A2-B1',ic:'🗺',
+   turns:[
+     {speaker:'Stranger',text:'Excuse me, are you lost? You look a bit confused!',
+      options:['Ha, yes! I am trying to find the Central Library. Am I close?','Yes, where is library?','I am looking for library.'],correct:0},
+     {speaker:'Stranger',text:'About 10 minutes away. Head straight and turn left at the traffic lights.',
+      options:['Straight on and left at the lights — got it. Easy to spot?','OK, left at lights.','Thank you, I understand.'],correct:0},
+     {speaker:'Stranger',text:'Big red brick building opposite the park — you cannot miss it.',
+      options:['Brilliant, thank you so much! Really appreciate it.','Thank you very much.','OK thanks.'],correct:0},
+   ]},
+  {id:'cv10',title:'At the Gym',level:'B1',ic:'💪',
+   turns:[
+     {speaker:'Trainer',text:'Hey! First time here?',
+      options:['Yes, first day! I just signed up this morning. I am Evan.','Yes I am new.','Yes, I start today.'],correct:0},
+     {speaker:'Trainer',text:'Welcome Evan! Main goals — weight loss, muscle, or general fitness?',
+      options:['Mainly building muscle and improving stamina. I sit at a desk all day!','Build muscle.','I want to be stronger.'],correct:0},
+     {speaker:'Trainer',text:'Great. How many days a week were you thinking?',
+      options:['Ideally three or four — consistent without burning out.','Three or four days.','Maybe three days.'],correct:0},
+   ]},
+  {id:'cv11',title:'Restaurant Booking',level:'B1',ic:'🍽',
+   turns:[
+     {speaker:'Host',text:'Good evening, La Piazza, how can I help?',
+      options:['I would like to book a table for four this Saturday evening please.','Table for four Saturday.','I want reservation Saturday.'],correct:0},
+     {speaker:'Host',text:'We have 7pm or 9pm. Which do you prefer?',
+      options:['7 would be perfect, thank you.','7pm please.','Earlier, so 7pm.'],correct:0},
+     {speaker:'Host',text:'Lovely. Name for the reservation?',
+      options:['It is Papadopoulos — P-A-P-A-D-O-P-O-U-L-O-S.','Papadopoulos.','My name is Papadopoulos.'],correct:0},
+   ]},
+  {id:'cv12',title:'Work Meeting',level:'B2',ic:'👔',
+   turns:[
+     {speaker:'Manager',text:'Shall we get started? Quick update on the project?',
+      options:['Of course — we are on track overall. Deliverables ready by Friday.','Project going OK.','We are progressing well.'],correct:0},
+     {speaker:'Manager',text:'Good. Any blockers we should know about?',
+      options:['One thing to flag — waiting on sign-off from legal, which could cause a small delay.','Waiting for legal.','Legal has not approved yet.'],correct:0},
+     {speaker:'Manager',text:'Can you follow up with them today and let me know?',
+      options:['Absolutely — I will email them right after this meeting and copy you in.','Yes I will email them.','OK, I will contact legal today.'],correct:0},
+   ]},
+  {id:'cv13',title:'Making Friends',level:'B1',ic:'🤝',
+   turns:[
+     {speaker:'Person',text:'Hey, I saw you at the language exchange last week! Are you learning Greek?',
+      options:['Yes! Well, I am Greek actually — I am here to practise my English and help others with Greek.','Yes I am Greek.','I am Greek but practising English.'],correct:0},
+     {speaker:'Person',text:'That is brilliant! How long have you been in London?',
+      options:['About eight months. Still getting used to the weather — quite a change from Greece!','Eight months.','Since eight months ago.'],correct:0},
+     {speaker:'Person',text:'Ha, you will get used to it! Fancy grabbing a coffee sometime?',
+      options:['That sounds great — I would love that. Shall we exchange numbers?','Yes coffee is good idea.','Yes I would like that.'],correct:0},
+   ]},
+  {id:'cv14',title:'First Date',level:'B1-B2',ic:'😊',
+   turns:[
+     {speaker:'Date',text:'So, how was your week? Anything interesting?',
+      options:['Pretty good — I discovered a great coffee place near my flat. Do you like coffee?','It was fine, I found a cafe.','Good week. I like coffee.'],correct:0},
+     {speaker:'Date',text:'I love coffee! What kind of music are you into?',
+      options:['Mostly indie and jazz — I know, odd combination! What about you?','I like indie and jazz.','Different kinds, depends on mood.'],correct:0},
+     {speaker:'Date',text:'I love jazz! There is a great jazz bar nearby — want to check it out sometime?',
+      options:['That would be really nice — yes, absolutely!','Yes sounds good.','I would like that.'],correct:0},
+   ]},
+  {id:'cv15',title:'At the Doctor',level:'B1-B2',ic:'🏥',
+   turns:[
+     {speaker:'Doctor',text:'Good morning. What seems to be the problem?',
+      options:['I have had a persistent headache for three days and I am feeling quite drained.','I have headache for three days.','My head hurts and I am tired.'],correct:0},
+     {speaker:'Doctor',text:'Have you been under stress recently, or not sleeping well?',
+      options:['Yes, work has been intense and I have not been sleeping well — maybe 5 hours a night.','Yes stress from work and bad sleep.','Work is stressful and I sleep only five hours.'],correct:0},
+     {speaker:'Doctor',text:'That is likely contributing. I would recommend rest and staying hydrated. Shall I prescribe something?',
+      options:['Yes please. Should I come back if it does not improve?','Yes, and when should I return?','Yes prescription please.'],correct:0},
+   ]}];
 
 let SIMST={conv:null,turn:0,sel:null,done:false,score:0};
 
@@ -5489,8 +5599,9 @@ const PLAN=[
   {id:'tenses',label:'Tenses',ic:'⏱',mins:10,col:'var(--bl)',tip:'1 χρόνος — θεωρία ή quiz'},
   {id:'grammar',label:'Grammar',ic:'✏',mins:10,col:'var(--gr)',tip:'1 κεφάλαιο γραμματικής + ασκήσεις'},
   {id:'reading',label:'Reading',ic:'📄',mins:10,col:'var(--or)',tip:'1 κείμενο + comprehension'},
-  {id:'writing',label:'Writing Practice',ic:'✍',mins:15,col:'var(--vi)',tip:'Email, συνομιλία ή άποψη'},
-  {id:'listening',label:'Listening / Speaking',ic:'🎧',mins:10,col:'var(--pk)',tip:'BBC 6 Min · Shadowing'},
+  {id:'writing',label:'Writing Practice',ic:'✍',mins:10,col:'var(--vi)',tip:'Email, essay ή AI feedback'},
+  {id:'speaking',label:'AI Conversation',ic:'🗣',mins:5,col:'var(--gr)',tip:'1 micro-conversation σε αγγλικά'},
+  {id:'phrases',label:'Phrases Quiz',ic:'💬',mins:5,col:'var(--pk)',tip:'10 everyday chunks με SM-2'},
 ];
 
 const MILESTONES=[
@@ -6158,10 +6269,11 @@ function updateTimerDisplay(){
 }
 
 function renderPlanTasks(comp,today){
-  const targets={vocab:'vocab',tenses:'tenses',grammar:'grammar',reading:'reading',writing:'writing',listening:'speaking'};
+  const targets={vocab:'vocab',tenses:'tenses',grammar:'grammar',reading:'reading',writing:'writing',listening:'speaking',speaking:'speaking',phrases:''};
   return PLAN.map(t=>{
     const done=(comp[today]||[]).includes(t.id);
-    const target=targets[t.id]||'home';
+    const target=targets[t.id];
+    const taskAction=target===''?'startPhrasesQuiz()':target?'go(\''+target+'\')':'go(\'home\')';
     const circle='<button onclick="toggleTask(\'' +t.id+ '\')" style="width:24px;height:24px;border-radius:50%;border:2px solid '+(done?'var(--gr)':'var(--ln2)')+';background:'+(done?'var(--gr)':'transparent')+';color:#fff;font-size:12px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s">'+(done?'✓':'')+'</button>';
     const label='<div style="flex:1;cursor:pointer" onclick="go(\'' +target+ '\')">'
       +'<div style="font-size:13px;font-weight:'+(done?400:600)+';color:'+(done?'var(--t3)':'var(--t1)')+';text-decoration:'+(done?'line-through':'none')+'">'+t.ic+' '+t.label+'</div>'
@@ -6723,21 +6835,9 @@ async function getAIWritingFeedback(){
   if(fb)fb.innerHTML='<div class="f12 c3" style="padding:12px;text-align:center">⏳ Αναλύω το κείμενό σου...</div>';
 
   try{
-    const sys=`You are an experienced English teacher correcting a Greek learner's writing.
-Analyze the text and respond ONLY in Greek with this EXACT format:
-
-🔴 ΛΑΘΗ:
-• [Quote the EXACT wrong phrase] → Σωστό: [correct version] — [brief explanation in Greek]
-(List each error separately. If no errors: "Δεν βρέθηκαν λάθη! ✅")
-
-🟡 ΒΕΛΤΙΩΣΕΙΣ:
-• [Specific suggestion to improve style/vocabulary]
-• [Another suggestion if needed]
-
-🟢 ΒΑΘΜΟΣ: [X/10]
-[One encouraging sentence in Greek]
-
-Be specific - quote the EXACT text that is wrong. Max 200 words.`;
+    const wordCount=text.split(' ').filter(x=>x.trim()).length;
+    const level=DB.get('placement_lv','B1');
+    const sys='You are an experienced English teacher. The student is at level '+level+'. Analyze their writing and respond ONLY in Greek.\n\nFormat EXACTLY like this:\n\n🔴 ΛΑΘΗ:\n• Λάθος: "[exact wrong phrase from text]" → Σωστό: "[correct version]" ([brief Greek explanation])\n(2-4 specific errors, or "✅ Δεν βρέθηκαν λάθη!" if none)\n\n🟡 ΦΥΣΙΚΟΤΕΡΕΣ ΕΚΦΡΑΣΕΙΣ:\n• Αντί για "[what they wrote]" → "[more natural English]"\n(2 suggestions)\n\n🟢 ΒΑΘΜΟΣ: [X/10] — [one encouraging sentence]\n\nMax 180 words. Quote EXACT phrases from the text.';
 
     const result=await callAI(text, sys);
     if(fb){
@@ -6784,17 +6884,36 @@ async function sendConvMsg(){
   rAIConversation();
   // Build system prompt using CONVERSATIONS data
   const sc=(typeof CONVERSATIONS!=='undefined'?CONVERSATIONS:[]).find(x=>x.id===CONVST.scenario);
+  const level=DB.get('placement_lv','B1');
+  const levelGuide={'B1':'use simple clear sentences, common vocabulary','B2':'use natural expressions, some idioms','B2+':'use varied vocabulary and natural flow','C1':'speak as with a native, use idioms freely'};
+  const guide=levelGuide[level]||levelGuide['B1'];
   const sys=sc
-    ?'You are a helpful English conversation partner. Scenario: '+sc.title+'. Respond naturally in English (2-3 sentences max). After turn 6, give brief encouraging feedback in Greek.'
-    :'You are a helpful English conversation partner. Respond naturally in English (2-3 sentences max).';
+    ?'You are a friendly English conversation partner. Scenario: '+sc.title+'. Student level: '+level+' — '+guide+'. Respond naturally (2-3 sentences). Keep it realistic and conversational.'
+    :'You are a friendly English conversation partner. Student level: '+level+' — '+guide+'. Respond naturally (2-3 sentences).';
   // Build message history (exclude last user message - it will be the userContent)
   const prevHistory=CONVST.history.slice(0,-1); // exclude the just-added user msg
   try{
     const result=await callAI(userText, sys, prevHistory.slice(-10));
     CONVST.history.push({role:'assistant',content:result});
     CONVST.loading=false;
-    if(CONVST.turn>=6){unlockAch('ai1');CONVST.done=true;}
-    rAIConversation();
+    // Auto-speak AI response
+    speak(result,'en-GB');
+    if(CONVST.turn>=6){
+      unlockAch('ai1');CONVST.done=true;
+      // Generate post-conversation review
+      if(hasAPIKey()&&CONVST.history.length>0){
+        const transcript=CONVST.history.map(m=>(m.role==='user'?'Me: ':'AI: ')+m.content).join('\n');
+        const reviewSys='You are an English coach reviewing a conversation. Respond ONLY in Greek with this exact format:\n\n🔴 ΛΑΘΗ / ΑΔΥΝΑΜΙΕΣ:\n• [specific error or weak phrasing] → Καλύτερα: [natural English alternative]\n(list 2-3 items, or "Δεν βρέθηκαν σοβαρά λάθη! ✅" if none)\n\n🟡 ΦΥΣΙΚΟΤΕΡΕΣ ΕΚΦΡΑΣΕΙΣ:\n• [what the user said] → [more natural/native version]\n(list 2-3 phrases)\n\n🟢 ΘΕΤΙΚΑ: [one encouraging sentence about what they did well]\n\nMax 150 words total.';
+        callAI(transcript, reviewSys, []).then(review=>{
+          CONVST.review=review;
+          rAIConversation();
+        }).catch(()=>{rAIConversation();});
+      } else {
+        rAIConversation();
+      }
+    } else {
+      rAIConversation();
+    }
   }catch(e){
     CONVST.history.pop();
     CONVST.turn--;
@@ -6820,6 +6939,7 @@ function rpSend(){
     .then(r=>{
       RPST.history.push({role:'assistant',content:r});
       RPST.loading=false;
+      speak(r,'en-GB');
       rRoleplay();
     })
     .catch(e=>{
@@ -6939,7 +7059,7 @@ function checkFill(){
 }
 
 function closeTopModal(){
-  const modals=['quick-modal','placement-modal','cefr-modal','il-modal','er-modal','onboard-modal','error-analysis-modal','weekly-summary-modal','aviation-modal','wn-modal'];
+  const modals=['quick-modal','placement-modal','cefr-modal','il-modal','er-modal','onboard-modal','error-analysis-modal','weekly-summary-modal','aviation-modal','wn-modal','phrases-modal'];
   for(const id of modals){
     const m=document.getElementById(id);
     if(m){m.remove();return;}
@@ -7075,222 +7195,303 @@ function showWeeklySummary(){
 
 /* ══ SPEAKING MODULE FUNCTIONS ══ */
 /* ══ MISSING STATE OBJECTS ══ */
-let CONVST={scenario:null,history:[],turn:0,loading:false,done:false};
+let CONVST={scenario:null,history:[],turn:0,loading:false,done:false,review:null};
 let RPST={scenario:null,history:[],turn:0,loading:false,done:false,scores:[]};
 let CLST={art:null,answers:{},checked:false};
 
 function rAIConversation(){
   const sp=document.querySelector('#speaking .vm');
   if(!sp)return;
+
+  // No API key
   if(!hasAPIKey()){
-    sp.innerHTML='<div style="text-align:center;padding:40px 20px"><div style="font-size:48px;margin-bottom:16px">🤖</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">AI Conversation</div><div style="font-size:13px;color:var(--t3);margin-bottom:20px">Χρειάζεσαι API Key.</div><button onclick="go(&quot;settings&quot;)" class="btn bp">⚙ Πήγαινε στα Settings</button></div>';
+    sp.innerHTML='<div style="text-align:center;padding:40px 20px">'
+      +'<div style="font-size:40px;margin-bottom:12px">🤖</div>'
+      +'<div style="font-size:15px;font-weight:700;margin-bottom:8px">AI Conversation</div>'
+      +'<div style="font-size:12px;color:var(--t3);margin-bottom:20px">Χρειάζεσαι API Key για να ξεκινήσεις.</div>'
+      +'<button onclick="go(&quot;settings&quot;)" class="btn bp">⚙ Πήγαινε στα Settings</button>'
+      +'</div>';
     return;
   }
+
+  // Scenario selection
   if(CONVST.scenario===null){
-    const scenarios=(typeof CONV_SCENARIOS!=='undefined'?CONV_SCENARIOS:[
-      {id:'job',title:'Job Interview',desc:'Συνέντευξη εργασίας',ic:'💼'},
-      {id:'travel',title:'At the Airport',desc:'Στο αεροδρόμιο',ic:'✈️'},
-      {id:'hotel',title:'Hotel Check-in',desc:'Check-in ξενοδοχείου',ic:'🏨'},
-      {id:'restaurant',title:'At a Restaurant',desc:'Σε εστιατόριο',ic:'🍽️'},
-      {id:'business',title:'Business Meeting',desc:'Επαγγελματική συνάντηση',ic:'📊'},
-    ]);
+    const convList=(typeof CONVERSATIONS!=='undefined'?CONVERSATIONS:[])
+      .filter(cv=>['cv1','cv4','cv5','cv7','cv8','cv9','cv10','cv11','cv12','cv13','cv14','cv15'].includes(cv.id));
     sp.innerHTML='';
     const wrap=document.createElement('div');
-    wrap.style.cssText='max-width:600px;margin:0 auto';
-    wrap.innerHTML='<div class="sl mb16">🗣 ΕΠΕΛΕΞΕ ΣΕΝΑΡΙΟ</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="conv-scenarios"></div>';
-    sp.appendChild(wrap);
-    const grid=document.getElementById('conv-scenarios');
-    scenarios.forEach(s=>{
+    wrap.style.cssText='max-width:580px;margin:0 auto';
+    const hdr=document.createElement('div');
+    hdr.innerHTML='<div style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:1px;margin-bottom:12px">ΕΠΕΛΕΞΕ ΣΕΝΑΡΙΟ</div>';
+    const grid=document.createElement('div');
+    grid.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px';
+    convList.forEach(cv=>{
       const btn=document.createElement('button');
-      btn.style.cssText='padding:16px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;text-align:left;transition:all .15s';
-      btn.innerHTML='<div style="font-size:24px;margin-bottom:8px">'+s.ic+'</div><div style="font-size:13px;font-weight:600;margin-bottom:4px">'+s.title+'</div><div style="font-size:11px;color:var(--t3)">'+s.desc+'</div>';
-      btn.onclick=()=>{
-        CONVST.scenario=s.id;CONVST.history=[];CONVST.turn=0;CONVST.done=false;CONVST.loading=true;
-        rAIConversation();
-        if(!hasAPIKey()){return;}
-        const greetSys='You are a friendly English conversation partner. Scenario: '+s.title+'. Start with a natural greeting in English (1-2 sentences only).';
-        callAI('Hello, lets start!',greetSys,[])
-          .then(r=>{CONVST.history.push({role:'assistant',content:r});CONVST.loading=false;rAIConversation();})
-          .catch(()=>{CONVST.loading=false;rAIConversation();});
-      };
+      btn.style.cssText='padding:12px 8px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;text-align:center;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:6px';
+      btn.innerHTML='<span style="font-size:22px">'+(cv.ic||'💬')+'</span><span style="font-size:11px;font-weight:600;color:var(--t2)">'+cv.title+'</span>';
+      btn.onmouseover=()=>btn.style.background='var(--s3)';
+      btn.onmouseout=()=>btn.style.background='var(--s2)';
+      const cvId=cv.id;
+      const cvTitle=cv.title;
+      btn.onclick=function(){startConvScenario(cvId,cvTitle);};
       grid.appendChild(btn);
     });
+    wrap.appendChild(hdr);
+    wrap.appendChild(grid);
+    sp.appendChild(wrap);
     return;
   }
+
+  // Completed → show review
   if(CONVST.done){
-    sp.innerHTML='<div style="text-align:center;padding:40px 20px"><div style="font-size:48px;margin-bottom:16px">✅</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">Conversation Complete!</div><button onclick="CONVST.scenario=null;rAIConversation()" class="btn bp">Νέα Συνομιλία</button></div>';
+    sp.innerHTML='';
+    const wrap=document.createElement('div');
+    wrap.style.cssText='max-width:580px;margin:0 auto;padding:10px 0';
+    wrap.innerHTML='<div style="text-align:center;margin-bottom:20px">'
+      +'<div style="font-size:36px;margin-bottom:8px">✅</div>'
+      +'<div style="font-size:15px;font-weight:700;margin-bottom:4px">Conversation Complete!</div>'
+      +'<div style="font-size:11px;color:var(--t3)">'+CONVST.turn+' turns · +15 XP</div>'
+      +'</div>'
+      +(CONVST.review
+        ?'<div style="background:var(--s2);border-radius:10px;padding:16px;margin-bottom:16px">'
+          +'<div style="font-size:12px;font-weight:700;color:var(--bl);margin-bottom:10px">🤖 Ανάλυση Συνομιλίας</div>'
+          +'<div style="font-size:12px;color:var(--t2);line-height:1.9;white-space:pre-line">'+CONVST.review+'</div>'
+          +'</div>'
+        :'<div style="text-align:center;font-size:12px;color:var(--t3);margin-bottom:16px">⏳ Ετοιμάζω ανάλυση...</div>')
+      +'<button onclick="CONVST.scenario=null;CONVST.history=[];CONVST.turn=0;CONVST.done=false;CONVST.review=null;CONVST.loading=false;rAIConversation()" class="btn bp" style="width:100%;justify-content:center">🔄 Νέα Συνομιλία</button>';
+    sp.appendChild(wrap);
+    addXP(15);
     return;
   }
+
+  // Chat view - validate scenario still exists
+  const validScenario=(typeof CONVERSATIONS!=='undefined'?CONVERSATIONS:[]).find(x=>x.id===CONVST.scenario);
+  if(!validScenario){CONVST.scenario=null;rAIConversation();return;}
   sp.innerHTML='';
   const wrap=document.createElement('div');
-  wrap.style.cssText='max-width:600px;margin:0 auto;display:flex;flex-direction:column;min-height:400px';
+  wrap.style.cssText='max-width:580px;margin:0 auto;display:flex;flex-direction:column;min-height:400px';
+
+  // Header
+  const sc=(typeof CONVERSATIONS!=='undefined'?CONVERSATIONS:[]).find(x=>x.id===CONVST.scenario);
   const hdr=document.createElement('div');
-  hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px';
-  hdr.innerHTML='<div class="sl">🗣 AI CONVERSATION</div><button onclick="CONVST.scenario=null;rAIConversation()" style="font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer">← Αλλαγή</button>';
+  hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--ln)';
+  hdr.innerHTML='<div style="font-size:13px;font-weight:700">'+(sc&&sc.ic?sc.ic+' '+sc.title:'AI Conversation')+'</div>'
+    +'<div style="display:flex;gap:8px;align-items:center">'
+    +'<span style="font-size:11px;color:var(--t3)">Turn '+CONVST.turn+'/6</span>'
+    +'<button onclick="CONVST.scenario=null;CONVST.history=[];CONVST.turn=0;CONVST.done=false;CONVST.review=null;CONVST.loading=false;rAIConversation()" style="font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer">← Αλλαγή</button>'
+    +'</div>';
+
+  // Messages
   const msgs=document.createElement('div');
-  msgs.style.cssText='flex:1;overflow-y:auto;margin-bottom:12px;min-height:200px';
+  msgs.id='conv-msgs';
+  msgs.style.cssText='flex:1;overflow-y:auto;margin-bottom:12px;min-height:200px;max-height:350px;padding:4px 0';
   CONVST.history.forEach(m=>{
     const d=document.createElement('div');
-    d.style.cssText='display:flex;justify-content:'+(m.role==='user'?'flex-end':'flex-start')+';margin-bottom:10px';
+    d.style.cssText='display:flex;justify-content:'+(m.role==='user'?'flex-end':'flex-start')+';margin-bottom:8px;gap:8px;align-items:flex-end';
     const bubble=document.createElement('div');
-    bubble.style.cssText='max-width:80%;padding:10px 14px;background:'+(m.role==='user'?'var(--bl)':'var(--s2)')+';border-radius:12px;font-size:13px;line-height:1.6';
+    bubble.style.cssText='max-width:80%;padding:10px 14px;background:'+(m.role==='user'?'var(--bl)':'var(--s2)')+';border-radius:'+(m.role==='user'?'12px 12px 2px 12px':'12px 12px 12px 2px')+';font-size:13px;line-height:1.6;color:'+(m.role==='user'?'#fff':'var(--t1)');
     bubble.textContent=m.content;
-    d.appendChild(bubble);msgs.appendChild(d);
+    // Speak button for AI messages
+    if(m.role==='assistant'){
+      const speakBtn=document.createElement('button');
+      speakBtn.style.cssText='background:none;border:none;cursor:pointer;color:var(--t3);font-size:14px;flex-shrink:0;padding:2px';
+      speakBtn.textContent='🔊';
+      speakBtn.title='Άκουσε';
+      speakBtn.onclick=()=>speak(m.content,'en-GB');
+      d.appendChild(bubble);
+      d.appendChild(speakBtn);
+    } else {
+      d.appendChild(bubble);
+    }
+    msgs.appendChild(d);
   });
-  wrap.appendChild(hdr);wrap.appendChild(msgs);
+
+  // Loading indicator
+  if(CONVST.loading){
+    const loading=document.createElement('div');
+    loading.style.cssText='display:flex;justify-content:flex-start;margin-bottom:8px';
+    loading.innerHTML='<div style="padding:10px 14px;background:var(--s2);border-radius:12px 12px 12px 2px;font-size:13px;color:var(--t3)">⏳ ...</div>';
+    msgs.appendChild(loading);
+  }
+
+  wrap.appendChild(hdr);
+  wrap.appendChild(msgs);
+
+  // Input row (only when not loading)
   if(!CONVST.loading){
     const row=document.createElement('div');
     row.style.cssText='display:flex;gap:8px';
     const inp=document.createElement('input');
-    inp.id='conv-input';inp.placeholder='Type your message...';
+    inp.id='conv-input';
+    inp.placeholder='Type or 🎤 speak...';
     inp.style.cssText='flex:1;padding:10px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px';
-    inp.addEventListener('keydown',e=>{if(e.key==='Enter')sendConvMsg();});
-    const btn=document.createElement('button');
-    btn.textContent='→';btn.style.cssText='padding:10px 16px;background:var(--bl);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none';
-    btn.onclick=sendConvMsg;
-    row.appendChild(inp);row.appendChild(btn);wrap.appendChild(row);
-  } else {
-    const loading=document.createElement('div');
-    loading.style.cssText='text-align:center;color:var(--t3);font-size:12px;padding:10px';
-    loading.textContent='⏳ Πληκτρολογεί...';
-    wrap.appendChild(loading);
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey)sendConvMsg();});
+    // Mic button
+    const micBtn=document.createElement('button');
+    micBtn.id='conv-mic';
+    micBtn.textContent='🎤';
+    micBtn.title='Μίλα αντί να γράφεις';
+    micBtn.style.cssText='padding:10px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;cursor:pointer;font-size:16px;transition:all .2s';
+    micBtn.onclick=()=>startConvVoice(inp, micBtn);
+    const sendBtn=document.createElement('button');
+    sendBtn.textContent='→';
+    sendBtn.style.cssText='padding:10px 16px;background:var(--bl);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none;font-size:16px';
+    sendBtn.onclick=sendConvMsg;
+    row.appendChild(inp);
+    row.appendChild(micBtn);
+    row.appendChild(sendBtn);
+    wrap.appendChild(row);
+    setTimeout(()=>inp.focus(),50);
   }
+
   sp.appendChild(wrap);
-  setTimeout(()=>{msgs.scrollTop=msgs.scrollHeight;},50);
+  // Auto-scroll to bottom
+  setTimeout(()=>{if(msgs)msgs.scrollTop=msgs.scrollHeight;},50);
 }
+
+function startConvScenario(id, title){
+  CONVST.scenario=id;
+  CONVST.history=[];
+  CONVST.turn=0;
+  CONVST.done=false;
+  CONVST.review=null;
+  CONVST.loading=true;
+  rAIConversation();
+  if(!hasAPIKey())return;
+  const level=DB.get('placement_lv','B1');
+  const levelGuide={'B1':'simple clear sentences','B2':'natural expressions, some idioms','B2+':'varied vocabulary','C1':'native-like, idioms freely'};
+  const guide=levelGuide[level]||levelGuide['B1'];
+  const greetSys='You are a friendly English conversation partner. Scenario: '+title+'. Student level: '+level+' ('+guide+'). Open with ONE natural greeting sentence. Be warm and conversational.';
+  callAI('Hello!',greetSys,[])
+    .then(r=>{
+      CONVST.history.push({role:'assistant',content:r});
+      CONVST.loading=false;
+      rAIConversation();
+      // Auto-speak the greeting
+      speak(r,'en-GB');
+    })
+    .catch(e=>{
+      CONVST.loading=false;
+      const msg=e.message.length>60?'Σφάλμα API — δοκίμασε σε λίγο':e.message;
+      toast('⚠ '+msg,'var(--am)');
+      rAIConversation();
+    });
+}
+
 
 function rRoleplay(){
   const sp=document.querySelector('#speaking .vm');
   if(!sp)return;
   if(!hasAPIKey()){
-    sp.innerHTML='<div style="text-align:center;padding:40px 20px"><div style="font-size:48px;margin-bottom:16px">🎭</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">Roleplay</div><div style="font-size:13px;color:var(--t3);margin-bottom:20px">Χρειάζεσαι API Key.</div><button onclick="go(&quot;settings&quot;)" class="btn bp">⚙ Πήγαινε στα Settings</button></div>';
+    sp.innerHTML='<div style="text-align:center;padding:40px 20px">'
+      +'<div style="font-size:40px;margin-bottom:12px">🎭</div>'
+      +'<div style="font-size:15px;font-weight:700;margin-bottom:8px">Roleplay</div>'
+      +'<div style="font-size:12px;color:var(--t3);margin-bottom:20px">Χρειάζεσαι API Key.</div>'
+      +'<button onclick="go(&quot;settings&quot;)" class="btn bp">⚙ Settings</button>'
+      +'</div>';
     return;
   }
   if(!RPST.scenario){
-    const roles=['Teacher','Doctor','Colleague','Customer Service','Friend','Job Interviewer'];
+    const roles=[
+      {r:'Teacher',ic:'👩‍🏫',desc:'Μαθαίνεις κάτι νέο'},
+      {r:'Doctor',ic:'🏥',desc:'Ιατρική επίσκεψη'},
+      {r:'Colleague',ic:'👔',desc:'Στο γραφείο'},
+      {r:'Customer Service',ic:'📞',desc:'Λύνεις πρόβλημα'},
+      {r:'Friend',ic:'🤝',desc:'Casual συνομιλία'},
+      {r:'Job Interviewer',ic:'💼',desc:'Για δουλειά'},
+    ];
     sp.innerHTML='';
     const wrap=document.createElement('div');
-    wrap.style.cssText='max-width:600px;margin:0 auto';
-    wrap.innerHTML='<div class="sl mb16">🎭 ΕΠΕΛΕΞΕ ΡΟΛΟ</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="rp-roles"></div>';
-    sp.appendChild(wrap);
-    const grid=document.getElementById('rp-roles');
-    roles.forEach(r=>{
+    wrap.style.cssText='max-width:500px;margin:0 auto';
+    wrap.innerHTML='<div style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:1px;margin-bottom:12px">ΕΠΕΛΕΞΕ ΡΟΛΟ</div>';
+    const grid=document.createElement('div');
+    grid.style.cssText='display:grid;grid-template-columns:repeat(2,1fr);gap:10px';
+    roles.forEach(item=>{
       const btn=document.createElement('button');
-      btn.style.cssText='padding:14px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s';
-      btn.textContent=r;
+      btn.style.cssText='padding:16px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;text-align:left;transition:all .15s';
+      btn.innerHTML='<div style="font-size:24px;margin-bottom:8px">'+item.ic+'</div>'
+        +'<div style="font-size:13px;font-weight:600;margin-bottom:4px;color:var(--t1)">'+item.r+'</div>'
+        +'<div style="font-size:11px;color:var(--t3)">'+item.desc+'</div>';
+      btn.onmouseover=()=>btn.style.background='var(--s3)';
+      btn.onmouseout=()=>btn.style.background='var(--s2)';
       btn.onclick=()=>{
-        RPST.scenario=r;RPST.history=[];RPST.loading=true;
+        RPST.scenario=item.r;
+        RPST.history=[];
+        RPST.loading=true;
         rRoleplay();
-        if(!hasAPIKey()){return;}
-        const rpSys='You are roleplaying as a '+r+'. Start the roleplay with a natural opening line in English (1-2 sentences only).';
-        callAI('Hello.',rpSys,[])
-          .then(res=>{RPST.history.push({role:'assistant',content:res});RPST.loading=false;rRoleplay();})
+        if(!hasAPIKey())return;
+        const sys='You are roleplaying as a '+item.r+'. Start with ONE natural opening line in English. Be realistic and engaging.';
+        callAI('Hello.',sys,[])
+          .then(res=>{
+            RPST.history.push({role:'assistant',content:res});
+            RPST.loading=false;
+            speak(res,'en-GB');
+            rRoleplay();
+          })
           .catch(()=>{RPST.loading=false;rRoleplay();});
       };
       grid.appendChild(btn);
     });
+    wrap.appendChild(grid);
+    sp.appendChild(wrap);
     return;
   }
   sp.innerHTML='';
   const wrap=document.createElement('div');
-  wrap.style.cssText='max-width:600px;margin:0 auto;display:flex;flex-direction:column;min-height:400px';
+  wrap.style.cssText='max-width:580px;margin:0 auto;display:flex;flex-direction:column;min-height:400px';
   const hdr=document.createElement('div');
-  hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px';
-  hdr.innerHTML='<div class="sl">🎭 '+RPST.scenario+'</div><button onclick="RPST.scenario=null;rRoleplay()" style="font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer">← Αλλαγή</button>';
+  hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--ln)';
+  hdr.innerHTML='<div style="font-size:13px;font-weight:700">🎭 '+RPST.scenario+'</div>'
+    +'<button onclick="RPST.scenario=null;RPST.history=[];RPST.loading=false;rRoleplay()" style="font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer">← Αλλαγή</button>';
   const msgs=document.createElement('div');
-  msgs.style.cssText='flex:1;overflow-y:auto;margin-bottom:12px;min-height:200px';
+  msgs.id='rp-msgs';
+  msgs.style.cssText='flex:1;overflow-y:auto;margin-bottom:12px;min-height:200px;max-height:350px;padding:4px 0';
   RPST.history.forEach(m=>{
     const d=document.createElement('div');
-    d.style.cssText='display:flex;justify-content:'+(m.role==='user'?'flex-end':'flex-start')+';margin-bottom:10px';
+    d.style.cssText='display:flex;justify-content:'+(m.role==='user'?'flex-end':'flex-start')+';margin-bottom:8px;gap:6px;align-items:flex-end';
     const bubble=document.createElement('div');
-    bubble.style.cssText='max-width:80%;padding:10px 14px;background:'+(m.role==='user'?'var(--vi)':'var(--s2)')+';border-radius:12px;font-size:13px;line-height:1.6';
+    bubble.style.cssText='max-width:80%;padding:10px 14px;background:'+(m.role==='user'?'var(--vi)':'var(--s2)')+';border-radius:'+(m.role==='user'?'12px 12px 2px 12px':'12px 12px 12px 2px')+';font-size:13px;line-height:1.6;color:'+(m.role==='user'?'#fff':'var(--t1)');
     bubble.textContent=m.content;
-    d.appendChild(bubble);msgs.appendChild(d);
+    if(m.role==='assistant'){
+      const sb=document.createElement('button');
+      sb.style.cssText='background:none;border:none;cursor:pointer;color:var(--t3);font-size:14px;flex-shrink:0;padding:2px';
+      sb.textContent='🔊';sb.onclick=()=>speak(m.content,'en-GB');
+      d.appendChild(bubble);d.appendChild(sb);
+    } else {
+      d.appendChild(bubble);
+    }
+    msgs.appendChild(d);
   });
+  if(RPST.loading){
+    const ld=document.createElement('div');
+    ld.style.cssText='display:flex;justify-content:flex-start;margin-bottom:8px';
+    ld.innerHTML='<div style="padding:10px 14px;background:var(--s2);border-radius:12px;font-size:13px;color:var(--t3)">⏳ ...</div>';
+    msgs.appendChild(ld);
+  }
   wrap.appendChild(hdr);wrap.appendChild(msgs);
   if(!RPST.loading){
     const row=document.createElement('div');
     row.style.cssText='display:flex;gap:8px';
     const inp=document.createElement('input');
-    inp.id='rp-input';inp.placeholder='Your response...';
+    inp.id='rp-input';inp.placeholder='Type or 🎤 speak...';
     inp.style.cssText='flex:1;padding:10px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px';
     inp.addEventListener('keydown',e=>{if(e.key==='Enter')rpSend();});
+    const micBtn=document.createElement('button');
+    micBtn.textContent='🎤';
+    micBtn.style.cssText='padding:10px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;cursor:pointer;font-size:16px';
+    micBtn.onclick=()=>startConvVoice(inp,micBtn);
     const btn=document.createElement('button');
-    btn.textContent='→';btn.style.cssText='padding:10px 16px;background:var(--vi);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none';
+    btn.textContent='→';
+    btn.style.cssText='padding:10px 16px;background:var(--vi);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none;font-size:16px';
     btn.onclick=rpSend;
-    row.appendChild(inp);row.appendChild(btn);wrap.appendChild(row);
-  } else {
-    const loading=document.createElement('div');
-    loading.style.cssText='text-align:center;color:var(--t3);font-size:12px;padding:10px';
-    loading.textContent='⏳...';
-    wrap.appendChild(loading);
+    row.appendChild(inp);row.appendChild(micBtn);row.appendChild(btn);
+    wrap.appendChild(row);
+    setTimeout(()=>inp.focus(),50);
   }
   sp.appendChild(wrap);
-  setTimeout(()=>{msgs.scrollTop=msgs.scrollHeight;},50);
+  setTimeout(()=>{if(msgs)msgs.scrollTop=msgs.scrollHeight;},50);
 }
 
-
-function rClozeTest(){
-  const el=document.querySelector('#reading .vm')||document.getElementById('reading');
-  if(!el)return;
-  const arts=READINGS||[];
-  if(CLST.art===null){
-    el.innerHTML='<div style="max-width:700px;margin:0 auto">'
-      +'<div class="sl mb16">📝 CLOZE TESTS</div>'
-      +'<div style="display:grid;gap:8px">'
-      +arts.map(a=>'<button onclick="startCloze(this)" data-id="'+a.id+'" style="padding:14px 16px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;text-align:left;transition:all .15s">'
-        +'<div style="font-size:13px;font-weight:600">'+a.t+'</div>'
-        +'<div style="font-size:11px;color:var(--t3);margin-top:4px">'+a.lv+' · '+a.time+'</div>'
-        +'</button>').join('')
-      +'</div></div>';
-    return;
-  }
-  const art=arts.find(a=>a.id===CLST.art);
-  if(!art){CLST.art=null;rClozeTest();return;}
-  const vocab=art.vocab||[];
-  const stripped=(typeof art.text==='string'?art.text.replace(/<[^>]+>/g,''):art.text);
-  let clozed=stripped;
-  vocab.forEach((w,i)=>{
-    const re=new RegExp('\\b'+w+'\\b','i');
-    clozed=clozed.replace(re,'<input id="clz-'+i+'" data-ans="'+w+'" placeholder="____" style="width:80px;padding:2px 6px;background:var(--s2);border:1px solid var(--ln);border-radius:4px;color:var(--t1);font-size:13px">');
-  });
-  el.innerHTML='<div style="max-width:700px;margin:0 auto">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
-    +'<div class="sl">📝 '+art.t+'</div>'
-    +'<button onclick="CLST.art=null;rClozeTest()" style="font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer">← Πίσω</button>'
-    +'</div>'
-    +'<div style="font-size:14px;line-height:2;margin-bottom:20px">'+clozed+'</div>'
-    +'<button onclick="checkCloze()" class="btn bp">Έλεγχος ✓</button>'
-    +'</div>';
-}
-function checkCloze(){
-  let correct=0,total=0;
-  document.querySelectorAll('[id^=clz-]').forEach(inp=>{
-    total++;
-    const ans=inp.dataset.ans.toLowerCase();
-    const val=inp.value.trim().toLowerCase();
-    if(val===ans){correct++;inp.style.borderColor='var(--gr)';}
-    else{inp.style.borderColor='var(--ro)';inp.placeholder=inp.dataset.ans;}
-  });
-  addXP(correct*5);
-  toast(correct+'/'+total+' σωστές! +'+correct*5+' XP','var(--gr)');
-}
-
-function startConvScenario(btn){
-  CONVST.scenario=btn.dataset.id;
-  CONVST.history=[];CONVST.turn=0;CONVST.done=false;CONVST.loading=true;
-  rAIConversation();
-  // AI speaks first
-  const sc=(typeof CONVERSATIONS!=='undefined'?CONVERSATIONS:[]).find(x=>x.id===CONVST.scenario);
-  const greetSys='You are a helpful English conversation partner. Scenario: '+(sc?sc.title:'General conversation')+'. Start the conversation with a natural opening line in English (1-2 sentences).';
-  callAI('Hello, lets begin.', greetSys, [])
-    .then(r=>{
-      CONVST.history.push({role:'assistant',content:r});
-      CONVST.loading=false;
-      rAIConversation();
-    })
-    .catch(()=>{CONVST.loading=false;rAIConversation();});
-}
 function startRoleplay(btn){
   RPST.scenario=btn.dataset.role;
   RPST.history=[];RPST.loading=true;
@@ -7300,6 +7501,7 @@ function startRoleplay(btn){
     .then(r=>{
       RPST.history.push({role:'assistant',content:r});
       RPST.loading=false;
+      speak(r,'en-GB');
       rRoleplay();
     })
     .catch(()=>{RPST.loading=false;rRoleplay();});
@@ -7396,6 +7598,172 @@ function saveAPIKeyFromSettings(){
   DB.set('anthropic_key',key);
   toast('✅ API Key αποθηκεύτηκε! Τα AI features είναι τώρα διαθέσιμα.','var(--gr)');
   rSettings();
+}
+
+/* ══ PHRASES QUIZ (SM-2 for chunks) ══ */
+let PHST={idx:0,pool:[],sel:-1,done:false,score:0};
+
+function buildPhrasesPool(){
+  const pool=[];
+  let i=0;
+  if(typeof SPEAKING_DATA!=='undefined'){
+    Object.values(SPEAKING_DATA).forEach(cat=>{
+      if(Array.isArray(cat)){
+        cat.forEach(group=>{
+          if(group.phrases){
+            group.phrases.forEach(ph=>{
+              pool.push({id:'ph_'+i++,en:ph.en,gr:ph.gr,title:group.title});
+            });
+          }
+        });
+      }
+    });
+  }
+  return pool;
+}
+
+function startPhrasesQuiz(){
+  const pool=buildPhrasesPool();
+  if(!pool.length){toast('Δεν βρέθηκαν phrases!','var(--am)');return;}
+  // SM-2: prioritize unseen/weak phrases
+  const wb=getWB();
+  const sorted=pool.sort((a,b)=>{
+    const sa=wb[a.id]||{sc:0,seen:0};
+    const sb=wb[b.id]||{sc:0,seen:0};
+    if(sa.seen===0&&sb.seen>0)return -1;
+    if(sb.seen===0&&sa.seen>0)return 1;
+    return sa.sc-sb.sc;
+  });
+  PHST={idx:0,pool:sorted.slice(0,10),sel:-1,done:false,score:0};
+  renderPhrasesQuiz();
+}
+
+function renderPhrasesQuiz(){
+  let modal=document.getElementById('phrases-modal');
+  if(!modal){
+    modal=document.createElement('div');
+    modal.id='phrases-modal';
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9997;display:flex;align-items:center;justify-content:center;padding:20px';
+    document.body.appendChild(modal);
+  }
+  if(PHST.done||PHST.idx>=PHST.pool.length){
+    addXP(PHST.score*8);
+    modal.innerHTML='<div style="background:var(--s1);border-radius:16px;padding:28px;max-width:400px;text-align:center;width:100%">'
+      +'<div style="font-size:40px;margin-bottom:12px">💬</div>'
+      +'<div style="font-size:16px;font-weight:700;margin-bottom:8px">Phrases Quiz!</div>'
+      +'<div style="font-size:13px;color:var(--t3);margin-bottom:20px">'+PHST.score+'/'+PHST.pool.length+' · +'+(PHST.score*8)+' XP</div>'
+      +'<button onclick="closeTopModal()" style="padding:10px 24px;background:var(--bl);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none">OK</button>'
+      +'</div>';
+    return;
+  }
+  const ph=PHST.pool[PHST.idx];
+  const pct=Math.round(PHST.idx/PHST.pool.length*100);
+  const isFlipped=PHST.sel>=0;
+  modal.innerHTML='<div style="background:var(--s1);border-radius:16px;padding:24px;max-width:500px;width:100%">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
+    +'<div style="font-size:11px;color:var(--t3)">💬 PHRASES · '+(PHST.idx+1)+'/'+PHST.pool.length+'</div>'
+    +'<button onclick="closeTopModal()" style="background:none;border:none;color:var(--t3);cursor:pointer">✕</button></div>'
+    +'<div style="height:3px;background:var(--s3);border-radius:3px;margin-bottom:20px"><div style="height:100%;width:'+pct+'%;background:var(--bl);border-radius:3px"></div></div>'
+    +'<div style="font-size:12px;color:var(--t3);margin-bottom:6px">'+ph.title+'</div>'
+    +'<div style="font-size:18px;font-weight:700;margin-bottom:8px;color:var(--t1)">'+ph.gr+'</div>'
+    +(isFlipped
+      ?'<div style="font-size:15px;font-weight:600;color:var(--bl);margin-bottom:20px;padding:12px;background:var(--s2);border-radius:8px">'+ph.en+'</div>'
+        +'<button onclick="speakPhrase()" style="font-size:11px;color:var(--t3);background:none;border:1px solid var(--ln);border-radius:6px;padding:4px 10px;cursor:pointer;margin-bottom:16px">🔊 Άκουσε</button>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+        +'<button onclick="phAnswer(false)" style="padding:10px;background:rgba(240,56,112,.1);border:1px solid var(--ro);border-radius:8px;color:var(--ro);cursor:pointer;font-size:13px">😕 Δεν το ήξερα</button>'
+        +'<button onclick="phAnswer(true)" style="padding:10px;background:rgba(34,197,94,.1);border:1px solid var(--gr);border-radius:8px;color:var(--gr);cursor:pointer;font-size:13px">✅ Το ήξερα</button>'
+        +'</div>'
+      :'<div style="font-size:13px;color:var(--t3);margin-bottom:20px">Πώς λέγεται στα Αγγλικά;</div>'
+        +'<button onclick="PHST.sel=1;renderPhrasesQuiz()" style="width:100%;padding:12px;background:var(--bl);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none">Δες την απάντηση 👁</button>')
+    +'</div>';
+}
+
+function phAnswer(knew){
+  const ph=PHST.pool[PHST.idx];
+  setWS(ph.id, knew);
+  if(knew)PHST.score++;
+  PHST.idx++;PHST.sel=-1;
+  renderPhrasesQuiz();
+}
+
+function speakPhrase(){
+  const ph=PHST.pool[PHST.idx];
+  if(ph)speak(ph.en.split(' — ')[0],'en-GB');
+}
+
+/* ══ VOICE INPUT FOR CONVERSATIONS ══ */
+let _convRecognition=null;
+
+function startConvVoice(inputEl, micBtn){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    toast('Το μικρόφωνο χρειάζεται Chrome browser ή Android Chrome','var(--am)');
+    return;
+  }
+  if(location.protocol!=='https:'&&!window.AndroidTTS){
+    toast('🔒 Το μικρόφωνο λειτουργεί μόνο σε HTTPS — άνοιξε το richter444.github.io στο Chrome','var(--am)');
+    return;
+  }
+  // Stop if already recording
+  if(_convRecognition){
+    _convRecognition.stop();
+    _convRecognition=null;
+    micBtn.textContent='🎤';
+    micBtn.style.background='var(--s2)';
+    return;
+  }
+  // Start recording
+  const rec=new SR();
+  _convRecognition=rec;
+  rec.lang='en-US';
+  rec.continuous=false;
+  rec.interimResults=true;
+  rec.maxAlternatives=1;
+
+  micBtn.textContent='⏹';
+  micBtn.style.background='rgba(240,56,112,.15)';
+  micBtn.style.borderColor='var(--ro)';
+  toast('🎤 Μιλάς... (πάτα ⏹ για σταμάτημα)','var(--bl)');
+
+  rec.onresult=(e)=>{
+    const transcript=Array.from(e.results).map(r=>r[0].transcript).join('');
+    inputEl.value=transcript;
+  };
+
+  rec.onend=()=>{
+    _convRecognition=null;
+    micBtn.textContent='🎤';
+    micBtn.style.background='var(--s2)';
+    micBtn.style.borderColor='var(--ln)';
+    // Auto-send if there's text
+    if(inputEl.value.trim()){
+      setTimeout(()=>{
+        if(inputEl.id==='conv-input') sendConvMsg();
+        else if(inputEl.id==='rp-input') rpSend();
+      },300);
+    }
+  };
+
+  rec.onerror=(e)=>{
+    _convRecognition=null;
+    micBtn.textContent='🎤';
+    micBtn.style.background='var(--s2)';
+    micBtn.style.borderColor='var(--ln)';
+    if(e.error==='not-allowed'||e.error==='permission-denied'){
+      const isHttps=location.protocol==='https:';
+      if(!isHttps){
+        toast('🔒 Το μικρόφωνο απαιτεί HTTPS. Χρησιμοποίησε το site από το richter444.github.io','var(--am)');
+      } else {
+        toast('Δεν δόθηκε άδεια μικροφώνου. Κλικ στο 🔒 στη γραμμή διευθύνσεων → Επιτρέπεται Μικρόφωνο','var(--am)');
+      }
+    } else if(e.error==='not-supported'){
+      toast('Το μικρόφωνο δεν υποστηρίζεται σε αυτό το browser. Χρησιμοποίησε Chrome.','var(--am)');
+    } else if(e.error!=='aborted'&&e.error!=='no-speech'){
+      toast('Σφάλμα μικροφώνου: '+e.error,'var(--am)');
+    }
+  };
+
+  rec.start();
 }
 </script>
 </body>
