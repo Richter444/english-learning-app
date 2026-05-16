@@ -6716,31 +6716,56 @@ async function sendConvMsg(){
   if(!input||!input.value.trim()||CONVST.loading)return;
   const userText=input.value.trim();
   input.value='';
+  CONVST.turn++;
+  CONVST.loading=true;
+  // Push user message to history
   CONVST.history.push({role:'user',content:userText});
-  CONVST.turn++;CONVST.loading=true;
   rAIConversation();
-  const sc=CONV_SCENARIOS?.find(x=>x.id===CONVST.scenario);
-  const sys=sc?'You are a conversation partner. Scenario: '+sc.title+'. Respond naturally in English. After 6 turns, give brief feedback in Greek.':'You are a helpful English conversation partner.';
+  // Build system prompt using CONVERSATIONS data
+  const sc=(typeof CONVERSATIONS!=='undefined'?CONVERSATIONS:[]).find(x=>x.id===CONVST.scenario);
+  const sys=sc
+    ?'You are a helpful English conversation partner. Scenario: '+sc.title+'. Respond naturally in English (2-3 sentences max). After turn 6, give brief encouraging feedback in Greek.'
+    :'You are a helpful English conversation partner. Respond naturally in English (2-3 sentences max).';
+  // Build message history (exclude last user message - it will be the userContent)
+  const prevHistory=CONVST.history.slice(0,-1); // exclude the just-added user msg
   try{
-    const msgs=CONVST.history.map(m=>({role:m.role,content:m.content}));
-    const result=await callAI(userText,sys,msgs.slice(-6));
+    const result=await callAI(userText, sys, prevHistory.slice(-10));
     CONVST.history.push({role:'assistant',content:result});
     CONVST.loading=false;
     if(CONVST.turn>=6){unlockAch('ai1');CONVST.done=true;}
     rAIConversation();
-  }catch(e){CONVST.loading=false;toast('Σφάλμα AI','var(--ro)');}
+  }catch(e){
+    CONVST.history.pop(); // remove failed user message
+    CONVST.turn--;
+    CONVST.loading=false;
+    toast('Σφάλμα AI: '+e.message,'var(--ro)');
+    rAIConversation();
+  }
 }
 
 function rpSend(){
   if(!hasAPIKey()){showAPIKeyModal();return;}
   const input=document.getElementById('rp-input');
   if(!input||!input.value.trim()||RPST.loading)return;
-  const userText=input.value.trim();input.value='';
+  const userText=input.value.trim();
+  input.value='';
   RPST.history.push({role:'user',content:userText});
-  RPST.loading=true;rRoleplay();
-  callAI(userText,'You are roleplaying as: '+RPST.scenario+'. Stay in character. Respond in English.',RPST.history.slice(-6))
-    .then(r=>{RPST.history.push({role:'assistant',content:r});RPST.loading=false;rRoleplay();})
-    .catch(()=>{RPST.loading=false;toast('Σφάλμα AI','var(--ro)');});
+  RPST.loading=true;
+  rRoleplay();
+  const sys='You are roleplaying as a '+RPST.scenario+'. Stay in character. Respond naturally in English (2-3 sentences max). Be helpful and encouraging.';
+  const prevHistory=RPST.history.slice(0,-1);
+  callAI(userText, sys, prevHistory.slice(-10))
+    .then(r=>{
+      RPST.history.push({role:'assistant',content:r});
+      RPST.loading=false;
+      rRoleplay();
+    })
+    .catch(e=>{
+      RPST.history.pop();
+      RPST.loading=false;
+      toast('Σφάλμα AI: '+e.message,'var(--ro)');
+      rRoleplay();
+    });
 }
 
 /* ══ MISSING FUNCTIONS ══ */
@@ -7159,13 +7184,31 @@ function checkCloze(){
 
 function startConvScenario(btn){
   CONVST.scenario=btn.dataset.id;
-  CONVST.history=[];CONVST.turn=0;CONVST.done=false;
+  CONVST.history=[];CONVST.turn=0;CONVST.done=false;CONVST.loading=true;
   rAIConversation();
+  // AI speaks first
+  const sc=(typeof CONVERSATIONS!=='undefined'?CONVERSATIONS:[]).find(x=>x.id===CONVST.scenario);
+  const greetSys='You are a helpful English conversation partner. Scenario: '+(sc?sc.title:'General conversation')+'. Start the conversation with a natural opening line in English (1-2 sentences).';
+  callAI('Hello, lets begin.', greetSys, [])
+    .then(r=>{
+      CONVST.history.push({role:'assistant',content:r});
+      CONVST.loading=false;
+      rAIConversation();
+    })
+    .catch(()=>{CONVST.loading=false;rAIConversation();});
 }
 function startRoleplay(btn){
   RPST.scenario=btn.dataset.role;
-  RPST.history=[];
+  RPST.history=[];RPST.loading=true;
   rRoleplay();
+  const sys='You are roleplaying as a '+RPST.scenario+'. Start the roleplay with a natural opening line in English (1-2 sentences).';
+  callAI('Hello.', sys, [])
+    .then(r=>{
+      RPST.history.push({role:'assistant',content:r});
+      RPST.loading=false;
+      rRoleplay();
+    })
+    .catch(()=>{RPST.loading=false;rRoleplay();});
 }
 function startCloze(btn){
   CLST.art=btn.dataset.id;
