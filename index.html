@@ -524,7 +524,11 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
 .more-item-new{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;color:var(--t2);text-align:left;transition:all .15s}
 .more-item-new:hover{background:var(--s3);border-color:var(--ln2);transform:translateY(-1px);color:var(--t1)}
 @keyframes celebPop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
-</style>
+
+/* Android keyboard fix */
+input:focus, textarea:focus {
+  scroll-margin-bottom: 80px;
+}</style>
 </head>
 <body>
 <div id="app">
@@ -625,6 +629,8 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
 </div>
 <div id="achpop"></div>
 <script>
+'use strict';
+
 /* ══ SPEECH SUPPORT ══ */
 function speechSupported(){ return 'speechSynthesis' in window; }
 
@@ -649,7 +655,7 @@ function stopQTimer(){
 /* ══ STORAGE ══ */
 const DB={
   get:(k,d=null)=>{try{const v=localStorage.getItem(k);return v!==null?JSON.parse(v):d}catch{return d}},
-  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}},
+  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){if(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'){try{toast('⚠ Αποθηκευτικός χώρος γεμάτος!','var(--ro)');}catch{}}}},
   delete:(k)=>{try{localStorage.removeItem(k)}catch{}},
   clear:(prefix='')=>{try{Object.keys(localStorage).filter(k=>k.startsWith(prefix)).forEach(k=>localStorage.removeItem(k))}catch{}}
 };
@@ -665,7 +671,7 @@ function speak(text,lang='en-GB'){
         setTimeout(()=>speak(text,lang),1000);
         return;
       }
-      window.AndroidTTS.speak(text.substring(0,400));
+      window.AndroidTTS.speak(text.substring(0,400), lang||'en-GB');
     }catch(e){console.log('TTS error:',e);}
     return;
   }
@@ -747,7 +753,9 @@ async function callAI(promptOrUser, systemOrExtra, messagesOrTokens){
     messages = [{role:'user', content: promptOrUser}];
   }
 
-  const response = await fetch('https://api.anthropic.com/v1/messages',{
+  let response;
+  try{
+    response = await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
     headers:{
       'Content-Type':'application/json',
@@ -763,6 +771,9 @@ async function callAI(promptOrUser, systemOrExtra, messagesOrTokens){
     })
   });
 
+  } catch(netErr){
+    throw new Error('Δεν υπάρχει σύνδεση. Έλεγξε το internet και ξαναπροσπάθησε.');
+  }
   if(!response.ok){
     if(response.status===401){
       showAPIKeyModal('invalid');
@@ -1108,13 +1119,16 @@ function go(id){
   document.querySelectorAll('.pnl,.fpnl').forEach(p=>{p.style.display='none'});
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   const p=document.getElementById(id);
+  if(!p){console.warn('Panel not found:',id);return;}
   p.style.display=FPANELS.includes(id)?'flex':'block';
   const t=document.getElementById('t-'+id);if(t)t.classList.add('on');
   // Update mobile bottom nav
   document.querySelectorAll('.mnb').forEach(b=>b.classList.remove('on'));
   const mn=document.getElementById('mn-'+id);if(mn)mn.classList.add('on');
   ({home:rHome,vocab:rVocab,tenses:rTenses,grammar:rGrammar,writing:rWriting,
-    reading:rReading,speaking:rSpeaking,lessons:rLessons,builder:rBuilder,falsefriends:rFalseFriends,stats:rStats,tracker:rTracker,settings:rSettings})[id]?.()
+    reading:rReading,speaking:rSpeaking,lessons:rLessons,builder:rBuilder,falsefriends:rFalseFriends,stats:rStats,tracker:rTracker,settings:rSettings})[id]?.();
+  // If Daily Flow active, keep bar visible (re-append if moved)
+  if(FLOW&&FLOW.active){const fb=document.getElementById('flow-bar');if(fb&&!document.body.contains(fb))document.body.appendChild(fb);}
 }
 
 function showMobileMenu(){
@@ -3896,6 +3910,7 @@ function rWriting(){unlockAch('wr1');
       <div class="fx ac jb mb4">
         <div class="fp f16 b">Γραφή</div>
         <button onclick="improveEmail()" style="padding:5px 14px;background:linear-gradient(135deg,var(--bl),var(--vi));border-radius:20px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;box-shadow:var(--shadow-glow-bl)">✉ Email Improver</button>
+        <button onclick="CLST.art=null;rClozeTest()" style="padding:5px 14px;background:var(--s2);border:1px solid var(--ln);border-radius:20px;color:var(--t2);font-size:11px;font-weight:600;cursor:pointer">📝 Cloze Tests</button>
       </div>
       <p class="f12 c2 mb20" style="line-height:1.6">Μάθε τη δομή κάθε τύπου κειμένου, απόμνημόνευσε χρήσιμες φράσεις και εξάσκησε τη γραφή σου.</p>
       ${WRITING.map(t=>`<div class="wtpl" onclick="WST.topic='${t.id}';WST.tab='structure';rWTopic()">
@@ -4006,7 +4021,7 @@ function rWTopic(){
       <div class="fx ac g10"><span style="font-size:26px">${t.ic}</span><div><div class="fp f16 b" style="color:${t.col}">${t.t}</div><div class="f11 c3">${t.desc}</div></div></div>
       <span class="tag f9" style="background:${t.col}1a;border:1px solid ${t.col}33;color:${t.col}">${t.lv}</span>
     </div>
-    <div class="fx mb16" style="border-bottom:1px solid var(--ln)">${tabs}</div>${body}
+    <div style="display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none">${tabs}</div>${body}
   </div>`;
   if(WST.tab==='practice'){
     const ta=document.getElementById('wptx');
@@ -4021,205 +4036,11 @@ function toggleWriteCheck(topicId,checkId){
   rWTopic();
 }
 
-function copyTxt(txt){navigator.clipboard?.writeText(txt).then(()=>toast('Αντιγράφτηκε ✓','var(--gr)')).catch(()=>toast('"'+txt+'"'))}
-
-/* ══ READING ══ */
-const READINGS=[
-  {id:'r1',t:'Daily Routines and Work-Life Balance',lv:'B1',col:'var(--gr)',time:'2 min',
-   text:`<p>Finding the right balance between work and personal life has become one of the most important challenges of modern society. <em>Increasingly</em>, people are realising that working longer hours does not necessarily mean being more <em>productive</em>.</p>
-   <p>Research shows that employees who maintain a healthy work-life balance are actually <strong>more focused, creative and motivated</strong> at work. They take fewer sick days and feel more energetic. Companies that <em>encourage</em> their staff to maintain this balance often report significantly better results overall.</p>
-   <p>Simple daily habits can make a remarkable difference. Going for a short walk during your lunch break, <em>avoiding</em> checking emails after work hours, and investing quality time in hobbies or family life can all help you <em>recharge</em> effectively.</p>
-   <p>The key message is simple: taking care of yourself is not a luxury — it is a <em>necessity</em>. When you feel well, you perform better. And when you perform better, you achieve more.</p>`,
-   vocab:['increasingly','productive','encourage','avoiding','recharge','necessity'],
-   qs:[
-     {q:'What is the main message of the text?',opts:['Working long hours leads to success','Work-life balance improves productivity and wellbeing','Rest is a waste of time','Companies should reduce working hours'],a:'Work-life balance improves productivity and wellbeing',ex:'"employees who maintain a healthy work-life balance are actually more focused, creative and motivated"'},
-     {q:'What do companies with good work-life balance experience?',opts:['More sick days','Higher operating costs','Significantly better results','More workplace conflicts'],a:'Significantly better results',ex:'"Companies that encourage their staff... often report significantly better results overall"'},
-     {q:'According to the text, which habit helps you recharge?',opts:['Working through lunch','Checking emails after work','Going for a walk during lunch','Arriving early to the office'],a:'Going for a walk during lunch',ex:'"Going for a short walk during your lunch break... can all help you recharge effectively"'},
-     {q:'What does "necessity" mean in the final paragraph?',opts:['A luxury or extra','Something optional','Something essential and non-negotiable','A temporary solution'],a:'Something essential and non-negotiable',ex:'"taking care of yourself is not a luxury — it is a necessity"'},
-   ]},
-  {id:'r2',t:'The Science of Habit Formation',lv:'B1-B2',col:'var(--bl)',time:'3 min',
-   text:`<p>According to research, <em>approximately</em> 40% of our daily actions are habits rather than <em>deliberate</em> choices. From the moment we wake up to the time we fall asleep, many of our behaviours happen automatically, without any conscious thought.</p>
-   <p>Habits are formed through a three-step process called the "habit loop." First, there is a <em>cue</em> — something that <em>triggers</em> the behaviour. Then comes the routine — the behaviour itself. Finally, there is a reward, which reinforces the cycle and makes the brain want to repeat it.</p>
-   <p>Understanding this loop is the key to changing unwanted habits and <em>establishing</em> new ones. Want to exercise more regularly? Link the new habit to something you already do — like putting your gym clothes next to your bed every evening. The existing habit becomes the cue for the new one.</p>
-   <p>The encouraging news is that habits can be changed at any age. The most <em>crucial</em> factor is not willpower, but consistency. Small, daily steps taken over time lead to <em>remarkable</em> and lasting change.</p>`,
-   vocab:['approximately','deliberate','cue','triggers','establishing','crucial','remarkable'],
-   qs:[
-     {q:'What percentage of daily actions are habits?',opts:['20%','40%','60%','80%'],a:'40%',ex:'"approximately 40% of our daily actions are habits"'},
-     {q:'What is the correct order of the habit loop?',opts:['Routine → Cue → Reward','Reward → Cue → Routine','Cue → Routine → Reward','Cue → Reward → Routine'],a:'Cue → Routine → Reward',ex:'"First, there is a cue... Then comes the routine... Finally, there is a reward"'},
-     {q:'What is described as the most crucial factor for change?',opts:['Willpower','Money','Consistency','Intelligence'],a:'Consistency',ex:'"The most crucial factor is not willpower, but consistency"'},
-     {q:'What does the text suggest to help start a new habit?',opts:['Start with big dramatic changes','Link it to an existing habit','Tell everyone about your goals','Wait for the right moment'],a:'Link it to an existing habit',ex:'"Link the new habit to something you already do"'},
-   ]},
-  {id:'r3',t:'The Digital Revolution and Communication',lv:'B2',col:'var(--am)',time:'3 min',
-   text:`<p>Digital technology has fundamentally <em>transformed</em> the way we communicate. Within a single generation, we have moved from handwritten letters to instant global messaging. While this has brought <em>undeniable</em> advantages, it has also introduced significant challenges.</p>
-   <p>Advocates of digital communication point out that we are now more <em>connected</em> than at any point in history. We can video-call family on the other side of the world, <em>collaborate</em> with international colleagues in real time, and access information within seconds.</p>
-   <p>However, critics argue that this constant <em>connectivity</em> comes at a psychological cost. The pressure to always be available, respond immediately, and curate a perfect online presence can lead to anxiety and feelings of <em>inadequacy</em>. Studies increasingly link heavy social media use with lower levels of life satisfaction.</p>
-   <p>The solution, many psychologists suggest, is not to <em>abandon</em> technology, but to use it more <em>mindfully</em>. Establishing clear digital boundaries — such as keeping phones away during meals or designating technology-free hours — can help restore a healthier, more balanced relationship with our devices.</p>`,
-   vocab:['transformed','undeniable','collaborate','connectivity','inadequacy','abandon','mindfully'],
-   qs:[
-     {q:'What has digital technology fundamentally changed?',opts:['The economy','The way we communicate','Education systems','Healthcare'],a:'The way we communicate',ex:'"Digital technology has fundamentally transformed the way we communicate"'},
-     {q:'What psychological cost is mentioned?',opts:['Physical health problems','Financial stress','Anxiety and feelings of inadequacy','Memory loss'],a:'Anxiety and feelings of inadequacy',ex:'"can lead to anxiety and feelings of inadequacy"'},
-     {q:'What does "mindfully" suggest?',opts:['Slowly and carefully','With full awareness and intention','Automatically','Reluctantly'],a:'With full awareness and intention',ex:'"mindfully" = με επίγνωση και πρόθεση'},
-     {q:'What solution do psychologists recommend?',opts:['Stop using technology completely','Use technology more mindfully with clear boundaries','Limit to one device per person','Only use technology for work'],a:'Use technology more mindfully with clear boundaries',ex:'"use it more mindfully... Establishing clear digital boundaries"'},
-   ]},
-  {id:'r4',t:'The Psychology of Learning a Language',lv:'B2-C1',col:'var(--vi)',time:'4 min',
-   text:`<p>Learning a new language is frequently described as one of the most <em>rewarding</em> yet demanding <em>endeavours</em> an adult can <em>undertake</em>. Beyond the obvious practical benefits, neuroscientific research reveals that bilingualism has profound effects on the brain itself.</p>
-   <p>Studies consistently show that bilingual individuals demonstrate superior <em>cognitive flexibility</em> — the ability to switch between tasks, think creatively, and resist distraction. Regular use of two language systems appears to <em>strengthen</em> key neural <em>pathways</em> and may even delay the onset of cognitive decline in later life.</p>
-   <p>Despite these compelling benefits, many adult learners find themselves stuck in what linguists call the "silent period" — a phase during which they understand far more than they can <em>express</em>. This perfectly natural stage often generates considerable <em>frustration</em> and leads learners to conclude, incorrectly, that they lack the necessary <em>aptitude</em>.</p>
-   <p>The path beyond this plateau does not lie in studying more grammar rules in isolation, but in <em>actively engaging</em> with the language through reading, listening, speaking — imperfectly at first — and writing regularly. Crucially, the willingness to make mistakes and learn from them <em>accelerates</em> progress far more effectively than passive study ever could.</p>`,
-   vocab:['rewarding','endeavours','undertake','cognitive','frustration','aptitude','actively','accelerates'],
-   qs:[
-     {q:'What does research show about bilingual people?',opts:['They earn more money','They have superior cognitive flexibility','They are better at mathematics','They learn faster as children'],a:'They have superior cognitive flexibility',ex:'"bilingual individuals demonstrate superior cognitive flexibility"'},
-     {q:'What is the "silent period" in language learning?',opts:['When you stop practising','When you understand more than you can express','When you focus only on writing','When you are too tired to study'],a:'When you understand more than you can express',ex:'"they understand far more than they can express"'},
-     {q:'What does the text say is the key to progress beyond the plateau?',opts:['Studying more grammar','Using a professional teacher','Actively engaging through all four skills','Memorising vocabulary lists'],a:'Actively engaging through all four skills',ex:'"actively engaging with the language through reading, listening, speaking... and writing"'},
-     {q:'What does the text say about making mistakes?',opts:['They should be avoided','They slow down progress','They are more effective than passive study','They cause frustration'],a:'They are more effective than passive study',ex:'"the willingness to make mistakes and learn from them accelerates progress far more effectively than passive study"'},
-   ]},
-  {id:'r5',t:'Emotional Intelligence in the Workplace',lv:'C1',col:'var(--ro)',time:'4 min',
-   text:`<p>Emotional intelligence — the capacity to recognise, understand, manage and effectively use emotions in ourselves and others — has emerged as one of the most highly <em>valued</em> skills in the contemporary workplace. While technical expertise and academic qualifications remain important, research consistently demonstrates that emotional intelligence is a stronger <em>predictor</em> of professional success than IQ alone.</p>
-   <p>At its core, emotional intelligence <em>comprises</em> four key <em>competencies</em>: self-awareness, self-regulation, social awareness and relationship management. Self-aware individuals recognise how their emotions influence their thinking and behaviour. Self-regulation enables people to manage <em>impulses</em> and respond rather than react to difficult situations.</p>
-   <p>Social awareness — often described as <em>empathy</em> — allows us to understand the emotional states of those around us, which is particularly valuable in leadership, negotiation and conflict resolution. Finally, relationship management involves using all these skills to inspire, influence and <em>cultivate</em> meaningful professional connections.</p>
-   <p>The encouraging finding from decades of research is that, unlike IQ, emotional intelligence can be significantly developed through <em>deliberate</em> practice and self-reflection. Leaders who invest in developing their emotional intelligence tend to create more <em>cohesive</em> teams, resolve conflicts more effectively, and achieve superior long-term outcomes.</p>`,
-   vocab:['valued','predictor','comprises','competencies','empathy','cultivate','deliberate','cohesive'],
-   qs:[
-     {q:'What does research say about emotional intelligence vs IQ?',opts:['IQ is more important for success','They are equally important','EI is a stronger predictor of professional success','EI is only important for managers'],a:'EI is a stronger predictor of professional success',ex:'"emotional intelligence is a stronger predictor of professional success than IQ alone"'},
-     {q:'How many key competencies does EI comprise?',opts:['Two','Three','Four','Five'],a:'Four',ex:'"emotional intelligence comprises four key competencies: self-awareness, self-regulation, social awareness and relationship management"'},
-     {q:'What does "empathy" allow us to do?',opts:['Control other people','Understand the emotional states of others','Avoid conflict','Make better decisions'],a:'Understand the emotional states of others',ex:'"Social awareness — often described as empathy — allows us to understand the emotional states of those around us"'},
-     {q:'What makes EI different from IQ according to the text?',opts:['EI decreases with age','EI cannot be measured','EI can be developed through practice','EI is only relevant for some professions'],a:'EI can be developed through practice',ex:'"unlike IQ, emotional intelligence can be significantly developed through deliberate practice"'},
-   ]},
-
-  {id:'r6',t:'The Future of Remote Work',lv:'B1-B2',col:'var(--tl)',time:'3 min',
-   text:`<p>The COVID-19 pandemic <em>fundamentally</em> changed how millions of people around the world work. What began as a temporary emergency measure has <em>evolved</em> into a permanent shift in workplace culture. Remote work, once considered a privilege, has become a standard expectation for many employees.</p>
-   <p>The benefits are <em>undeniable</em>. Employees report higher levels of job satisfaction, better work-life balance, and reduced commuting costs. For employers, remote work opens access to a global talent pool and can significantly reduce office overhead costs. Studies show that productivity often <em>increases</em> when people work from home, particularly for tasks requiring deep concentration.</p>
-   <p>However, remote work is not without its <em>drawbacks</em>. Many workers struggle with feelings of isolation and find it difficult to separate professional and personal life. Collaboration and creativity can suffer when teams are not physically together. Junior employees, in particular, may miss out on the informal mentoring that naturally occurs in office environments.</p>
-   <p>Most companies are now <em>adopting</em> a hybrid model — a combination of office and remote work. This approach attempts to capture the benefits of both arrangements while minimising the drawbacks. The key to success lies in clear communication, trust between managers and employees, and the right technological infrastructure.</p>`,
-   vocab:['fundamentally','evolved','undeniable','drawbacks','adopting'],
-   qs:[
-     {q:'What does the text say about productivity when working from home?',opts:['It always decreases','It often increases for tasks needing concentration','It stays exactly the same','It depends on the company'],a:'It often increases for tasks needing concentration',ex:'"productivity often increases when people work from home, particularly for tasks requiring deep concentration"'},
-     {q:'What is a major drawback of remote work mentioned in the text?',opts:['Higher costs','Isolation and difficulty separating work from personal life','Lower salaries','Longer working hours'],a:'Isolation and difficulty separating work from personal life',ex:'"Many workers struggle with feelings of isolation and find it difficult to separate professional and personal life"'},
-     {q:'Who may particularly miss out due to remote work?',opts:['Senior managers','Experienced employees','Junior employees','Part-time workers'],a:'Junior employees',ex:'"Junior employees, in particular, may miss out on the informal mentoring that naturally occurs in office environments"'},
-     {q:'What is a hybrid model?',opts:['Fully remote work','Only office work','A combination of office and remote work','Working from different countries'],a:'A combination of office and remote work',ex:'"Most companies are now adopting a hybrid model — a combination of office and remote work"'},
-   ]},
-  {id:'r7',t:'The Importance of Financial Literacy',lv:'B2',col:'var(--gr)',time:'3 min',
-   text:`<p>Financial literacy — the ability to understand and manage personal finances effectively — is one of the most valuable yet <em>neglected</em> skills in modern education. Despite its critical importance, many people reach adulthood without a solid understanding of <em>fundamental</em> concepts such as budgeting, saving, investing, and managing debt.</p>
-   <p>The consequences of financial <em>illiteracy</em> are significant. People who lack financial knowledge are more likely to accumulate debt, make poor investment decisions, and struggle to save for retirement. They are also more vulnerable to financial scams and predatory lending practices that can have devastating long-term effects.</p>
-   <p>Fortunately, developing financial literacy does not require a degree in economics. Understanding a few key principles can make a substantial difference. These include: living within your means, building an emergency fund, avoiding high-interest debt, and <em>consistently</em> setting aside money for long-term goals.</p>
-   <p>Governments and organisations around the world are increasingly recognising the importance of financial education. Some countries have introduced financial literacy programmes into school <em>curricula</em>, while banks and employers are offering workshops and resources to help people make better financial decisions. The evidence is clear: financially literate individuals are better equipped to navigate economic challenges and achieve lasting financial stability.</p>`,
-   vocab:['neglected','fundamental','illiteracy','consistently','curricula'],
-   qs:[
-     {q:'What is financial literacy?',opts:['The ability to count money','Understanding and managing personal finances effectively','A university degree in finance','The ability to earn a high salary'],a:'Understanding and managing personal finances effectively',ex:'"Financial literacy — the ability to understand and manage personal finances effectively"'},
-     {q:'According to the text, what are financially illiterate people more vulnerable to?',opts:['Unemployment','Financial scams and predatory lending','Health problems','Poor education'],a:'Financial scams and predatory lending',ex:'"They are also more vulnerable to financial scams and predatory lending practices"'},
-     {q:'Which principle is NOT mentioned as key to financial literacy?',opts:['Living within your means','Building an emergency fund','Investing in property','Avoiding high-interest debt'],a:'Investing in property',ex:'The text mentions: living within means, emergency fund, avoiding high-interest debt, saving for long-term goals'},
-     {q:'How are governments responding to this issue?',opts:['By reducing taxes','Introducing financial literacy into school curricula','Printing more money','Offering free loans'],a:'Introducing financial literacy into school curricula',ex:'"Some countries have introduced financial literacy programmes into school curricula"'},
-   ]},
-  {id:'r8',t:'Social Media and Mental Health',lv:'B2-C1',col:'var(--ro)',time:'4 min',
-   text:`<p>The relationship between social media use and mental health has become one of the most <em>scrutinised</em> topics in contemporary psychology. As platforms such as Instagram, TikTok and Twitter have become central to daily life — particularly for younger generations — researchers have been working to understand their psychological impact.</p>
-   <p>The evidence presents a nuanced picture. On the one hand, social media enables people to maintain connections, access support communities, and express their identity. For individuals in isolated circumstances, online communities can provide a vital sense of belonging. Furthermore, platforms have been used effectively to raise awareness about mental health issues and <em>destigmatise</em> seeking help.</p>
-   <p>On the other hand, research consistently links heavy social media use — particularly passive scrolling — with increased rates of anxiety, loneliness, and depression. The mechanism appears to involve <em>unfavourable</em> social comparisons: seeing carefully curated images of others' lives can generate feelings of <em>inadequacy</em> and low self-worth. Cyberbullying presents an additional and serious risk, particularly for adolescents.</p>
-   <p>Experts recommend a mindful approach rather than complete abstinence. Setting clear time limits, being selective about the accounts you follow, and actively engaging rather than passively consuming content are all <em>strategies</em> shown to mitigate negative effects. The goal is not to eliminate social media but to develop a healthier, more intentional relationship with it.</p>`,
-   vocab:['scrutinised','destigmatise','unfavourable','inadequacy','strategies'],
-   qs:[
-     {q:'What does "passive scrolling" refer to in this context?',opts:['Actively creating content','Reading content without engaging or interacting','Scrolling quickly through pages','Using social media for work'],a:'Reading content without engaging or interacting',ex:'Passive scrolling = consuming content without active engagement, linked to anxiety and depression'},
-     {q:'What mechanism links social media to negative mental health outcomes?',opts:['Addiction to notifications','Unfavourable social comparisons from curated images','Too much screen time generally','Lack of real-life friends'],a:'Unfavourable social comparisons from curated images',ex:'"seeing carefully curated images of others lives can generate feelings of inadequacy and low self-worth"'},
-     {q:'What is the positive aspect of social media for isolated individuals?',opts:['It replaces real friendships','It provides entertainment','It provides a vital sense of belonging','It improves physical health'],a:'It provides a vital sense of belonging',ex:'"For individuals in isolated circumstances, online communities can provide a vital sense of belonging"'},
-     {q:'What approach do experts recommend?',opts:['Complete avoidance of social media','Mindful use with clear limits and active engagement','Using only one platform','Only using social media for work'],a:'Mindful use with clear limits and active engagement',ex:'"Experts recommend a mindful approach rather than complete abstinence. Setting clear time limits... actively engaging rather than passively consuming"'},
-   ]},
-  {id:'r9',t:'Aviation Safety Management',lv:'B1',col:'var(--bl)',time:'6 min',
-   vocab:['safety management','risk assessment','corrective action','compliance','mitigation'],
-   text:'Aviation safety is not the absence of accidents — it is the active management of risk. Every airline and CAMO must maintain a Safety Management System (SMS), which identifies hazards before they become incidents. The process involves four key steps: hazard identification, risk assessment, risk mitigation, and performance monitoring. When a defect or near-miss occurs, a corrective action is raised and tracked until it is closed. Regulators such as EASA and HCAA require evidence that organisations are not only identifying problems, but also learning from them. The goal is a just culture — one where people report issues without fear of punishment, so that systemic problems can be addressed before they cause harm.',
-   qs:[
-     {q:'What does SMS stand for?',opts:['Safety Maintenance Schedule','Safety Management System','Standard Monitoring Service','System Maintenance Standard'],a:'Safety Management System'},
-     {q:'What is a just culture in aviation?',opts:['A culture with strict punishment','A culture encouraging reporting without fear','A culture focused only on compliance','A culture that ignores minor incidents'],a:'A culture encouraging reporting without fear'},
-     {q:'Which step comes AFTER risk assessment in the SMS process?',opts:['Hazard identification','Performance monitoring','Risk mitigation','Corrective action'],a:'Risk mitigation'},
-   ]},
-  {id:'r10',t:'CAMO Responsibilities Under EASA Part-CAMO',lv:'B2',col:'var(--vi)',time:'7 min',
-   vocab:['continuing airworthiness','maintenance programme','airworthiness review','subcontract','findings'],
-   text:'A Continuing Airworthiness Management Organisation (CAMO) is responsible for ensuring that aircraft remain airworthy throughout their operational life. Under EASA Part-CAMO, organisations must develop and maintain an Aircraft Maintenance Programme (AMP), coordinate with approved maintenance organisations, and conduct regular Airworthiness Reviews. The CAMO must also monitor the implementation of Airworthiness Directives (ADs) and Service Bulletins. When the competent authority — such as HCAA in Greece — conducts an audit and raises findings, the organisation must respond with corrective actions within defined timeframes. Failure to comply can result in suspension of the CAMO approval. Good documentation, accurate records, and proactive communication with the authority are essential for maintaining compliance.',
-   qs:[
-     {q:'What does AMP stand for?',opts:['Aviation Maintenance Procedure','Aircraft Maintenance Programme','Approved Maintenance Plan','Airworthiness Monitoring Protocol'],a:'Aircraft Maintenance Programme'},
-     {q:'What happens if a CAMO fails to respond to audit findings?',opts:['They receive a warning letter','Their approval may be suspended','They must pay a fine','Nothing happens'],a:'Their approval may be suspended'},
-     {q:'What must a CAMO do when a new AD is issued?',opts:['Wait for the authority','Assess its impact within a defined timeframe','Immediately ground all aircraft','Only act if marked Emergency'],a:'Assess its impact within a defined timeframe'},
-   ]},
-  {id:'r11',t:'Effective Communication in Aviation',lv:'B1',col:'var(--gr)',time:'5 min',
-   vocab:['miscommunication','standard phraseology','readback','crew resource management','ambiguity'],
-   text:'Communication failures are a leading cause of aviation incidents. When instructions are ambiguous, the consequences can be serious. This is why aviation uses standard phraseology — precise, internationally agreed expressions that reduce misunderstanding. Pilots and controllers use the readback technique: the recipient repeats critical information to confirm understanding. In maintenance, clear written communication is equally important. A poorly worded maintenance record can lead to repeated defects or missed inspections. Crew Resource Management (CRM) training teaches aviation professionals to speak up, question assumptions, and share information openly — even when speaking to a senior colleague.',
-   qs:[
-     {q:'What is the readback technique?',opts:['Reading the manual','Repeating critical information to confirm understanding','Writing a summary','Asking a colleague to repeat'],a:'Repeating critical information to confirm understanding'},
-     {q:'What can a poorly worded maintenance record cause?',opts:['Improved communication','Repeated defects or missed inspections','Better documentation','No significant problems'],a:'Repeated defects or missed inspections'},
-     {q:'What does CRM training teach?',opts:['Technical aircraft systems','How to speak up and share information openly','Standard phraseology only','Emergency procedures'],a:'How to speak up and share information openly'},
-   ]},
-  {id:'r12',t:'Airworthiness Directives: What You Need to Know',lv:'B2',col:'var(--am)',time:'6 min',
-   vocab:['mandatory','compliance deadline','amendment','unsafe condition','applicability'],
-   text:'An Airworthiness Directive (AD) is a mandatory document issued by a national aviation authority when an unsafe condition is identified on an aircraft type. Unlike Service Bulletins, which are generally optional, ADs must be complied with by the stated deadline or the aircraft cannot legally fly. ADs describe the unsafe condition, specify which aircraft are affected (the applicability), and detail the required action — which may be an inspection, a modification, or a component replacement. The CAMO is responsible for tracking all applicable ADs, incorporating them into the Aircraft Maintenance Programme, and ensuring compliance.',
-   qs:[
-     {q:'What is the key difference between an AD and a Service Bulletin?',opts:['ADs are optional','ADs are mandatory, SBs are generally optional','There is no difference','ADs apply only to engines'],a:'ADs are mandatory, SBs are generally optional'},
-     {q:'What does applicability refer to in an AD?',opts:['The deadline for compliance','Which aircraft are affected','The required action','The authority that issued it'],a:'Which aircraft are affected'},
-     {q:'What must a CAMO do with applicable ADs?',opts:['Wait for instructions','Incorporate them into the AMP and ensure compliance','Only act on Emergency ADs','Report them to pilots'],a:'Incorporate them into the AMP and ensure compliance'},
-   ]}
-];
-
-let RST={art:null,ra:{},rs:false,rsc:null};
-function rReading(){
-  unlockAch('rd1');{const rd2=DB.get('rdDone',[]);if(rd2.length>=5)unlockAch('rd5');}
-  const el=document.getElementById('reading');
-  if(!RST.art){
-    el.innerHTML=`<div class="sec fu">
-      <div class="sl mb4 cam">READING COMPREHENSION</div>
-      <div class="fp f16 b mb6">Ανάγνωση & Κατανόηση</div>
-      <div class="fx g8 mb16">
-        <button onclick="CLST.art=null;rClozeTest()" class="btn bgh bsm">📝 Cloze Tests</button>
-      </div>
-      <p class="f12 c2 mb12" style="line-height:1.6">8 κείμενα B1→C1 σε γενικά θέματα. Οι <em style="color:var(--tl)">υπογραμμισμένες λέξεις</em> μπορούν να αποθηκευτούν στο Vocabular.</p>
-      ${READINGS.map(a=>`<div class="rcard">
-        <div class="fx ac jb mb8" onclick="RST.art='${a.id}';RST.ra={};RST.rs=false;RST.rsc=null;rReading()">
-          <div class="fp f13 b" style="color:${a.col}">${a.t}</div>
-          <div class="fx ac g6">
-            <span class="tag f9" style="background:${a.col}1a;border:1px solid ${a.col}33;color:${a.col}">${a.lv}</span>
-            <span class="tag f9" style="background:var(--s2);border:1px solid var(--ln2);color:var(--t3)">⏱ ${a.time}</span>
-            <span class="tag f9" style="background:var(--s2);border:1px solid var(--ln2);color:var(--t3)">❓ ${a.qs.length}Q</span>
-          </div>
-        </div>
-        <p class="f11 c3" style="line-height:1.5" onclick="RST.art='${a.id}';RST.ra={};RST.rs=false;RST.rsc=null;rReading()">${a.text.replace(/<[^>]+>/g,'').substring(0,170)}...</p>
-        ${a.vocab.length?`<div class="mt8 fx g6 ac fw"><span class="f9 c3">Λέξεις:</span>${a.vocab.map(v=>`<span class="tag f9" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr)">${v}</span>`).join('')}</div>`:''}
-      </div>`).join('')}
-    </div>`;
-  } else {
-    const a=READINGS.find(x=>x.id===RST.art);
-    if(!a){RST.art=null;rReading();return;}
-    const qRows=(a.qs||[]).map((q,i)=>{
-      const opts=q.opts.map(opt=>{
-        let bg='var(--s2)',br='var(--ln)',col='var(--t2)';
-        if(RST.ra[i]===opt){bg='var(--s3)';br=a.col;col=a.col;}
-        if(RST.rs){if(opt===q.a){bg='#051a0a';br='#22c77a44';col='var(--gr)';}else if(RST.ra[i]===opt){bg='#1a0508';br='#f0387044';col='var(--ro)';}}
-        return `<button class="rqo" onclick="if(!RST.rs){RST.ra[${i}]='${opt.replace(/'/g,"\\'")}';rReading()}" style="background:${bg};border-color:${br};color:${col}">${opt}</button>`;
-      }).join('');
-      return `<div class="card mb10"><div class="f13 mb10" style="line-height:1.6"><span class="fp b" style="color:${a.col};margin-right:7px">${i+1}.</span>${q.q}</div>${opts}${RST.rs?`<div class="mt8 f11"><span style="color:${RST.ra[i]===q.a?'var(--gr)':'var(--ro)'}">${RST.ra[i]===q.a?'✓ Σωστό! ':'✗ Σωστό: "'+q.a+'" — '}</span><span class="c3">${q.ex}</span></div>`:''}</div>`;
-    }).join('');
-    const allA=Object.keys(RST.ra).length>=a.qs.length;
-    el.innerHTML=`<div class="sec fu">
-      <button onclick="RST.art=null;rReading()" style="color:var(--t3);font-size:11px;background:none;border:none;cursor:pointer;margin-bottom:16px">← Πίσω</button>
-      <div class="fx ac g8 mb6">
-        <span class="tag f9" style="background:${a.col}1a;border:1px solid ${a.col}33;color:${a.col}">${a.lv}</span>
-        <span class="tag f9" style="background:var(--s2);border:1px solid var(--ln2);color:var(--t3)">⏱ ${a.time}</span>
-      </div>
-      <div class="fp f16 b mb4" style="color:${a.col}">${a.t}</div>
-      ${a.vocab.length?`<div class="card c-ok mb12 fx ac g8 fw"><span class="f10 c2">💡 Κλικ για αποθήκευση στο Vocabular:</span>${a.vocab.map(v=>`<button onclick="saveFromR('${v}')" style="padding:3px 9px;border-radius:20px;border:1px solid var(--gr)44;background:var(--gr)1a;color:var(--gr);font-size:10px;font-weight:600;cursor:pointer">+ ${v}</button>`).join('')}</div>`:''}
-      <div class="fx ac g8 mb8">
-        <button onclick="speakCurrentReading()" style="padding:4px 12px;background:none;border:1px solid var(--tl)44;border-radius:20px;color:var(--tl);font-size:11px;cursor:pointer">🔊 Άκουσε το κείμενο</button>
-        <button onclick="saveCurrentReading()" style="padding:4px 12px;background:none;border:1px solid var(--vi)44;border-radius:20px;color:var(--vi);font-size:11px;cursor:pointer">📌 Αποθήκευσε</button>
-      </div>
-      <div class="card mb20 rbody">${a.text}</div>
-      <div class="sl mb12">COMPREHENSION QUESTIONS</div>
-      ${qRows}
-      ${!RST.rs
-        ?`<button onclick="if(${allA}){let c=0;READINGS.find(x=>x.id===RST.art).qs.forEach((q,i)=>{if(RST.ra[i]===q.a)c++});RST.rsc=c;RST.rs=true;addXP(c*10);
-  const rd=DB.get('rdDone',[]);if(!rd.includes(RST.art)){rd.push(RST.art);DB.set('rdDone',rd);}
-  if(c===READINGS.find(x=>x.id===RST.art).qs.length)toast('✓ Τέλειο! +'+c*10+' XP','var(--gr)');
-  else toast('Αποτέλεσμα: '+c+'/'+READINGS.find(x=>x.id===RST.art).qs.length+' — +'+c*10+' XP','var(--bl)');
-  rReading()}" style="padding:10px 22px;background:${a.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${allA?1:0.4};cursor:${allA?'pointer':'not-allowed'};${allA?'box-shadow:0 4px 16px rgba(79,142,247,.3)':''}">Ελέγξτε →</button>`
-        :`<div class="fx ac g12"><div class="card" style="border:2px solid ${RST.rsc===a.qs.length?'var(--am)':'var(--gr)'}">
-           <span class="f11 c3">Αποτέλεσμα: </span><span class="fp f20 b" style="color:${RST.rsc===a.qs.length?'var(--am)':'var(--gr)'}">${RST.rsc}/${a.qs.length}</span>
-           </div><button onclick="RST.ra={};RST.rs=false;RST.rsc=null;rReading()" style="padding:9px 16px;border:1px solid ${a.col};border-radius:7px;color:${a.col};background:transparent;cursor:pointer;font-size:10px;font-weight:700">ΞΑΝΑ</button></div>`}
-    </div>`;
+function copyTxt(txt){
+  if(navigator.clipboard&&location.protocol==='https:'){
+    navigator.clipboard.writeText(txt).then(()=>toast('Αντιγράφτηκε ✓','var(--gr)')).catch(()=>{});
   }
+  toast(txt.length<=40?'📋 '+txt:'📋 Αντιγράφτηκε!','var(--gr)');
 }
 
 function saveFromR(word){
@@ -4423,7 +4244,6 @@ const CONVERSATIONS=[
                "Maybe cut costs somewhere?"],correct:1,
       feedback:"✓ 'I would propose that we...' = formal suggestion. Specific and actionable."},
    ]},
-,
   {id:'cv4',title:'Ordering Coffee',level:'A2-B1',ic:'☕',
    turns:[
      {speaker:'Barista',text:'Hi there! What can I get for you today?',
@@ -4660,14 +4480,179 @@ const LISTENING_EX=[
    vocab:['neurological','reinforces','eliminates','transforms'],
    keyPhrases:['follows the same loop','triggers the habit','reinforce the loop','cannot simply eliminate'],
   },
-];
+,
+  {id:'le4',title:'TED: The Power of Vulnerability',level:'B2-C1',duration:'5 min',accent:'American',speed:'natural',
+   url:'https://www.ted.com/talks/brene_brown_the_power_of_vulnerability',
+   transcript:'Brene Brown studies human connection. She says vulnerability is not weakness; it is our most accurate measure of courage. When we numb vulnerability, we numb joy and happiness. People with a strong sense of belonging simply believe they are worthy of love and belonging. They have the courage to be imperfect.',
+   questions:[
+     {q:'What does Brown say vulnerability is?',opts:['Weakness','Courage','A problem','A skill'],a:'Courage'},
+     {q:'What happens when we numb vulnerability?',opts:['We get stronger','We numb joy too','We connect better','Nothing changes'],a:'We numb joy too'},
+     {q:'What do people with belonging believe?',opts:['They must be perfect','They are worthy of love','They never fail','They are better than others'],a:'They are worthy of love'},
+   ]},
+  {id:'le5',title:'BBC News: Climate Solutions',level:'B2',duration:'4 min',accent:'British',speed:'natural',
+   url:'https://www.bbc.com/news/science-environment',
+   transcript:'Solar and wind energy have become dramatically cheaper over the past decade. Electric vehicles are now outselling petrol cars in several countries. Experts warn that the pace of change needs to accelerate if we are to limit global warming to 1.5 degrees Celsius above pre-industrial levels.',
+   questions:[
+     {q:'What has happened to renewable energy costs?',opts:['Increased','Same','Much cheaper','Still expensive'],a:'Much cheaper'},
+     {q:'What target do experts mention?',opts:['2 degrees','1 degree','1.5 degrees Celsius','3 degrees'],a:'1.5 degrees Celsius'},
+     {q:'What are EVs doing in some countries?',opts:['Being banned','Outselling petrol cars','Getting cheaper only','Failing to sell'],a:'Outselling petrol cars'},
+   ]},
+  {id:'le6',title:'Podcast: Habits That Changed My Life',level:'B1-B2',duration:'5 min',accent:'Australian',speed:'natural',
+   url:'https://www.bbc.co.uk/programmes/p02nrss1',
+   transcript:'Building good habits is less about motivation and more about design. Make healthy choices easy and unhealthy choices harder. Want to exercise more? Sleep in your gym clothes. Want to read more? Put your phone in another room and leave a book on your pillow. Consistency beats perfection every single time.',
+   questions:[
+     {q:'Habit-building is more about what than motivation?',opts:['Willpower','Design','Money','Genetics'],a:'Design'},
+     {q:'What beats perfection?',opts:['Motivation','Hard work','Consistency','Intelligence'],a:'Consistency'},
+     {q:'What helps you read more?',opts:['Buy more books','Phone away and book on pillow','Read for one hour daily','Join a book club'],a:'Phone away and book on pillow'},
+   ]},
+  {id:'le7',title:'Interview: Remote Work Culture',level:'B2',duration:'6 min',accent:'American',speed:'fast',
+   url:'https://www.bbc.co.uk/learningenglish/english/features/6-minute-english',
+   transcript:'Remote work has transformed how companies operate. Some workers thrive with flexibility, others struggle without structure. Companies are experimenting with hybrid models, requiring staff to come in two or three days a week. The biggest challenge is maintaining company culture and onboarding new employees who have never met their colleagues in person.',
+   questions:[
+     {q:'What do studies show about remote work productivity?',opts:['Always better','Mixed results','Always worse','No effect'],a:'Mixed results'},
+     {q:'What are companies experimenting with?',opts:['Full remote','Full office','Hybrid models','Four-day weeks'],a:'Hybrid models'},
+     {q:'What is the biggest challenge of remote work?',opts:['Internet speed','Culture and onboarding','Time zones','Equipment costs'],a:'Culture and onboarding'},
+   ]}];
 
 let LEST={art:null,ans:{},done:false,score:0};
+let RST={art:null,ra:{},rs:false,rsc:null};
+
+const READINGS=[
+  {id:'r1',t:'Daily Routines and Work-Life Balance',lv:'B1',col:'var(--gr)',time:'2 min',
+   text:`<p>Finding the right balance between work and personal life has become one of the most important challenges of modern society. <em>Increasingly</em>, people are realising that working longer hours does not necessarily mean being more <em>productive</em>.</p>
+   <p>Research shows that employees who maintain a healthy work-life balance are actually <strong>more focused, creative and motivated</strong> at work. They take fewer sick days and feel more energetic. Companies that <em>encourage</em> their staff to maintain this balance often report significantly better results overall.</p>
+   <p>Simple daily habits can make a remarkable difference. Going for a short walk during your lunch break, <em>avoiding</em> checking emails after work hours, and investing quality time in hobbies or family life can all help you <em>recharge</em> effectively.</p>
+   <p>The key message is simple: taking care of yourself is not a luxury — it is a <em>necessity</em>. When you feel well, you perform better. And when you perform better, you achieve more.</p>`,
+   vocab:['increasingly','productive','encourage','avoiding','recharge','necessity'],
+   qs:[
+     {q:'What is the main message of the text?',opts:['Working long hours leads to success','Work-life balance improves productivity and wellbeing','Rest is a waste of time','Companies should reduce working hours'],a:'Work-life balance improves productivity and wellbeing',ex:'"employees who maintain a healthy work-life balance are actually more focused, creative and motivated"'},
+     {q:'What do companies with good work-life balance experience?',opts:['More sick days','Higher operating costs','Significantly better results','More workplace conflicts'],a:'Significantly better results',ex:'"Companies that encourage their staff... often report significantly better results overall"'},
+     {q:'According to the text, which habit helps you recharge?',opts:['Working through lunch','Checking emails after work','Going for a walk during lunch','Arriving early to the office'],a:'Going for a walk during lunch',ex:'"Going for a short walk during your lunch break... can all help you recharge effectively"'},
+     {q:'What does "necessity" mean in the final paragraph?',opts:['A luxury or extra','Something optional','Something essential and non-negotiable','A temporary solution'],a:'Something essential and non-negotiable',ex:'"taking care of yourself is not a luxury — it is a necessity"'},
+   ]},
+  {id:'r2',t:'The Science of Habit Formation',lv:'B1-B2',col:'var(--bl)',time:'3 min',
+   text:`<p>According to research, <em>approximately</em> 40% of our daily actions are habits rather than <em>deliberate</em> choices. From the moment we wake up to the time we fall asleep, many of our behaviours happen automatically, without any conscious thought.</p>
+   <p>Habits are formed through a three-step process called the "habit loop." First, there is a <em>cue</em> — something that <em>triggers</em> the behaviour. Then comes the routine — the behaviour itself. Finally, there is a reward, which reinforces the cycle and makes the brain want to repeat it.</p>
+   <p>Understanding this loop is the key to changing unwanted habits and <em>establishing</em> new ones. Want to exercise more regularly? Link the new habit to something you already do — like putting your gym clothes next to your bed every evening. The existing habit becomes the cue for the new one.</p>
+   <p>The encouraging news is that habits can be changed at any age. The most <em>crucial</em> factor is not willpower, but consistency. Small, daily steps taken over time lead to <em>remarkable</em> and lasting change.</p>`,
+   vocab:['approximately','deliberate','cue','triggers','establishing','crucial','remarkable'],
+   qs:[
+     {q:'What percentage of daily actions are habits?',opts:['20%','40%','60%','80%'],a:'40%',ex:'"approximately 40% of our daily actions are habits"'},
+     {q:'What is the correct order of the habit loop?',opts:['Routine → Cue → Reward','Reward → Cue → Routine','Cue → Routine → Reward','Cue → Reward → Routine'],a:'Cue → Routine → Reward',ex:'"First, there is a cue... Then comes the routine... Finally, there is a reward"'},
+     {q:'What is described as the most crucial factor for change?',opts:['Willpower','Money','Consistency','Intelligence'],a:'Consistency',ex:'"The most crucial factor is not willpower, but consistency"'},
+     {q:'What does the text suggest to help start a new habit?',opts:['Start with big dramatic changes','Link it to an existing habit','Tell everyone about your goals','Wait for the right moment'],a:'Link it to an existing habit',ex:'"Link the new habit to something you already do"'},
+   ]},
+  {id:'r3',t:'The Digital Revolution and Communication',lv:'B2',col:'var(--am)',time:'3 min',
+   text:`<p>Digital technology has fundamentally <em>transformed</em> the way we communicate. Within a single generation, we have moved from handwritten letters to instant global messaging. While this has brought <em>undeniable</em> advantages, it has also introduced significant challenges.</p>
+   <p>Advocates of digital communication point out that we are now more <em>connected</em> than at any point in history. We can video-call family on the other side of the world, <em>collaborate</em> with international colleagues in real time, and access information within seconds.</p>
+   <p>However, critics argue that this constant <em>connectivity</em> comes at a psychological cost. The pressure to always be available, respond immediately, and curate a perfect online presence can lead to anxiety and feelings of <em>inadequacy</em>. Studies increasingly link heavy social media use with lower levels of life satisfaction.</p>
+   <p>The solution, many psychologists suggest, is not to <em>abandon</em> technology, but to use it more <em>mindfully</em>. Establishing clear digital boundaries — such as keeping phones away during meals or designating technology-free hours — can help restore a healthier, more balanced relationship with our devices.</p>`,
+   vocab:['transformed','undeniable','collaborate','connectivity','inadequacy','abandon','mindfully'],
+   qs:[
+     {q:'What has digital technology fundamentally changed?',opts:['The economy','The way we communicate','Education systems','Healthcare'],a:'The way we communicate',ex:'"Digital technology has fundamentally transformed the way we communicate"'},
+     {q:'What psychological cost is mentioned?',opts:['Physical health problems','Financial stress','Anxiety and feelings of inadequacy','Memory loss'],a:'Anxiety and feelings of inadequacy',ex:'"can lead to anxiety and feelings of inadequacy"'},
+     {q:'What does "mindfully" suggest?',opts:['Slowly and carefully','With full awareness and intention','Automatically','Reluctantly'],a:'With full awareness and intention',ex:'"mindfully" = με επίγνωση και πρόθεση'},
+     {q:'What solution do psychologists recommend?',opts:['Stop using technology completely','Use technology more mindfully with clear boundaries','Limit to one device per person','Only use technology for work'],a:'Use technology more mindfully with clear boundaries',ex:'"use it more mindfully... Establishing clear digital boundaries"'},
+   ]},
+  {id:'r4',t:'The Psychology of Learning a Language',lv:'B2-C1',col:'var(--vi)',time:'4 min',
+   text:`<p>Learning a new language is frequently described as one of the most <em>rewarding</em> yet demanding <em>endeavours</em> an adult can <em>undertake</em>. Beyond the obvious practical benefits, neuroscientific research reveals that bilingualism has profound effects on the brain itself.</p>
+   <p>Studies consistently show that bilingual individuals demonstrate superior <em>cognitive flexibility</em> — the ability to switch between tasks, think creatively, and resist distraction. Regular use of two language systems appears to <em>strengthen</em> key neural <em>pathways</em> and may even delay the onset of cognitive decline in later life.</p>
+   <p>Despite these compelling benefits, many adult learners find themselves stuck in what linguists call the "silent period" — a phase during which they understand far more than they can <em>express</em>. This perfectly natural stage often generates considerable <em>frustration</em> and leads learners to conclude, incorrectly, that they lack the necessary <em>aptitude</em>.</p>
+   <p>The path beyond this plateau does not lie in studying more grammar rules in isolation, but in <em>actively engaging</em> with the language through reading, listening, speaking — imperfectly at first — and writing regularly. Crucially, the willingness to make mistakes and learn from them <em>accelerates</em> progress far more effectively than passive study ever could.</p>`,
+   vocab:['rewarding','endeavours','undertake','cognitive','frustration','aptitude','actively','accelerates'],
+   qs:[
+     {q:'What does research show about bilingual people?',opts:['They earn more money','They have superior cognitive flexibility','They are better at mathematics','They learn faster as children'],a:'They have superior cognitive flexibility',ex:'"bilingual individuals demonstrate superior cognitive flexibility"'},
+     {q:'What is the "silent period" in language learning?',opts:['When you stop practising','When you understand more than you can express','When you focus only on writing','When you are too tired to study'],a:'When you understand more than you can express',ex:'"they understand far more than they can express"'},
+     {q:'What does the text say is the key to progress beyond the plateau?',opts:['Studying more grammar','Using a professional teacher','Actively engaging through all four skills','Memorising vocabulary lists'],a:'Actively engaging through all four skills',ex:'"actively engaging with the language through reading, listening, speaking... and writing"'},
+     {q:'What does the text say about making mistakes?',opts:['They should be avoided','They slow down progress','They are more effective than passive study','They cause frustration'],a:'They are more effective than passive study',ex:'"the willingness to make mistakes and learn from them accelerates progress far more effectively than passive study"'},
+   ]},
+  {id:'r5',t:'Emotional Intelligence in the Workplace',lv:'C1',col:'var(--ro)',time:'4 min',
+   text:`<p>Emotional intelligence — the capacity to recognise, understand, manage and effectively use emotions in ourselves and others — has emerged as one of the most highly <em>valued</em> skills in the contemporary workplace. While technical expertise and academic qualifications remain important, research consistently demonstrates that emotional intelligence is a stronger <em>predictor</em> of professional success than IQ alone.</p>
+   <p>At its core, emotional intelligence <em>comprises</em> four key <em>competencies</em>: self-awareness, self-regulation, social awareness and relationship management. Self-aware individuals recognise how their emotions influence their thinking and behaviour. Self-regulation enables people to manage <em>impulses</em> and respond rather than react to difficult situations.</p>
+   <p>Social awareness — often described as <em>empathy</em> — allows us to understand the emotional states of those around us, which is particularly valuable in leadership, negotiation and conflict resolution. Finally, relationship management involves using all these skills to inspire, influence and <em>cultivate</em> meaningful professional connections.</p>
+   <p>The encouraging finding from decades of research is that, unlike IQ, emotional intelligence can be significantly developed through <em>deliberate</em> practice and self-reflection. Leaders who invest in developing their emotional intelligence tend to create more <em>cohesive</em> teams, resolve conflicts more effectively, and achieve superior long-term outcomes.</p>`,
+   vocab:['valued','predictor','comprises','competencies','empathy','cultivate','deliberate','cohesive'],
+   qs:[
+     {q:'What does research say about emotional intelligence vs IQ?',opts:['IQ is more important for success','They are equally important','EI is a stronger predictor of professional success','EI is only important for managers'],a:'EI is a stronger predictor of professional success',ex:'"emotional intelligence is a stronger predictor of professional success than IQ alone"'},
+     {q:'How many key competencies does EI comprise?',opts:['Two','Three','Four','Five'],a:'Four',ex:'"emotional intelligence comprises four key competencies: self-awareness, self-regulation, social awareness and relationship management"'},
+     {q:'What does "empathy" allow us to do?',opts:['Control other people','Understand the emotional states of others','Avoid conflict','Make better decisions'],a:'Understand the emotional states of others',ex:'"Social awareness — often described as empathy — allows us to understand the emotional states of those around us"'},
+     {q:'What makes EI different from IQ according to the text?',opts:['EI decreases with age','EI cannot be measured','EI can be developed through practice','EI is only relevant for some professions'],a:'EI can be developed through practice',ex:'"unlike IQ, emotional intelligence can be significantly developed through deliberate practice"'},
+   ]},
+
+  {id:'r6',t:'The Future of Remote Work',lv:'B1-B2',col:'var(--tl)',time:'3 min',
+   text:`<p>The COVID-19 pandemic <em>fundamentally</em> changed how millions of people around the world work. What began as a temporary emergency measure has <em>evolved</em> into a permanent shift in workplace culture. Remote work, once considered a privilege, has become a standard expectation for many employees.</p>
+   <p>The benefits are <em>undeniable</em>. Employees report higher levels of job satisfaction, better work-life balance, and reduced commuting costs. For employers, remote work opens access to a global talent pool and can significantly reduce office overhead costs. Studies show that productivity often <em>increases</em> when people work from home, particularly for tasks requiring deep concentration.</p>
+   <p>However, remote work is not without its <em>drawbacks</em>. Many workers struggle with feelings of isolation and find it difficult to separate professional and personal life. Collaboration and creativity can suffer when teams are not physically together. Junior employees, in particular, may miss out on the informal mentoring that naturally occurs in office environments.</p>
+   <p>Most companies are now <em>adopting</em> a hybrid model — a combination of office and remote work. This approach attempts to capture the benefits of both arrangements while minimising the drawbacks. The key to success lies in clear communication, trust between managers and employees, and the right technological infrastructure.</p>`,
+   vocab:['fundamentally','evolved','undeniable','drawbacks','adopting'],
+   qs:[
+     {q:'What does the text say about productivity when working from home?',opts:['It always decreases','It often increases for tasks needing concentration','It stays exactly the same','It depends on the company'],a:'It often increases for tasks needing concentration',ex:'"productivity often increases when people work from home, particularly for tasks requiring deep concentration"'},
+     {q:'What is a major drawback of remote work mentioned in the text?',opts:['Higher costs','Isolation and difficulty separating work from personal life','Lower salaries','Longer working hours'],a:'Isolation and difficulty separating work from personal life',ex:'"Many workers struggle with feelings of isolation and find it difficult to separate professional and personal life"'},
+     {q:'Who may particularly miss out due to remote work?',opts:['Senior managers','Experienced employees','Junior employees','Part-time workers'],a:'Junior employees',ex:'"Junior employees, in particular, may miss out on the informal mentoring that naturally occurs in office environments"'},
+     {q:'What is a hybrid model?',opts:['Fully remote work','Only office work','A combination of office and remote work','Working from different countries'],a:'A combination of office and remote work',ex:'"Most companies are now adopting a hybrid model — a combination of office and remote work"'},
+   ]},
+  {id:'r7',t:'The Importance of Financial Literacy',lv:'B2',col:'var(--gr)',time:'3 min',
+   text:`<p>Financial literacy — the ability to understand and manage personal finances effectively — is one of the most valuable yet <em>neglected</em> skills in modern education. Despite its critical importance, many people reach adulthood without a solid understanding of <em>fundamental</em> concepts such as budgeting, saving, investing, and managing debt.</p>
+   <p>The consequences of financial <em>illiteracy</em> are significant. People who lack financial knowledge are more likely to accumulate debt, make poor investment decisions, and struggle to save for retirement. They are also more vulnerable to financial scams and predatory lending practices that can have devastating long-term effects.</p>
+   <p>Fortunately, developing financial literacy does not require a degree in economics. Understanding a few key principles can make a substantial difference. These include: living within your means, building an emergency fund, avoiding high-interest debt, and <em>consistently</em> setting aside money for long-term goals.</p>
+   <p>Governments and organisations around the world are increasingly recognising the importance of financial education. Some countries have introduced financial literacy programmes into school <em>curricula</em>, while banks and employers are offering workshops and resources to help people make better financial decisions. The evidence is clear: financially literate individuals are better equipped to navigate economic challenges and achieve lasting financial stability.</p>`,
+   vocab:['neglected','fundamental','illiteracy','consistently','curricula'],
+   qs:[
+     {q:'What is financial literacy?',opts:['The ability to count money','Understanding and managing personal finances effectively','A university degree in finance','The ability to earn a high salary'],a:'Understanding and managing personal finances effectively',ex:'"Financial literacy — the ability to understand and manage personal finances effectively"'},
+     {q:'According to the text, what are financially illiterate people more vulnerable to?',opts:['Unemployment','Financial scams and predatory lending','Health problems','Poor education'],a:'Financial scams and predatory lending',ex:'"They are also more vulnerable to financial scams and predatory lending practices"'},
+     {q:'Which principle is NOT mentioned as key to financial literacy?',opts:['Living within your means','Building an emergency fund','Investing in property','Avoiding high-interest debt'],a:'Investing in property',ex:'The text mentions: living within means, emergency fund, avoiding high-interest debt, saving for long-term goals'},
+     {q:'How are governments responding to this issue?',opts:['By reducing taxes','Introducing financial literacy into school curricula','Printing more money','Offering free loans'],a:'Introducing financial literacy into school curricula',ex:'"Some countries have introduced financial literacy programmes into school curricula"'},
+   ]},
+  {id:'r8',t:'Social Media and Mental Health',lv:'B2-C1',col:'var(--ro)',time:'4 min',
+   text:`<p>The relationship between social media use and mental health has become one of the most <em>scrutinised</em> topics in contemporary psychology. As platforms such as Instagram, TikTok and Twitter have become central to daily life — particularly for younger generations — researchers have been working to understand their psychological impact.</p>
+   <p>The evidence presents a nuanced picture. On the one hand, social media enables people to maintain connections, access support communities, and express their identity. For individuals in isolated circumstances, online communities can provide a vital sense of belonging. Furthermore, platforms have been used effectively to raise awareness about mental health issues and <em>destigmatise</em> seeking help.</p>
+   <p>On the other hand, research consistently links heavy social media use — particularly passive scrolling — with increased rates of anxiety, loneliness, and depression. The mechanism appears to involve <em>unfavourable</em> social comparisons: seeing carefully curated images of others' lives can generate feelings of <em>inadequacy</em> and low self-worth. Cyberbullying presents an additional and serious risk, particularly for adolescents.</p>
+   <p>Experts recommend a mindful approach rather than complete abstinence. Setting clear time limits, being selective about the accounts you follow, and actively engaging rather than passively consuming content are all <em>strategies</em> shown to mitigate negative effects. The goal is not to eliminate social media but to develop a healthier, more intentional relationship with it.</p>`,
+   vocab:['scrutinised','destigmatise','unfavourable','inadequacy','strategies'],
+   qs:[
+     {q:'What does "passive scrolling" refer to in this context?',opts:['Actively creating content','Reading content without engaging or interacting','Scrolling quickly through pages','Using social media for work'],a:'Reading content without engaging or interacting',ex:'Passive scrolling = consuming content without active engagement, linked to anxiety and depression'},
+     {q:'What mechanism links social media to negative mental health outcomes?',opts:['Addiction to notifications','Unfavourable social comparisons from curated images','Too much screen time generally','Lack of real-life friends'],a:'Unfavourable social comparisons from curated images',ex:'"seeing carefully curated images of others lives can generate feelings of inadequacy and low self-worth"'},
+     {q:'What is the positive aspect of social media for isolated individuals?',opts:['It replaces real friendships','It provides entertainment','It provides a vital sense of belonging','It improves physical health'],a:'It provides a vital sense of belonging',ex:'"For individuals in isolated circumstances, online communities can provide a vital sense of belonging"'},
+     {q:'What approach do experts recommend?',opts:['Complete avoidance of social media','Mindful use with clear limits and active engagement','Using only one platform','Only using social media for work'],a:'Mindful use with clear limits and active engagement',ex:'"Experts recommend a mindful approach rather than complete abstinence. Setting clear time limits... actively engaging rather than passively consuming"'},
+   ]},,
+  {id:'r9',t:'Aviation Safety Management',lv:'B1',col:'var(--bl)',time:'6 min',
+   vocab:['safety management','risk assessment','corrective action','compliance','mitigation'],
+   text:'Aviation safety is not the absence of accidents — it is the active management of risk. Every airline and CAMO must maintain a Safety Management System (SMS), which identifies hazards before they become incidents. The process involves four key steps: hazard identification, risk assessment, risk mitigation, and performance monitoring. When a defect or near-miss occurs, a corrective action is raised and tracked until it is closed. Regulators such as EASA and HCAA require evidence that organisations are not only identifying problems, but also learning from them. The goal is a just culture — one where people report issues without fear of punishment, so that systemic problems can be addressed before they cause harm.',
+   qs:[
+     {q:'What does SMS stand for?',opts:['Safety Maintenance Schedule','Safety Management System','Standard Monitoring Service','System Maintenance Standard'],a:'Safety Management System'},
+     {q:'What is a just culture in aviation?',opts:['A culture with strict punishment','A culture encouraging reporting without fear','A culture focused only on compliance','A culture that ignores minor incidents'],a:'A culture encouraging reporting without fear'},
+     {q:'Which step comes AFTER risk assessment in the SMS process?',opts:['Hazard identification','Performance monitoring','Risk mitigation','Corrective action'],a:'Risk mitigation'},
+   ]},
+  {id:'r10',t:'CAMO Responsibilities Under EASA Part-CAMO',lv:'B2',col:'var(--vi)',time:'7 min',
+   vocab:['continuing airworthiness','maintenance programme','airworthiness review','subcontract','findings'],
+   text:'A Continuing Airworthiness Management Organisation (CAMO) is responsible for ensuring that aircraft remain airworthy throughout their operational life. Under EASA Part-CAMO, organisations must develop and maintain an Aircraft Maintenance Programme (AMP), coordinate with approved maintenance organisations, and conduct regular Airworthiness Reviews. The CAMO must also monitor the implementation of Airworthiness Directives (ADs) and Service Bulletins. When the competent authority — such as HCAA in Greece — conducts an audit and raises findings, the organisation must respond with corrective actions within defined timeframes. Failure to comply can result in suspension of the CAMO approval. Good documentation, accurate records, and proactive communication with the authority are essential for maintaining compliance.',
+   qs:[
+     {q:'What does AMP stand for?',opts:['Aviation Maintenance Procedure','Aircraft Maintenance Programme','Approved Maintenance Plan','Airworthiness Monitoring Protocol'],a:'Aircraft Maintenance Programme'},
+     {q:'What happens if a CAMO fails to respond to audit findings?',opts:['They receive a warning letter','Their approval may be suspended','They must pay a fine','Nothing happens'],a:'Their approval may be suspended'},
+     {q:'What must a CAMO do when a new AD is issued?',opts:['Wait for the authority','Assess its impact within a defined timeframe','Immediately ground all aircraft','Only act if marked Emergency'],a:'Assess its impact within a defined timeframe'},
+   ]},
+  {id:'r11',t:'Effective Communication in Aviation',lv:'B1',col:'var(--gr)',time:'5 min',
+   vocab:['miscommunication','standard phraseology','readback','crew resource management','ambiguity'],
+   text:'Communication failures are a leading cause of aviation incidents. When instructions are ambiguous, the consequences can be serious. This is why aviation uses standard phraseology — precise, internationally agreed expressions that reduce misunderstanding. Pilots and controllers use the readback technique: the recipient repeats critical information to confirm understanding. In maintenance, clear written communication is equally important. A poorly worded maintenance record can lead to repeated defects or missed inspections. Crew Resource Management (CRM) training teaches aviation professionals to speak up, question assumptions, and share information openly — even when speaking to a senior colleague.',
+   qs:[
+     {q:'What is the readback technique?',opts:['Reading the manual','Repeating critical information to confirm understanding','Writing a summary','Asking a colleague to repeat'],a:'Repeating critical information to confirm understanding'},
+     {q:'What can a poorly worded maintenance record cause?',opts:['Improved communication','Repeated defects or missed inspections','Better documentation','No significant problems'],a:'Repeated defects or missed inspections'},
+     {q:'What does CRM training teach?',opts:['Technical aircraft systems','How to speak up and share information openly','Standard phraseology only','Emergency procedures'],a:'How to speak up and share information openly'},
+   ]},
+  {id:'r12',t:'Airworthiness Directives: What You Need to Know',lv:'B2',col:'var(--am)',time:'6 min',
+   vocab:['mandatory','compliance deadline','amendment','unsafe condition','applicability'],
+   text:'An Airworthiness Directive (AD) is a mandatory document issued by a national aviation authority when an unsafe condition is identified on an aircraft type. Unlike Service Bulletins, which are generally optional, ADs must be complied with by the stated deadline or the aircraft cannot legally fly. ADs describe the unsafe condition, specify which aircraft are affected (the applicability), and detail the required action — which may be an inspection, a modification, or a component replacement. The CAMO is responsible for tracking all applicable ADs, incorporating them into the Aircraft Maintenance Programme, and ensuring compliance.',
+   qs:[
+     {q:'What is the key difference between an AD and a Service Bulletin?',opts:['ADs are optional','ADs are mandatory, SBs are generally optional','There is no difference','ADs apply only to engines'],a:'ADs are mandatory, SBs are generally optional'},
+     {q:'What does applicability refer to in an AD?',opts:['The deadline for compliance','Which aircraft are affected','The required action','The authority that issued it'],a:'Which aircraft are affected'},
+     {q:'What must a CAMO do with applicable ADs?',opts:['Wait for instructions','Incorporate them into the AMP and ensure compliance','Only act on Emergency ADs','Report them to pilots'],a:'Incorporate them into the AMP and ensure compliance'},
+   ]}
+];
 
 function rListeningEx(el){
   if(!LEST.art){
     el.innerHTML=`<div class="fp f13 b mb16">Listening Comprehension Exercises</div>
-      <p class="f12 c2 mb16" style="line-height:1.6">Διάβασε το transcript (εκτός αν έχεις το audio). Απάντησε τις ερωτήσεις. Στη συνέχεια άκουσε το πραγματικό audio για shadowing!</p>
+      <p class="f12 c2 mb16" style="line-height:1.6">7 texts · British, American, Australian accents · Read → answer → listen → shadow.</p>
       ${LISTENING_EX.map(ex=>`<div class="scard" onclick="LEST.art='${ex.id}';LEST.ans={};LEST.done=false;LEST.score=0;rSpeaking()">
         <div class="fx ac jb mb8">
           <div class="fp f13 b" style="color:var(--tl)">${ex.title}</div>
@@ -4714,8 +4699,8 @@ let SPST={tab:'conversations',convIdx:null};
 function rSpeaking(){
   unlockAch('sp1');
   const el=document.getElementById('speaking');
-  const tabs=[['conversations','💬 Συνομιλίες'],['aiconv','🤖 AI Chat ✨'],['roleplay','🎭 Roleplay'],['simulator','🎭 Simulator (old)'],['listening','🎧 Listening'],['pronunciation','🗣 Προφορά'],['shadowing','📖 Shadowing']].map(([id,lb])=>
-    `<button class="ttab ${SPST.tab===id?'on':''}" onclick="SPST.tab='${id}';SPST.convIdx=null;rSpeaking()" style="--tc:var(--gr)">${lb}</button>`
+  const tabs=[['conversations','💬'],['aiconv','🤖 Chat'],['roleplay','🎭'],['shadowing','📖'],['thinking','🧠'],['instant','⚡'],['journal','📔'],['slang','🗣'],['listening','🎧'],['pronunciation','🔤']].map(([id,lb])=>
+    `<button class="ttab ${SPST.tab===id?'on':''}" onclick="SPST.tab='${id}';SPST.convIdx=null;rSpeaking()" style="--tc:var(--gr);white-space:nowrap;flex-shrink:0">${lb}</button>`
   ).join('');
 
   let body='';
@@ -4749,7 +4734,7 @@ function rSpeaking(){
     el.innerHTML=`<div class="sec fu" style="max-width:840px">
     <div class="sl mb4" style="color:var(--gr)">SPEAKING</div>
     <div class="fp f16 b mb16">Ομιλία & Προφορά</div>
-    <div class="fx mb16" style="border-bottom:1px solid var(--ln)">${tabs}</div>
+    <div style="display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none">${tabs}</div>
     <div class="vm" style="min-height:400px"></div>
     </div>`;
     rAIConversation();return;
@@ -4757,10 +4742,25 @@ function rSpeaking(){
     el.innerHTML=`<div class="sec fu" style="max-width:840px">
     <div class="sl mb4" style="color:var(--gr)">SPEAKING</div>
     <div class="fp f16 b mb16">Ομιλία & Προφορά</div>
-    <div class="fx mb16" style="border-bottom:1px solid var(--ln)">${tabs}</div>
+    <div style="display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none">${tabs}</div>
     <div class="vm" style="min-height:400px"></div>
     </div>`;
     rRoleplay();return;
+  } else if(SPST.tab==='thinking'){
+    el.innerHTML=`<div class="sec fu" style="max-width:840px"><div class="sl mb4" style="color:var(--gr)">SPEAKING</div><div class="fp f16 b mb16">Ομιλία & Προφορά</div><div style="display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none">${tabs}</div><div class="vm" style="min-height:400px"></div></div>`;
+    startThinkingMode();return;
+  } else if(SPST.tab==='instant'){
+    el.innerHTML=`<div class="sec fu" style="max-width:840px"><div class="sl mb4" style="color:var(--gr)">SPEAKING</div><div class="fp f16 b mb16">Ομιλία & Προφορά</div><div style="display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none">${tabs}</div><div class="vm" style="min-height:400px"></div></div>`;
+    startInstantTraining();return;
+  } else if(SPST.tab==='journal'){
+    el.innerHTML=`<div class="sec fu" style="max-width:840px"><div class="sl mb4" style="color:var(--gr)">SPEAKING</div><div class="fp f16 b mb16">Ομιλία & Προφορά</div><div style="display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none">${tabs}</div><div class="vm" style="min-height:400px"></div></div>`;
+    startVoiceJournal();return;
+  } else if(SPST.tab==='shadowing'){
+    el.innerHTML=`<div class="sec fu" style="max-width:840px"><div class="sl mb4" style="color:var(--gr)">SPEAKING</div><div class="fp f16 b mb16">Ομιλία & Προφορά</div><div style="display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none">${tabs}</div><div class="vm" style="min-height:400px"></div></div>`;
+    startShadowing();return;
+  } else if(SPST.tab==='slang'){
+    el.innerHTML=`<div class="sec fu" style="max-width:840px"><div class="sl mb4" style="color:var(--gr)">SPEAKING</div><div class="fp f16 b mb16">Ομιλία & Προφορά</div><div style="display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none">${tabs}</div><div style="display:flex;gap:8px;margin-bottom:16px"><button onclick="startSlangMode('learn')" class="btn bp bsm">📖 Learn</button><button onclick="startSlangMode('quiz')" style="padding:6px 14px;background:var(--vi);border-radius:8px;color:#fff;border:none;cursor:pointer;font-size:13px">🧠 Quiz</button></div><div class="vm"></div></div>`;
+    startSlangMode('learn');return;
   } else if(SPST.tab==='simulator'){
     const simDiv=document.createElement('div');
     rSimulator(simDiv);
@@ -4817,7 +4817,7 @@ function rSpeaking(){
   el.innerHTML=`<div class="sec fu" style="max-width:840px">
     <div class="sl mb4" style="color:var(--gr)">SPEAKING</div>
     <div class="fp f16 b mb16">Ομιλία & Προφορά</div>
-    <div class="fx mb16" style="border-bottom:1px solid var(--ln)">${tabs}</div>
+    <div style="display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none">${tabs}</div>
     ${body}
   </div>`;
 }
@@ -5468,7 +5468,7 @@ function rFalseFriends(){
   el.innerHTML=`<div class="sec fu" style="max-width:840px">
     <div class="sl mb4 cro">FALSE FRIENDS</div>
     <div class="fp f16 b mb4">False Friends — Προσοχή!</div>
-    <div class="fx mb16" style="border-bottom:1px solid var(--ln)">${tabs}</div>
+    <div style="display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none">${tabs}</div>
     ${body}
   </div>`;
 }
@@ -5612,6 +5612,71 @@ const MILESTONES=[
 ];
 
 /* ══ STATS ══ */
+function rReading(){
+  unlockAch('rd1');{const rd2=DB.get('rdDone',[]);if(rd2.length>=5)unlockAch('rd5');}
+  const el=document.getElementById('reading');
+  if(!RST.art){
+    el.innerHTML=`<div class="sec fu">
+      <div class="sl mb4 cam">READING COMPREHENSION</div>
+      <div class="fp f16 b mb6">Ανάγνωση & Κατανόηση</div>
+      <div class="fx g8 mb16">
+        <button onclick="CLST.art=null;rClozeTest()" class="btn bgh bsm">📝 Cloze Tests</button>
+      </div>
+      <p class="f12 c2 mb12" style="line-height:1.6">8 κείμενα B1→C1 σε γενικά θέματα. Οι <em style="color:var(--tl)">υπογραμμισμένες λέξεις</em> μπορούν να αποθηκευτούν στο Vocabular.</p>
+      ${READINGS.map(a=>`<div class="rcard">
+        <div class="fx ac jb mb8" onclick="RST.art='${a.id}';RST.ra={};RST.rs=false;RST.rsc=null;rReading()">
+          <div class="fp f13 b" style="color:${a.col}">${a.t}</div>
+          <div class="fx ac g6">
+            <span class="tag f9" style="background:${a.col}1a;border:1px solid ${a.col}33;color:${a.col}">${a.lv}</span>
+            <span class="tag f9" style="background:var(--s2);border:1px solid var(--ln2);color:var(--t3)">⏱ ${a.time}</span>
+            <span class="tag f9" style="background:var(--s2);border:1px solid var(--ln2);color:var(--t3)">❓ ${a.qs.length}Q</span>
+          </div>
+        </div>
+        <p class="f11 c3" style="line-height:1.5" onclick="RST.art='${a.id}';RST.ra={};RST.rs=false;RST.rsc=null;rReading()">${a.text.replace(/<[^>]+>/g,'').substring(0,170)}...</p>
+        ${a.vocab.length?`<div class="mt8 fx g6 ac fw"><span class="f9 c3">Λέξεις:</span>${a.vocab.map(v=>`<span class="tag f9" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr)">${v}</span>`).join('')}</div>`:''}
+      </div>`).join('')}
+    </div>`;
+  } else {
+    const a=READINGS.find(x=>x.id===RST.art);
+    const qRows=a.qs.map((q,i)=>{
+      const opts=q.opts.map(opt=>{
+        let bg='var(--s2)',br='var(--ln)',col='var(--t2)';
+        if(RST.ra[i]===opt){bg='var(--s3)';br=a.col;col=a.col;}
+        if(RST.rs){if(opt===q.a){bg='#051a0a';br='#22c77a44';col='var(--gr)';}else if(RST.ra[i]===opt){bg='#1a0508';br='#f0387044';col='var(--ro)';}}
+        return `<button class="rqo" onclick="if(!RST.rs){RST.ra[${i}]='${opt.replace(/'/g,"\\'")}';rReading()}" style="background:${bg};border-color:${br};color:${col}">${opt}</button>`;
+      }).join('');
+      return `<div class="card mb10"><div class="f13 mb10" style="line-height:1.6"><span class="fp b" style="color:${a.col};margin-right:7px">${i+1}.</span>${q.q}</div>${opts}${RST.rs?`<div class="mt8 f11"><span style="color:${RST.ra[i]===q.a?'var(--gr)':'var(--ro)'}">${RST.ra[i]===q.a?'✓ Σωστό! ':'✗ Σωστό: "'+q.a+'" — '}</span><span class="c3">${q.ex}</span></div>`:''}</div>`;
+    }).join('');
+    const allA=Object.keys(RST.ra).length>=a.qs.length;
+    el.innerHTML=`<div class="sec fu">
+      <button onclick="RST.art=null;rReading()" style="color:var(--t3);font-size:11px;background:none;border:none;cursor:pointer;margin-bottom:16px">← Πίσω</button>
+      <div class="fx ac g8 mb6">
+        <span class="tag f9" style="background:${a.col}1a;border:1px solid ${a.col}33;color:${a.col}">${a.lv}</span>
+        <span class="tag f9" style="background:var(--s2);border:1px solid var(--ln2);color:var(--t3)">⏱ ${a.time}</span>
+      </div>
+      <div class="fp f16 b mb4" style="color:${a.col}">${a.t}</div>
+      ${a.vocab.length?`<div class="card c-ok mb12 fx ac g8 fw"><span class="f10 c2">💡 Κλικ για αποθήκευση στο Vocabular:</span>${a.vocab.map(v=>`<button onclick="saveFromR('${v}')" style="padding:3px 9px;border-radius:20px;border:1px solid var(--gr)44;background:var(--gr)1a;color:var(--gr);font-size:10px;font-weight:600;cursor:pointer">+ ${v}</button>`).join('')}</div>`:''}
+      <div class="fx ac g8 mb8">
+        <button onclick="speak(a.t+'. '+a.text.replace(/<[^>]+>/g,''),'en-GB')" style="padding:4px 12px;background:none;border:1px solid var(--tl)44;border-radius:20px;color:var(--tl);font-size:11px;cursor:pointer">🔊 Άκουσε το κείμενο</button>
+        <button onclick="saveSentence(a.text.replace(/<[^>]+>/g,'').substring(0,200),'Reading '+a.t,'');toast('📌 Αποθηκεύτηκε στο Sentence Mining!','var(--gr)')" style="padding:4px 12px;background:none;border:1px solid var(--vi)44;border-radius:20px;color:var(--vi);font-size:11px;cursor:pointer">📌 Αποθήκευσε</button>
+      </div>
+      <div class="card mb20 rbody">${a.text}</div>
+      <div class="sl mb12">COMPREHENSION QUESTIONS</div>
+      ${qRows}
+      ${!RST.rs
+        ?`<button onclick="if(${allA}){let c=0;READINGS.find(x=>x.id===RST.art).qs.forEach((q,i)=>{if(RST.ra[i]===q.a)c++});RST.rsc=c;RST.rs=true;addXP(c*10);
+  const rd=DB.get('rdDone',[]);if(!rd.includes(RST.art)){rd.push(RST.art);DB.set('rdDone',rd);}
+  if(c===READINGS.find(x=>x.id===RST.art).qs.length)toast('✓ Τέλειο! +'+c*10+' XP','var(--gr)');
+  else toast('Αποτέλεσμα: '+c+'/'+READINGS.find(x=>x.id===RST.art).qs.length+' — +'+c*10+' XP','var(--bl)');
+  rReading()}" style="padding:10px 22px;background:${a.col};border:none;border-radius:7px;color:#07080f;font-weight:700;font-size:11px;cursor:pointer;opacity:${allA?1:0.4};cursor:${allA?'pointer':'not-allowed'};${allA?'box-shadow:0 4px 16px rgba(79,142,247,.3)':''}">Ελέγξτε →</button>`
+        :`<div class="fx ac g12"><div class="card" style="border:2px solid ${RST.rsc===a.qs.length?'var(--am)':'var(--gr)'}">
+           <span class="f11 c3">Αποτέλεσμα: </span><span class="fp f20 b" style="color:${RST.rsc===a.qs.length?'var(--am)':'var(--gr)'}">${RST.rsc}/${a.qs.length}</span>
+           </div><button onclick="RST.ra={};RST.rs=false;RST.rsc=null;rReading()" style="padding:9px 16px;border:1px solid ${a.col};border-radius:7px;color:${a.col};background:transparent;cursor:pointer;font-size:10px;font-weight:700">ΞΑΝΑ</button></div>`}
+    </div>`;
+  }
+}
+
+
 function rStats(){
   const xp=getXP(),lv=getLv(xp),ld=LVLS[lv];
   const nx=LVLS[lv+1]?LVLS[lv+1].x:ld.x+2000;
@@ -5636,8 +5701,9 @@ function rStats(){
         <button onclick="showLeaderboard()" class="btn bgh bsm">🏆 Leaderboard</button>
         <button onclick="runErrorAnalysis()" class="btn bgh bsm">🔍 Ανάλυση Λαθών</button>
         <button onclick="startCEFRTest()" class="btn bp bsm">🎓 CEFR Test</button>
-        <button onclick="exportVocabCSV()" class="btn bgh bsm">📥 Export CSV</button>
-        <button onclick="exportLearnedCSV()" class="btn bgh bsm">🃏 Export Anki</button>
+        <button onclick="exportVocabCSV()" class="btn bgh bsm">📥 All Words CSV</button>
+        <button onclick="exportLearnedCSV()" class="btn bgh bsm">📋 Learned CSV</button>
+        <button onclick="exportAnki()" class="btn bgh bsm">🃏 Anki Export</button>
       </div>
     </div>
 
@@ -5658,6 +5724,26 @@ function rStats(){
     <div class="sgrid mb16">
       ${[['🔥',streak,'Streak','var(--or)'],['📅',totalDays,'Μέρες','var(--gr)'],['📚',learned+'/'+all,'Λέξεις','var(--bl)'],['⭐',xp+' XP','Σύνολο','var(--am)']].map(([i,v,l,c])=>`
       <div class="ss"><div style="font-size:22px;margin-bottom:4px">${i}</div><div class="ss-v" style="color:${c}">${v}</div><div class="ss-l">${l}</div></div>`).join('')}
+    </div>
+
+    <div class="cbox">
+      <div class="sl mb12">SPEAKING PROGRESS</div>
+      ${(()=>{
+        const sp=DB.get('spk_stats',{t:0,i:0,s:0,j:0,ai:0});
+        const tot=sp.t+sp.i+sp.s+sp.j+sp.ai;
+        return '<div class="g4 tc mb12">'
+          +'<div><div class="fp f20 b cbl">'+tot+'</div><div class="f10 c3 mt1">Sessions</div></div>'
+          +'<div><div class="fp f20 b" style="color:var(--gr)">'+sp.t+'</div><div class="f10 c3 mt1">🧠 Thinking</div></div>'
+          +'<div><div class="fp f20 b" style="color:var(--vi)">'+sp.i+'</div><div class="f10 c3 mt1">⚡ Instant</div></div>'
+          +'<div><div class="fp f20 b" style="color:var(--or)">'+sp.s+'</div><div class="f10 c3 mt1">📖 Shadow</div></div>'
+          +'</div>'
+          +'<div class="g2 mb10">'
+          +'<div style="background:var(--s3);border-radius:8px;padding:8px;text-align:center"><div class="fp f16 b cbl">'+sp.ai+'</div><div class="f10 c3">🤖 AI Chats</div></div>'
+          +'<div style="background:var(--s3);border-radius:8px;padding:8px;text-align:center"><div class="fp f16 b" style="color:var(--pk)">'+sp.j+'</div><div class="f10 c3">📔 Journals</div></div>'
+          +'</div>'
+          +'<div style="background:var(--s3);border-radius:8px;padding:8px;text-align:center;margin-top:8px"><div class="f10 c3 mb1">⏱ Χρόνος ομιλίας</div><div class="fp f16 b cbl">'+Math.floor(DB.get('speaking_time_secs',0)/60)+' λεπτά</div></div>'
+          +'<div class="f11 c3 tc" style="margin-top:6px">'+(tot===0?'Ξεκίνα σήμερα! Στόχος: 5 sessions/εβδομάδα':tot<5?'Καλή αρχή!':tot<20?'💪 Καλή πρόοδος!':'🔥 Εξαιρετικό!')+'</div>';
+      })()}
     </div>
 
     <div class="cbox"><div class="sl mb12">ΔΡΑΣΤΗΡΙΟΤΗΤΑ — ΤΕΛΕΥΤΑΙΕΣ 7 ΜΕΡΕΣ (λεπτά)</div><canvas id="wc" height="100"></canvas></div>
@@ -6054,10 +6140,38 @@ function rSettings(){
       </div>
     </div>
 
+    <div class="sl mb10 c3">ΤΑ ΕΝΔΙΑΦΕΡΟΝΤΑ ΜΟΥ</div>
+    <div class="card mb16">
+      <div class="f12 c2 mb10">Επέλεξε θέματα — το AI θα τα χρησιμοποιεί στις συνομιλίες.</div>
+      ${(()=>{
+        const all=[
+          {id:'travel',ic:'✈️',l:'Travel'},{id:'tech',ic:'💻',l:'Tech'},
+          {id:'gym',ic:'💪',l:'Gym'},{id:'food',ic:'🍕',l:'Food'},
+          {id:'music',ic:'🎵',l:'Music'},{id:'movies',ic:'🎬',l:'Movies'},
+          {id:'business',ic:'💼',l:'Business'},{id:'games',ic:'🎮',l:'Gaming'},
+          {id:'aviation',ic:'✈',l:'Aviation'}
+        ];
+        const sel=DB.get('user_interests',['travel','tech','gym','aviation']);
+        return '<div style="display:flex;flex-wrap:wrap;gap:8px">'
+          +all.map(it=>{
+            const on=sel.includes(it.id);
+            return '<button onclick="toggleInterest(\''+it.id+'\');rSettings()"'
+              +' style="padding:6px 12px;border-radius:20px;border:1px solid '
+              +(on?'var(--bl)':'var(--ln)')
+              +';background:'+(on?'rgba(79,142,247,.15)':'var(--s2)')
+              +';cursor:pointer;font-size:12px;color:'+(on?'var(--bl)':'var(--t2)')
+              +';font-weight:'+(on?'600':'400')+'">'
+              +it.ic+' '+it.l+'</button>';
+          }).join('')
+          +'</div>';
+      })()}
+    </div>
+
     <div class="sl mb10 c3">ΕΙΔΟΠΟΙΗΣΕΙΣ</div>
     <div class="setrow mb16">
       <div><div class="f12 b">Ημερήσια Υπενθύμιση</div><div class="f11 c3">Browser notification για μελέτη</div></div>
       <div class="tgl ${nf?'on':''}" onclick="toggleNF()"></div>
+      <button onclick="if(confirm('⚠ Διαγραφή ΟΛΗΣ της προόδου;'))resetAllProgress()" class="btn br bsm" style="margin-top:8px;width:100%;justify-content:center">🗑 Επαναφορά Προόδου</button>
     </div>
 
     <div class="sl mb10 c3">BACKUP & RESTORE</div>
@@ -6068,6 +6182,7 @@ function rSettings(){
         <button onclick="document.getElementById('impF').click()" class="btn bgh" style="justify-content:center;font-size:12px;font-weight:700">⬆ IMPORT</button>
       </div>
       <input type="file" id="impF" accept=".json" style="display:none" onchange="importData(this)">
+      <button onclick="if(confirm('Διαγραφή ΟΛΗΣ της προόδου;'))resetAllProgress()" class="btn br bsm" style="margin-top:8px;width:100%;justify-content:center">🗑 Επαναφορά Προόδου</button>
     </div>
 
     <div class="sl mb10 c3">ΣΤΑΤΙΣΤΙΚΑ</div>
@@ -6115,13 +6230,18 @@ function rSettings(){
           <div class="f12 b mb2">Anthropic API Key</div>
           <div class="f11 c3">${hasAPIKey()?'✓ Key αποθηκευμένο':'⚠ Απαιτείται για AI features'}</div>
         </div>
+
+      <div style="margin-top:12px">
+        <div class="f11 c3 mb6">API Key:</div>
+        <div class="fx g8 mb8" style="align-items:center">
+          <input id="settings-api-input" type="password" placeholder="sk-ant-api03-..." style="flex:1;padding:9px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:12px;font-family:monospace;min-width:0">
+          <button onclick="saveAPIKeyFromSettings()" class="btn bp bsm" style="white-space:nowrap;flex-shrink:0">💾 Αποθήκευση</button>
+        </div>
         ${hasAPIKey()
-          ?'<button onclick="DB.set(\'anthropic_key\',\'\');rSettings()" class="btn br bsm" style="font-size:10px">Διαγραφή Key</button>'
-          :'<button onclick="showAPIKeyModal()" class="btn bp bsm" style="font-size:10px">➕ Προσθήκη Key</button>'}
+          ?'<div class="fx ac jb"><span class="f10 c3">✓ sk-ant-...'+DB.get('anthropic_key','').slice(-4)+'</span><button onclick="DB.set(\'anthropic_key\',\'\');rSettings()" style="color:var(--ro);background:none;border:none;cursor:pointer;font-size:10px">Διαγραφή</button></div>'
+          :'<div class="f10 c3">Χωρίς key τα AI features δεν λειτουργούν.</div>'}
+        <div class="f10 c3 mt6"><a href="https://console.anthropic.com" target="_blank" style="color:var(--bl)">Δωρεάν key → console.anthropic.com</a></div>
       </div>
-      ${hasAPIKey()
-        ?'<div class="f10 c3">Key: <span class="mono">sk-ant-...'+DB.get('anthropic_key','').slice(-4)+'</span></div>'
-        :'<div class="f11 c2" style="line-height:1.6">AI features: Writing Feedback · Error Analysis · Forced Output · AI Conversation<br><a href="https://console.anthropic.com" target="_blank" style="color:var(--bl)">Δωρεάν key στο console.anthropic.com →</a></div>'}
     </div>
 
     <div class="sl mb10 c3">ΕΜΦΑΝΙΣΗ</div>
@@ -6151,6 +6271,7 @@ function exportData(){
 
 function importData(inp){
   const file=inp.files[0];if(!file)return;
+  if(!confirm('⚠ Η εισαγωγή θα ΑΝΤΙΚΑΤΑΣΤΗΣΕΙ όλη την τρέχουσα πρόοδό σου. Συνεχίζεις;'))return;
   const reader=new FileReader();
   reader.onload=e=>{
     try{
@@ -6301,7 +6422,17 @@ function rHome(){
 
     el.innerHTML=`<div class="sec fu">
 
-    ${!DB.get('placement_done',false)?'<div onclick="startPlacementQuiz()" style="background:rgba(124,92,245,.1);border:1px solid rgba(124,92,245,.3);border-radius:12px;padding:12px 16px;margin-bottom:14px;cursor:pointer;display:flex;align-items:center;gap:12px"><span style="font-size:20px">🎯</span><div style="flex:1"><div class="fp f13 b">Ξεκίνα με Placement Quiz</div><div class="f10 c3">10 ερωτήσεις · βρίσκουμε το επίπεδό σου (3 λεπτά)</div></div><span style="color:var(--vi);font-size:18px">›</span></div>':''}
+    <div onclick="startDailyFlow()" style="background:linear-gradient(135deg,rgba(79,142,247,.1),rgba(124,92,245,.08));border:1px solid rgba(79,142,247,.25);border-radius:12px;padding:12px 16px;margin-bottom:14px;cursor:pointer">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:24px">📅</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;color:var(--bl)">20-min Daily Flow</div>
+              <div style="font-size:11px;color:var(--t3)">Warm-up → Phrases → Shadow → AI Chat → Journal</div>
+            </div>
+            <span style="color:var(--bl);font-size:16px">→</span>
+          </div>
+        </div>
+        ${!DB.get('placement_done',false)?'<div onclick="startPlacementQuiz()" style="background:rgba(124,92,245,.1);border:1px solid rgba(124,92,245,.3);border-radius:12px;padding:12px 16px;margin-bottom:14px;cursor:pointer;display:flex;align-items:center;gap:12px"><span style="font-size:20px">🎯</span><div style="flex:1"><div class="fp f13 b">Ξεκίνα με Placement Quiz</div><div class="f10 c3">10 ερωτήσεις · βρίσκουμε το επίπεδό σου (3 λεπτά)</div></div><span style="color:var(--vi);font-size:18px">›</span></div>':''}
 
     <!-- STATS ROW -->
     <div class="hstats mb12">
@@ -6335,6 +6466,7 @@ function rHome(){
     <div class="card mb12">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div class="sl">🗓 ΣΗΜΕΡΑ</div>
+        <button onclick="showWeeklySummary()" style="font-size:10px;padding:3px 8px;background:var(--s2);border:1px solid var(--ln);border-radius:6px;cursor:pointer;color:var(--t2)">📊 Εβδομαδιαία</button>
         <div style="display:flex;align-items:center;gap:6px">
           <div style="width:80px;height:4px;background:var(--s3);border-radius:4px;overflow:hidden"><div style="height:100%;width:${todayPct}%;background:linear-gradient(90deg,var(--gr),var(--tl));border-radius:4px;transition:width .4s"></div></div>
           <span style="font-size:10px;color:var(--t3)">${todayDone}/${todayTotal}</span>
@@ -6873,8 +7005,9 @@ async function improveEmail(){
 
 async function sendConvMsg(){
   if(!hasAPIKey()){toast('⚠ Χρειάζεσαι API Key — πήγαινε στα ⚙ Settings.','var(--am)');setTimeout(()=>go('settings'),1500);return;}
+  if(CONVST.loading)return; // Prevent double-send
   const input=document.getElementById('conv-input');
-  if(!input||!input.value.trim()||CONVST.loading)return;
+  if(!input||!input.value.trim())return;
   const userText=input.value.trim();
   input.value='';
   CONVST.turn++;
@@ -6900,6 +7033,7 @@ async function sendConvMsg(){
     speak(result,'en-GB');
     if(CONVST.turn>=6){
       unlockAch('ai1');CONVST.done=true;
+      const _spk5=DB.get('spk_stats',{t:0,i:0,s:0,j:0,ai:0});_spk5.ai++;DB.set('spk_stats',_spk5);
       // Generate post-conversation review
       if(hasAPIKey()&&CONVST.history.length>0){
         const transcript=CONVST.history.map(m=>(m.role==='user'?'Me: ':'AI: ')+m.content).join('\n');
@@ -7255,7 +7389,7 @@ function rAIConversation(){
       +(CONVST.review
         ?'<div style="background:var(--s2);border-radius:10px;padding:16px;margin-bottom:16px">'
           +'<div style="font-size:12px;font-weight:700;color:var(--bl);margin-bottom:10px">🤖 Ανάλυση Συνομιλίας</div>'
-          +'<div style="font-size:12px;color:var(--t2);line-height:1.9;white-space:pre-line">'+CONVST.review+'</div>'
+          +'<div style="font-size:12px;color:var(--t2);line-height:1.9;white-space:pre-line">'+escHTML(CONVST.review)+'</div>'
           +'</div>'
         :'<div style="text-align:center;font-size:12px;color:var(--t3);margin-bottom:16px">⏳ Ετοιμάζω ανάλυση...</div>')
       +'<button onclick="CONVST.scenario=null;CONVST.history=[];CONVST.turn=0;CONVST.done=false;CONVST.review=null;CONVST.loading=false;rAIConversation()" class="btn bp" style="width:100%;justify-content:center">🔄 Νέα Συνομιλία</button>';
@@ -7277,6 +7411,7 @@ function rAIConversation(){
   hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--ln)';
   hdr.innerHTML='<div style="font-size:13px;font-weight:700">'+(sc&&sc.ic?sc.ic+' '+sc.title:'AI Conversation')+'</div>'
     +'<div style="display:flex;gap:8px;align-items:center">'
+    +'<span style="font-size:10px;background:rgba(34,197,94,.15);color:var(--gr);padding:2px 7px;border-radius:8px">😌 No pressure</span>'
     +'<span style="font-size:11px;color:var(--t3)">Turn '+CONVST.turn+'/6</span>'
     +'<button onclick="CONVST.scenario=null;CONVST.history=[];CONVST.turn=0;CONVST.done=false;CONVST.review=null;CONVST.loading=false;rAIConversation()" style="font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer">← Αλλαγή</button>'
     +'</div>';
@@ -7730,12 +7865,14 @@ function startConvVoice(inputEl, micBtn){
     inputEl.value=transcript;
   };
 
+  const _recStart=Date.now();
   rec.onend=()=>{
     _convRecognition=null;
     micBtn.textContent='🎤';
     micBtn.style.background='var(--s2)';
     micBtn.style.borderColor='var(--ln)';
-    // Auto-send if there's text
+    const secs=Math.round((Date.now()-_recStart)/1000);
+    if(secs>1){const st=DB.get('speaking_time_secs',0);DB.set('speaking_time_secs',st+secs);}
     if(inputEl.value.trim()){
       setTimeout(()=>{
         if(inputEl.id==='conv-input') sendConvMsg();
@@ -7765,6 +7902,621 @@ function startConvVoice(inputEl, micBtn){
 
   rec.start();
 }
+
+/* THINKING IN ENGLISH MODE */
+let TEST={questions:[],idx:0,score:0,history:[],timer:null,secs:0};
+const THINKING_QS=["What did you do this morning?","Describe your bedroom in 3 sentences.","What is your favourite food and why?","What would you do with one million euros?","Describe a person you admire.","What do you do when you feel stressed?","What is the best trip you have ever taken?","Describe your daily routine.","What is something you want to learn?","What makes a good friend?","Describe your city in 3 words.","What did you eat yesterday?","What is your favourite season and why?","What would you change about your job?","Describe a movie you love.","What are you afraid of?","What do you do on weekends?","Describe your perfect day.","What skill do you wish you had?","What is something you are proud of?","If you could live anywhere, where would you go?","What is the last book you read?","Describe someone in your family.","What is your morning routine?","What would you do differently in life?"];
+
+function startThinkingMode(){
+  const shuffled=[...THINKING_QS].sort(()=>Math.random()-.5);
+  TEST={questions:shuffled,idx:0,score:0,history:[],timer:null,secs:0};
+  renderThinking();
+}
+
+function renderThinking(){
+  const el=document.getElementById('speaking');
+  if(!el)return;
+  const vm=el.querySelector('.vm');
+  const target=vm||el;
+  target.innerHTML='';
+
+  if(TEST.idx>=10){
+    addXP(TEST.score*5);
+    const _spk=DB.get('spk_stats',{t:0,i:0,s:0,j:0,ai:0});_spk.t++;DB.set('spk_stats',_spk);
+    const rows=TEST.history.map((h,i)=>'<div style="padding:8px 0;border-bottom:1px solid var(--ln)"><div style="font-size:11px;color:var(--t3)">Q'+(i+1)+': '+h.q+'</div><div style="font-size:12px;color:var(--t1);margin-top:2px">'+h.a+'</div><div style="font-size:11px;color:'+(h.time<=8?'var(--gr)':'var(--am)')+'">'+h.time+'s</div></div>').join('');
+    target.innerHTML='<div style="max-width:520px;margin:0 auto"><div style="text-align:center;margin-bottom:20px"><div style="font-size:36px;margin-bottom:8px">🧠</div><div style="font-size:16px;font-weight:700;margin-bottom:4px">Thinking in English!</div><div style="font-size:12px;color:var(--t3)">'+TEST.score+'/10 fast answers · +'+(TEST.score*5)+' XP</div></div><div style="background:var(--s2);border-radius:10px;padding:12px;margin-bottom:16px;max-height:300px;overflow-y:auto">'+rows+'</div><button onclick="startThinkingMode()" class="btn bp" style="width:100%;justify-content:center">Ξανά</button></div>';
+    return;
+  }
+
+  const q=TEST.questions[TEST.idx];
+  const totalTime=12;
+  TEST.secs=totalTime;
+  if(TEST.timer)clearInterval(TEST.timer);
+
+  target.innerHTML='<div style="max-width:480px;margin:0 auto"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><div style="font-size:12px;color:var(--t3)">🧠 THINKING IN ENGLISH</div><div style="font-size:12px;color:var(--t3)">Q'+(TEST.idx+1)+'/10</div></div><div style="height:4px;background:var(--s3);border-radius:4px;margin-bottom:20px"><div id="think-bar" style="height:100%;width:100%;background:var(--gr);border-radius:4px;transition:width 1s linear"></div></div><div style="font-size:22px;font-weight:700;text-align:center;margin-bottom:8px;line-height:1.4;color:var(--t1)">'+q+'</div><div id="think-timer" style="text-align:center;font-size:40px;font-weight:700;margin-bottom:20px;color:var(--gr)">'+totalTime+'</div><textarea id="think-input" placeholder="Answer immediately in English..." style="width:100%;height:90px;padding:12px;background:var(--s2);border:2px solid var(--bl);border-radius:10px;color:var(--t1);font-size:14px;resize:none;font-family:var(--font)"></textarea><div style="display:flex;gap:8px;margin-top:10px"><button onclick="submitThinkingAnswer()" class="btn bp" style="flex:1;justify-content:center">Next question</button></div></div>';
+  setTimeout(()=>document.getElementById('think-input')?.focus(),50);
+
+  TEST.timer=setInterval(()=>{
+    // Stop timer if user navigated away
+    if(!document.getElementById('think-timer')){clearInterval(TEST.timer);TEST.timer=null;return;}
+    TEST.secs--;
+    const timerEl=document.getElementById('think-timer');
+    const barEl=document.getElementById('think-bar');
+    if(timerEl){timerEl.textContent=Math.max(0,TEST.secs);timerEl.style.color=TEST.secs>6?'var(--gr)':TEST.secs>3?'var(--am)':'var(--ro)';}
+    if(barEl)barEl.style.width=(Math.max(0,TEST.secs)/totalTime*100)+'%';
+    if(TEST.secs<=0){clearInterval(TEST.timer);TEST.timer=null;submitThinkingAnswer();}
+  },1000);
+}
+
+function submitThinkingAnswer(){
+  if(TEST.timer)clearInterval(TEST.timer);
+  const inp=document.getElementById('think-input');
+  const answer=(inp&&inp.value.trim())||'(no answer)';
+  const timeTaken=12-Math.max(0,TEST.secs);
+  TEST.history.push({q:TEST.questions[TEST.idx],a:answer,time:timeTaken});
+  if(answer!=='(no answer)')TEST.score++;
+  TEST.idx++;
+  renderThinking();
+}
+
+/* INSTANT RESPONSE TRAINING */
+let IRST={questions:[],idx:0,score:0,history:[]};
+const INSTANT_QS=[{q:"What is your name?",h:"My name is..."},{q:"Where are you from?",h:"I am from..."},{q:"What do you do for work?",h:"I work as..."},{q:"How are you feeling today?",h:"I am feeling..."},{q:"What did you have for breakfast?",h:"I had..."},{q:"What is the weather like?",h:"It is..."},{q:"What time did you wake up?",h:"I woke up at..."},{q:"What are you doing tonight?",h:"I am planning to..."},{q:"Do you prefer coffee or tea?",h:"I prefer..."},{q:"What is your favourite sport?",h:"I love..."},{q:"How do you get to work?",h:"I take the..."},{q:"What is stressing you out lately?",h:"I have been stressed about..."},{q:"Name three things you can see right now.",h:"I can see..."},{q:"What would you do on a rainy Sunday?",h:"I would probably..."},{q:"Recommend a TV show.",h:"You should watch..."},{q:"What are you good at?",h:"I am quite good at..."},{q:"What is the last thing you bought?",h:"The last thing I bought was..."},{q:"If you could travel tomorrow, where?",h:"I would go to..."},{q:"Describe your phone in one sentence.",h:"My phone is..."},{q:"One word to describe your week?",h:"My week has been..."}];
+
+function startInstantTraining(){
+  const shuffled=[...INSTANT_QS].sort(()=>Math.random()-.5).slice(0,10);
+  IRST={questions:shuffled,idx:0,score:0,history:[]};
+  renderInstant();
+}
+
+function renderInstant(){
+  const el=document.getElementById('speaking');
+  if(!el)return;
+  const vm=el.querySelector('.vm');
+  const target=vm||el;
+  target.innerHTML='';
+  if(IRST.idx>=IRST.questions.length){
+    addXP(IRST.score*4);
+    const _spk2=DB.get('spk_stats',{t:0,i:0,s:0,j:0,ai:0});_spk2.i++;DB.set('spk_stats',_spk2);
+    const rows=IRST.history.map((h,i)=>'<div style="padding:8px 0;border-bottom:1px solid var(--ln)"><div style="font-size:11px;color:var(--t3)">'+h.q+'</div><div style="font-size:12px;color:var(--t1);margin-top:2px">'+h.a+'</div></div>').join('');
+    target.innerHTML='<div style="max-width:480px;margin:0 auto"><div style="text-align:center;margin-bottom:20px"><div style="font-size:36px;margin-bottom:8px">⚡</div><div style="font-size:16px;font-weight:700;margin-bottom:4px">Instant Response!</div><div style="font-size:12px;color:var(--t3)">'+IRST.score+'/10 · +'+(IRST.score*4)+' XP</div></div><div style="background:var(--s2);border-radius:10px;padding:12px;max-height:280px;overflow-y:auto;margin-bottom:16px">'+rows+'</div><button onclick="startInstantTraining()" class="btn bp" style="width:100%;justify-content:center">Ξανά</button></div>';
+    return;
+  }
+  const item=IRST.questions[IRST.idx];
+  target.innerHTML='<div style="max-width:440px;margin:0 auto"><div style="display:flex;justify-content:space-between;margin-bottom:16px"><div style="font-size:12px;color:var(--t3)">⚡ INSTANT RESPONSE</div><div style="font-size:12px;color:var(--t3)">'+(IRST.idx+1)+'/'+IRST.questions.length+'</div></div><div style="font-size:24px;font-weight:700;text-align:center;margin-bottom:8px;line-height:1.4">'+item.q+'</div><div style="font-size:12px;color:var(--t3);text-align:center;margin-bottom:20px">'+item.h+'</div><textarea id="instant-input" placeholder="Answer now..." style="width:100%;height:80px;padding:12px;background:var(--s2);border:2px solid var(--vi);border-radius:10px;color:var(--t1);font-size:14px;resize:none;font-family:var(--font)"></textarea><button onclick="submitInstant()" class="btn" style="margin-top:10px;width:100%;justify-content:center;background:var(--vi);color:#fff;border:none">Next</button></div>';
+  setTimeout(()=>document.getElementById('instant-input')?.focus(),50);
+}
+
+function submitInstant(){
+  const inp=document.getElementById('instant-input');
+  const answer=(inp&&inp.value.trim())||'(skipped)';
+  IRST.history.push({q:IRST.questions[IRST.idx].q,a:answer});
+  if(answer!=='(skipped)')IRST.score++;
+  IRST.idx++;
+  renderInstant();
+}
+
+/* VOICE JOURNALING */
+let VJST={recording:false,transcript:'',feedback:'',rec:null,loading:false};
+const JOURNAL_PROMPTS=["Talk about your day so far.","Describe something that made you smile recently.","What are you looking forward to this week?","Talk about a challenge you are facing.","Describe your ideal weekend.","What is something new you learned recently?","Talk about a person who inspires you.","What would you change about your daily routine?","Describe a place that makes you feel calm.","What are your goals for the next month?","Talk about your favourite hobby.","Describe a memorable meal.","What has been on your mind lately?","Talk about something you are grateful for."];
+
+function startVoiceJournal(){
+  VJST={recording:false,transcript:'',feedback:'',rec:null,loading:false};
+  renderJournal();
+}
+
+function renderJournal(){
+  const el=document.getElementById('speaking');
+  if(!el)return;
+  const vm=el.querySelector('.vm');
+  const target=vm||el;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const hasVoice=!!SR&&(location.protocol==='https:'||!!window.AndroidTTS);
+  const prompt=JOURNAL_PROMPTS[new Date().getDay()%JOURNAL_PROMPTS.length];
+  target.innerHTML='<div style="max-width:520px;margin:0 auto"><div style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:1px;margin-bottom:16px">📔 VOICE JOURNAL</div><div style="background:linear-gradient(135deg,rgba(79,142,247,.1),rgba(124,92,245,.06));border:1px solid rgba(79,142,247,.3);border-radius:12px;padding:16px;margin-bottom:16px"><div style="font-size:12px;font-weight:600;margin-bottom:4px">Σημερινό prompt:</div><div style="font-size:15px;font-weight:700;color:var(--bl)">'+prompt+'</div></div>'+(hasVoice?'<div style="text-align:center;margin-bottom:16px"><button id="vj-mic" onclick="toggleJournalRec()" style="width:68px;height:68px;border-radius:50%;background:'+(VJST.recording?'var(--ro)':'var(--bl)')+';border:none;cursor:pointer;font-size:26px;color:#fff;box-shadow:0 4px 16px rgba(79,142,247,.4)">'+(VJST.recording?'⏹':'🎤')+'</button><div style="font-size:11px;color:var(--t3);margin-top:6px">'+(VJST.recording?'Μιλάς... (⏹ stop)':'Πάτα για εγγραφή')+'</div></div>':'<div style="font-size:11px;color:var(--am);margin-bottom:12px">Το μικρόφωνο χρειάζεται Chrome/HTTPS. Γράψε παρακάτω.</div>')+'<textarea id="vj-text" placeholder="...ή γράψε εδώ στα αγγλικά" style="width:100%;height:100px;padding:12px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;color:var(--t1);font-size:13px;resize:none;font-family:var(--font);margin-bottom:12px">'+VJST.transcript+'</textarea>'+(VJST.loading?'<div style="text-align:center;font-size:12px;color:var(--t3);margin-bottom:12px">⏳ Αναλύω...</div>':VJST.feedback?'<div style="background:var(--s2);border-radius:10px;padding:14px;margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:var(--bl);margin-bottom:8px">🤖 AI Feedback</div><div style="font-size:12px;color:var(--t2);line-height:1.9;white-space:pre-line">'+VJST.feedback+'</div></div>':'')+'<div style="display:flex;gap:8px">'+(hasAPIKey()?'<button onclick="getJournalFeedback()" class="btn bp" style="flex:1;justify-content:center">🤖 AI Feedback</button>':'<button onclick="go(\'settings\')" class="btn" style="flex:1;justify-content:center;background:var(--s2);border:1px solid var(--ln);color:var(--t2)">⚙ API Key</button>')+'<button onclick="startVoiceJournal()" style="padding:10px 14px;background:var(--s3);border:1px solid var(--ln);border-radius:8px;cursor:pointer;font-size:12px;color:var(--t2)">🔄 Νέο</button></div></div>';
+}
+
+function toggleJournalRec(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){toast('Το μικρόφωνο χρειάζεται Chrome ή Android app','var(--am)');return;}
+  if(location.protocol!=='https:'&&!window.AndroidTTS){
+    toast('🔒 Το μικρόφωνο λειτουργεί στο Android app ή στο richter444.github.io','var(--am)');return;
+  }
+  if(VJST.recording&&VJST.rec){VJST.rec.stop();return;}
+  const rec=new SR();
+  VJST.rec=rec;VJST.recording=true;
+  rec.lang='en-US';rec.continuous=true;rec.interimResults=true;
+  rec.onresult=(e)=>{VJST.transcript=Array.from(e.results).map(r=>r[0].transcript).join(' ');const ta=document.getElementById('vj-text');if(ta)ta.value=VJST.transcript;};
+  rec.onend=()=>{VJST.recording=false;VJST.rec=null;renderJournal();};
+  rec.onerror=(e)=>{VJST.recording=false;if(e.error!=='aborted')toast('Σφάλμα: '+e.error,'var(--am)');renderJournal();};
+  rec.start();renderJournal();
+}
+
+async function getJournalFeedback(){
+  const ta=document.getElementById('vj-text');
+  const text=(ta&&ta.value.trim())||VJST.transcript;
+  if(!text||text.length<15){toast('Γράψε ή μίλα πρώτα!','var(--am)');return;}
+  VJST.loading=true;VJST.transcript=text;renderJournal();
+  const sys='You are an English coach reviewing a journal entry. Respond ONLY in Greek.\n\n🔴 ΛΑΘΗ:\n- Λάθος: "[exact]" → Σωστό: "[correction]" (Greek explanation)\n(2-3 max, or "Δεν βρέθηκαν λάθη! ✅")\n\n🟡 ΦΥΣΙΚΟΤΕΡΕΣ ΕΚΦΡΑΣΕΙΣ:\n- Αντί: "[phrase]" → "[natural version]"\n(2 suggestions)\n\n🟢 ΒΑΘΜΟΣ: [X/10] — [one encouraging sentence]\n\nMax 150 words.';
+  try{const fb=await callAI(text,sys);VJST.feedback=fb;VJST.loading=false;addXP(20);toast('+20 XP!','var(--am)');}
+  catch(e){VJST.loading=false;toast('Σφάλμα AI','var(--ro)');}
+  renderJournal();
+}
+
+/* SHADOWING MODE */
+let SHST={idx:0,transcript:'',feedback:'',recording:false,rec:null};
+const SHADOW_SENTS=[{t:"I have been working on this project for about three weeks now.",tip:"been + -ing = ongoing action"},
+{t:"Could you possibly send me the report by end of day?",tip:"Could you possibly = very polite request"},
+{t:"I am not sure I follow — could you elaborate on that?",tip:"I do not follow = I do not understand"},
+{t:"That makes a lot of sense, actually.",tip:"actually = να δείξεις συμφωνία"},
+{t:"I am running a bit late — I will be there in ten minutes.",tip:"running late = αργώ"},
+{t:"Let me get back to you on that.",tip:"να πεις ότι θα απαντήσεις αργότερα"},
+{t:"It has been a really long week, to be honest.",tip:"to be honest = για να είμαι ειλικρινής"},
+{t:"I was wondering if you would be free for a quick call.",tip:"I was wondering = διστακτική ερώτηση"},
+{t:"That is completely understandable.",tip:"να δείξεις ενσυναίσθηση"},
+{t:"I will look into it and let you know.",tip:"look into = ερευνώ"},
+{t:"We seem to be on the same page.",tip:"on the same page = συμφωνούμε"},
+{t:"It is worth giving it a shot.",tip:"give it a shot = δοκίμασε το"},
+{t:"That went better than expected.",tip:"better than expected = καλύτερα από ό,τι περίμενα"},
+{t:"I appreciate you taking the time.",tip:"ευχαριστώ επαγγελματικά"},
+{t:"Could we push the meeting to Thursday?",tip:"push = μετάθεση ραντεβού"},
+{t:"I am totally swamped at the moment.",tip:"swamped = overwhelmed, informal"},
+{t:"Let us touch base tomorrow morning.",tip:"touch base = επικοινωνούμε σύντομα"},
+{t:"I had a feeling that might happen.",tip:"I had a feeling = το είχα προβλέψει"},
+{t:"Do not worry, I have got it covered.",tip:"I have got it covered = το έχω υπό έλεγχο"},
+{t:"That is not something I can commit to right now.",tip:"commit to = δεσμεύομαι"}];
+
+function startShadowing(){
+  SHST={idx:0,transcript:'',recording:false,rec:null};
+  renderShadowing();
+}
+
+function renderShadowing(){
+  const el=document.getElementById('speaking');
+  if(!el)return;
+  const vm=el.querySelector('.vm');
+  const target=vm||el;
+  target.innerHTML='';
+
+  if(SHST.idx>=SHADOW_SENTS.length){
+    addXP(30);
+    const _spk3=DB.get('spk_stats',{t:0,i:0,s:0,j:0,ai:0});_spk3.s++;DB.set('spk_stats',_spk3);
+    target.innerHTML='<div style="max-width:480px;margin:0 auto;text-align:center;padding:40px 0"><div style="font-size:40px;margin-bottom:12px">🎯</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">Shadowing Complete!</div><div style="font-size:12px;color:var(--t3);margin-bottom:20px">'+SHADOW_SENTS.length+' sentences · +30 XP</div><button onclick="startShadowing()" class="btn bp" style="justify-content:center">Ξανά</button></div>';
+    return;
+  }
+
+  const item=SHADOW_SENTS[SHST.idx];
+  const pct=Math.round(SHST.idx/SHADOW_SENTS.length*100);
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const hasVoice=!!SR&&(location.protocol==='https:'||!!window.AndroidTTS);
+
+  const wrap=document.createElement('div');
+  wrap.style.cssText='max-width:520px;margin:0 auto';
+
+  const progress_html='<div style="display:flex;justify-content:space-between;margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:var(--t3)">📖 SHADOWING</div><div style="font-size:12px;color:var(--t3)">'+(SHST.idx+1)+'/'+SHADOW_SENTS.length+'</div></div><div style="height:3px;background:var(--s3);border-radius:3px;margin-bottom:20px"><div style="height:100%;width:'+pct+'%;background:var(--bl);border-radius:3px"></div></div>';
+
+  const card_html='<div style="background:var(--s2);border-radius:12px;padding:24px;text-align:center;margin-bottom:12px"><div style="font-size:19px;font-weight:600;line-height:1.6;color:var(--t1)">'+item.t+'</div></div>';
+
+  const tip_html='<div style="font-size:12px;color:var(--t3);margin-bottom:16px;padding:8px 12px;background:var(--s2);border-radius:8px">💡 '+item.tip+'</div>';
+
+  const transcript_html=SHST.transcript
+    ?'<div style="font-size:12px;color:var(--t3);margin-bottom:12px;padding:8px 12px;background:var(--s2);border-radius:8px;border-left:3px solid var(--gr)">Είπες: <span style="color:var(--t1)">'+escHTML(SHST.transcript)+'</span></div>'
+    :'';
+
+  wrap.innerHTML=progress_html+card_html+tip_html+transcript_html;
+
+  // Buttons row
+  const btnRow=document.createElement('div');
+  btnRow.style.cssText='display:flex;gap:8px';
+
+  const listenBtn=document.createElement('button');
+  listenBtn.style.cssText='flex:1;padding:10px;background:var(--bl);border-radius:8px;color:#fff;border:none;cursor:pointer;font-size:13px';
+  listenBtn.textContent='🔊 Άκουσε';
+  listenBtn.onclick=()=>speak(SHADOW_SENTS[SHST.idx].t,'en-GB');
+  btnRow.appendChild(listenBtn);
+
+  if(hasVoice){
+    const micBtn=document.createElement('button');
+    micBtn.id='shadow-mic';
+    micBtn.style.cssText='flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:13px;border:1px solid var(--ln);background:'+(SHST.recording?'var(--ro)':'var(--s2)')+';color:'+(SHST.recording?'#fff':'var(--t1)');
+    micBtn.textContent=SHST.recording?'⏹ Stop':'🎤 Επανέλαβε';
+    micBtn.onclick=shadowRecord;
+    btnRow.appendChild(micBtn);
+  }
+
+  const nextBtn=document.createElement('button');
+  nextBtn.style.cssText='flex:1;padding:10px;background:var(--gr);border-radius:8px;color:#fff;border:none;cursor:pointer;font-size:13px';
+  nextBtn.textContent='→ Επόμενο';
+  nextBtn.onclick=shadowNext;
+  btnRow.appendChild(nextBtn);
+
+  wrap.appendChild(btnRow);
+  target.appendChild(wrap);
+}
+
+function shadowRecord(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){toast('Το μικρόφωνο χρειάζεται Chrome ή Android app','var(--am)');return;}
+  // On Android WebView (file://) SR works via native permission grant
+  // Only block on non-Android non-HTTPS
+  if(location.protocol!=='https:'&&!window.AndroidTTS){
+    toast('🔒 Το μικρόφωνο λειτουργεί στο Android app ή στο richter444.github.io','var(--am)');return;
+  }
+  if(SHST.recording&&SHST.rec){SHST.rec.stop();return;}
+  const rec=new SR();
+  SHST.rec=rec;SHST.recording=true;
+  rec.lang='en-US';rec.continuous=false;rec.interimResults=false;
+  rec.onresult=(e)=>{SHST.transcript=e.results[0][0].transcript;};
+  rec.onend=()=>{SHST.recording=false;SHST.rec=null;renderShadowing();};
+  rec.onerror=(e)=>{SHST.recording=false;if(e.error!=='aborted')toast('Σφάλμα: '+e.error,'var(--am)');renderShadowing();};
+  rec.start();renderShadowing();
+}
+
+function shadowNext(){
+  if(SHST.rec)SHST.rec.stop();
+  SHST.idx++;SHST.transcript='';SHST.recording=false;
+  renderShadowing();
+}
+
+/* ══ CLOZE TEST ══ */
+function rClozeTest(){
+  const el=document.getElementById('writing');
+  if(!el)return;
+  const arts=READINGS||[];
+
+  if(!CLST.art){
+    // List view
+    el.innerHTML='<div class="sec fu" style="max-width:700px">'
+      +'<div class="sl mb4" style="color:var(--vi)">WRITING</div>'
+      +'<div class="fp f16 b mb16">Cloze Tests — Συμπλήρωσε τα κενά</div>'
+      +'<p class="f12 c2 mb16" style="line-height:1.6">Επέλεξε ένα κείμενο. Μερικές λέξεις θα αφαιρεθούν — συμπλήρωσε τα κενά από μνήμη.</p>'
+      +'<div class="g2">'
+      +arts.map(a=>'<button onclick="startCloze(this)" data-id="'+a.id+'" style="padding:14px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;text-align:left;width:100%">'
+        +'<div style="font-size:12px;font-weight:700;color:var(--t1);margin-bottom:4px">'+a.t+'</div>'
+        +'<div style="font-size:11px;color:var(--t3)">'+a.lv+' · '+a.time+'</div>'
+        +'</button>').join('')
+      +'</div></div>';
+    return;
+  }
+
+  const art=arts.find(a=>a.id===CLST.art);
+  if(!art){CLST.art=null;rClozeTest();return;}
+
+  // Build cloze: remove every 7th content word
+  const stripped=art.text.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+  const words=stripped.split(' ');
+  let blanks=[];
+  const clozeWords=words.map((w,i)=>{
+    const clean=w.replace(/[^a-zA-Z]/g,'');
+    if(clean.length>4 && i%7===6){
+      blanks.push({idx:i,word:clean,orig:w});
+      return '<input data-idx="'+i+'" type="text" placeholder="___" style="width:'+(clean.length*10+20)+'px;padding:2px 6px;background:var(--s2);border:1px solid var(--bl);border-radius:4px;font-size:13px;color:var(--t1);text-align:center">';
+    }
+    return w;
+  });
+
+  const checked=CLST.checked;
+  let clozeHtml=clozeWords.join(' ');
+
+  if(checked){
+    // Show results
+    blanks.forEach(b=>{
+      const ans=(CLST.answers[b.idx]||'').trim().toLowerCase();
+      const correct=b.word.toLowerCase();
+      const col=ans===correct?'var(--gr)':'var(--ro)';
+      clozeHtml=clozeHtml.replace(
+        'data-idx="'+b.idx+'"',
+        'data-idx="'+b.idx+'" style="width:'+(b.word.length*10+20)+'px;padding:2px 6px;background:'+col+'22;border:1px solid '+col+';border-radius:4px;font-size:13px;color:'+col+';text-align:center" value="'+(CLST.answers[b.idx]||'')+'" readonly'
+      );
+    });
+    const correct=blanks.filter(b=>(CLST.answers[b.idx]||'').trim().toLowerCase()===b.word.toLowerCase()).length;
+    clozeHtml+='<div style="margin-top:16px;padding:12px;background:var(--s2);border-radius:8px;font-size:13px">Σκορ: <strong style="color:var(--bl)">'+correct+'/'+blanks.length+'</strong> — '+Math.round(correct/blanks.length*100)+'%</div>';
+    blanks.forEach(b=>{
+      if((CLST.answers[b.idx]||'').trim().toLowerCase()!==b.word.toLowerCase()){
+        clozeHtml+='<div style="font-size:11px;color:var(--t3);margin-top:4px">Σωστό: <strong>'+b.orig+'</strong></div>';
+      }
+    });
+  }
+
+  el.innerHTML='<div class="sec fu" style="max-width:700px">'
+    +'<div class="sl mb4" style="color:var(--vi)">CLOZE TEST</div>'
+    +'<div class="fp f14 b mb16">'+art.t+'</div>'
+    +'<div class="card mb16" style="line-height:2;font-size:13px">'+clozeHtml+'</div>'
+    +(!checked
+      ?'<div class="fx g8"><button onclick="checkCloze()" class="btn bp">✓ Έλεγχος</button><button onclick="CLST.art=null;rClozeTest()" class="btn bgh">← Πίσω</button></div>'
+      :'<div class="fx g8"><button onclick="CLST.art=null;CLST.checked=false;rClozeTest()" class="btn bp">🔄 Νέο</button><button onclick="CLST.art=null;rClozeTest()" class="btn bgh">← Λίστα</button></div>')
+    +'</div>';
+
+  // Attach input change handlers
+  if(!checked){
+    el.querySelectorAll('input[data-idx]').forEach(inp=>{
+      inp.addEventListener('input',()=>{CLST.answers[inp.dataset.idx]=inp.value;});
+    });
+  }
+}
+
+function checkCloze(){
+  CLST.checked=true;
+  const el=document.getElementById('writing');
+  el&&el.querySelectorAll('input[data-idx]').forEach(inp=>{
+    CLST.answers[inp.dataset.idx]=inp.value;
+  });
+  addXP(15);
+  rClozeTest();
+}
+
+/* SLANG MODE */
+let SLANGST={idx:0,mode:'learn',score:0,total:0,cards:[]};
+const SLANG_DATA=[
+  {s:"Gonna",f:"Going to",e:"I'm gonna grab a coffee.",n:"Casual — ποτέ σε γραπτό"},
+  {s:"Wanna",f:"Want to",e:"You wanna come with us?",n:"Πολύ συνηθισμένο"},
+  {s:"Gotta",f:"Have got to",e:"I've gotta run!",n:"Εκφράζει επείγον"},
+  {s:"Kinda",f:"Kind of",e:"It's kinda complicated.",n:"Μετριάζει αυτό που λες"},
+  {s:"Gimme",f:"Give me",e:"Gimme a sec.",n:"Πολύ casual — μόνο φίλοι"},
+  {s:"Lemme",f:"Let me",e:"Lemme check that.",n:"Casual"},
+  {s:"My bad",f:"My mistake",e:"Oh my bad, I forgot!",n:"Αναγνωρίζεις λάθος"},
+  {s:"No worries",f:"It is fine",e:"No worries, I'll sort it.",n:"British/Australian"},
+  {s:"Totally",f:"Completely",e:"I totally agree.",n:"Ενισχύει αυτό που λες"},
+  {s:"Hang on",f:"Wait a moment",e:"Hang on, let me think.",n:"Ζητάς χρόνο"},
+  {s:"I'm down",f:"I'm up for it",e:"A barbecue? I'm down!",n:"Αποδέχεσαι πρόταση"},
+  {s:"Catch you later",f:"See you later",e:"Gotta go, catch you later!",n:"Αποχαιρετισμός"},
+  {s:"No-brainer",f:"Obvious decision",e:"Take that job, it's a no-brainer.",n:"Κάτι εύκολο/προφανές"},
+  {s:"I'm swamped",f:"I'm very busy",e:"Can't meet, totally swamped.",n:"Overwhelmed"},
+  {s:"On the same page",f:"In agreement",e:"Good, we're on the same page.",n:"Συμφωνούμε"},
+  {s:"Touch base",f:"Make brief contact",e:"Let's touch base tomorrow.",n:"Brief check-in"},
+  {s:"ASAP",f:"As soon as possible",e:"Send it ASAP!",n:"Λέγεται A-S-A-P"},
+  {s:"FYI",f:"For your information",e:"FYI, meeting moved to 3pm.",n:"Ενημέρωση"},
+  {s:"No biggie",f:"Not a big deal",e:"Don't worry, no biggie.",n:"Δεν πειράζει"},
+  {s:"Chill out",f:"Relax",e:"Chill out! It'll be fine.",n:"Για stressed κάποιον"},
+  {s:"That's fire",f:"That's excellent",e:"This pizza is fire!",n:"Gen Z slang"},
+  {s:"I'm dead",f:"That's hilarious",e:"He said what? I'm dead!",n:"Γελάς πολύ"},
+  {s:"Low-key",f:"Secretly",e:"I low-key love this song.",n:"Κάτι που δεν παραδέχεσαι"},
+  {s:"High-key",f:"Obviously",e:"I high-key need a holiday.",n:"Αντίθετο του low-key"},
+  {s:"Hit me up",f:"Contact me",e:"Hit me up when you're free.",n:"Πες μου να βρεθούμε"},
+  {s:"Spill the tea",f:"Tell me the gossip",e:"Spill the tea, what happened?",n:"Θέλεις να ακούσεις"},
+  {s:"Ghosted",f:"Stopped all contact",e:"He ghosted me after 3 dates.",n:"Εξαφανίστηκε χωρίς εξήγηση"},
+  {s:"It slaps",f:"It's really good",e:"This song slaps!",n:"Gen Z για μουσική/φαγητό"},
+  {s:"Vibe",f:"Atmosphere / feeling",e:"The vibe here is great.",n:"Η ατμόσφαιρα/αίσθηση"},
+  {s:"That hits different",f:"That feels special",e:"Coffee at sunrise hits different.",n:"Κάτι που αισθάνεσαι βαθύτερα"},
+];
+
+function startSlangMode(mode){
+  const shuffled=[...SLANG_DATA].sort(()=>Math.random()-.5);
+  SLANGST={idx:0,mode:mode||'learn',score:0,total:0,cards:mode==='quiz'?shuffled.slice(0,10):shuffled};
+  renderSlang();
+}
+
+function renderSlang(){
+  const el=document.getElementById('speaking');
+  if(!el)return;
+  const vm=el.querySelector('.vm');
+  const target=vm||el;
+  target.innerHTML='';
+
+  if(SLANGST.idx>=SLANGST.cards.length){
+    if(SLANGST.total>0)addXP(SLANGST.score*3);
+    const wrap=document.createElement('div');
+    wrap.style.cssText='max-width:480px;margin:0 auto;text-align:center';
+    wrap.innerHTML='<div style="font-size:36px;margin-bottom:8px">🗣</div>'
+      +'<div style="font-size:16px;font-weight:700;margin-bottom:4px">Slang Done!</div>'
+      +(SLANGST.total>0?'<div style="font-size:12px;color:var(--t3);margin-bottom:12px">'+SLANGST.score+'/'+SLANGST.total+' · +'+(SLANGST.score*3)+' XP</div>':'<div style="margin-bottom:12px"></div>');
+    const brow=document.createElement('div');brow.style.cssText='display:flex;gap:8px;justify-content:center';
+    const lb=document.createElement('button');lb.className='btn bp';lb.textContent='📖 Learn';lb.onclick=()=>startSlangMode('learn');
+    const qb=document.createElement('button');qb.style.cssText='padding:10px 16px;background:var(--vi);border-radius:8px;color:#fff;border:none;cursor:pointer';qb.textContent='🧠 Quiz';qb.onclick=()=>startSlangMode('quiz');
+    brow.appendChild(lb);brow.appendChild(qb);wrap.appendChild(brow);target.appendChild(wrap);
+    return;
+  }
+
+  const item=SLANGST.cards[SLANGST.idx];
+  const pct=Math.round(SLANGST.idx/SLANGST.cards.length*100);
+  const wrap=document.createElement('div');
+  wrap.style.cssText='max-width:480px;margin:0 auto';
+
+  // Header + progress bar
+  const hdr=document.createElement('div');
+  hdr.innerHTML='<div style="display:flex;justify-content:space-between;margin-bottom:12px">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--t3)">'+(SLANGST.mode==='learn'?'🗣 SLANG':'🧠 SLANG QUIZ')+'</div>'
+    +'<div style="font-size:12px;color:var(--t3)">'+(SLANGST.idx+1)+'/'+SLANGST.cards.length+'</div></div>'
+    +'<div style="height:3px;background:var(--s3);border-radius:3px;margin-bottom:20px">'
+    +'<div style="height:100%;width:'+pct+'%;background:var(--vi);border-radius:3px"></div></div>';
+  wrap.appendChild(hdr);
+
+  if(SLANGST.mode==='learn'){
+    // Card
+    const card=document.createElement('div');
+    card.style.cssText='background:linear-gradient(135deg,rgba(124,92,245,.12),rgba(79,142,247,.08));border:1px solid rgba(124,92,245,.3);border-radius:14px;padding:24px;text-align:center;margin-bottom:12px';
+    card.innerHTML='<div style="font-size:30px;font-weight:800;color:var(--vi);margin-bottom:6px">'+item.s+'</div>'
+      +'<div style="font-size:13px;color:var(--t3);margin-bottom:12px">= '+item.f+'</div>'
+      +'<div style="font-size:14px;font-style:italic;color:var(--t1);margin-bottom:10px">"'+item.e+'"</div>';
+    const speakBtn=document.createElement('button');
+    speakBtn.style.cssText='font-size:11px;background:none;border:1px solid var(--ln);border-radius:6px;padding:3px 10px;cursor:pointer;color:var(--t3)';
+    speakBtn.textContent='🔊 Άκουσε';
+    speakBtn.onclick=()=>speak(item.e,'en-GB');
+    card.appendChild(speakBtn);
+    wrap.appendChild(card);
+    // Note
+    const note=document.createElement('div');
+    note.style.cssText='background:var(--s2);border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px;color:var(--t3)';
+    note.textContent='💡 '+item.n;
+    wrap.appendChild(note);
+    // Next button
+    const nextBtn=document.createElement('button');
+    nextBtn.className='btn bp';nextBtn.style.cssText+='width:100%;justify-content:center';
+    nextBtn.textContent='Επόμενο →';nextBtn.onclick=()=>{SLANGST.idx++;renderSlang();};
+    wrap.appendChild(nextBtn);
+  } else {
+    // Quiz mode
+    const question=document.createElement('div');
+    question.innerHTML='<div style="font-size:28px;font-weight:800;text-align:center;color:var(--vi);margin-bottom:6px">'+item.s+'</div>'
+      +'<div style="font-size:13px;font-style:italic;text-align:center;color:var(--t3);margin-bottom:16px">"'+item.e+'"</div>';
+    wrap.appendChild(question);
+    const opts=[item.f,...SLANGST.cards.filter((_,i)=>i!==SLANGST.idx).sort(()=>Math.random()-.5).slice(0,3).map(x=>x.f)].sort(()=>Math.random()-.5);
+    const grid=document.createElement('div');grid.style.cssText='display:grid;gap:8px';
+    opts.forEach(opt=>{
+      const ob=document.createElement('button');
+      ob.style.cssText='padding:11px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;font-size:13px;text-align:left;color:var(--t1)';
+      ob.textContent=opt;
+      ob.onclick=function(){answerSlang(this,opt,item.f);};
+      grid.appendChild(ob);
+    });
+    wrap.appendChild(grid);
+  }
+  target.appendChild(wrap);
+}
+
+
+function answerSlang(btn,chosen,correct){
+  const ok=chosen===correct;
+  btn.parentElement.querySelectorAll('button').forEach(b=>{
+    b.style.pointerEvents='none';
+    const bText=b.textContent.trim();
+    if(bText===correct)b.style.cssText+=';background:rgba(34,197,94,.15);border-color:var(--gr)';
+    else if(b===btn&&!ok)b.style.cssText+=';background:rgba(240,56,112,.15);border-color:var(--ro)';
+  });
+  if(ok)SLANGST.score++;
+  SLANGST.total++;
+  setTimeout(()=>{SLANGST.idx++;renderSlang();},700);
+}
+
+/* GUIDED DAILY FLOW */
+let FLOW={active:false,step:0,steps:[],startTime:0};
+const FLOW_STEPS=[
+  {id:'warmup',label:'Warm-up',desc:'3 Instant Response questions',mins:2,ic:'⚡',
+   fn:()=>{IRST.questions=[...INSTANT_QS].sort(()=>Math.random()-.5).slice(0,3);IRST.idx=0;IRST.score=0;IRST.history=[];go('speaking');SPST.tab='instant';rSpeaking();}},
+  {id:'phrases',label:'Phrases',desc:'5 everyday chunks',mins:3,ic:'💬',
+   fn:()=>{startPhrasesQuiz();}},
+  {id:'shadowing',label:'Shadowing',desc:'3 sentences — listen & repeat',mins:4,ic:'📖',
+   fn:()=>{SHST.idx=0;SHST.transcript='';SHST.feedback='';go('speaking');SPST.tab='shadowing';rSpeaking();}},
+  {id:'conversation',label:'AI Conversation',desc:'Mini conversation',mins:8,ic:'🤖',
+   fn:()=>{CONVST.scenario=null;CONVST.history=[];CONVST.turn=0;CONVST.done=false;CONVST.review=null;CONVST.loading=false;go('speaking');SPST.tab='aiconv';rSpeaking();}},
+  {id:'journal',label:'Voice Journal',desc:'Μίλα 1 λεπτό για τη μέρα σου',mins:3,ic:'📔',
+   fn:()=>{go('speaking');SPST.tab='journal';rSpeaking();}},
+];
+
+function startDailyFlow(){
+  FLOW={active:true,step:0,steps:FLOW_STEPS,startTime:Date.now()};
+  renderFlowBar();
+}
+
+function renderFlowBar(){
+  let bar=document.getElementById('flow-bar');
+  if(!bar){
+    bar=document.createElement('div');
+    bar.id='flow-bar';
+    bar.style.cssText='position:fixed;bottom:0;left:0;right:0;background:var(--s1);border-top:2px solid var(--bl);z-index:8880;padding:10px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 -4px 20px rgba(0,0,0,.25)';
+    document.body.appendChild(bar);
+  }
+  if(!FLOW.active){bar.remove();return;}
+  const s=FLOW.steps[FLOW.step];
+  const mins=Math.round((Date.now()-FLOW.startTime)/60000);
+  // Build bar using DOM
+  bar.innerHTML='';
+  const info=document.createElement('div');info.style.cssText='flex:1';
+  info.innerHTML='<div style="font-size:10px;color:var(--t3);margin-bottom:2px">📅 DAILY FLOW — '+(FLOW.step+1)+'/'+FLOW.steps.length+' · '+mins+' min elapsed</div>'
+    +'<div style="font-size:13px;font-weight:700">'+s.ic+' '+s.label+'</div>'
+    +'<div style="font-size:11px;color:var(--t3)">'+s.desc+'</div>';
+  const brow=document.createElement('div');brow.style.cssText='display:flex;gap:6px';
+  const nb=document.createElement('button');
+  nb.style.cssText='padding:8px 14px;background:var(--bl);border-radius:8px;color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:700';
+  nb.textContent=FLOW.step<FLOW.steps.length-1?'Next →':'Finish ✓';
+  nb.onclick=flowNext;
+  const xb=document.createElement('button');
+  xb.style.cssText='padding:8px;background:var(--s3);border:1px solid var(--ln);border-radius:8px;cursor:pointer;font-size:11px;color:var(--t2)';
+  xb.textContent='✕';xb.onclick=()=>{FLOW.active=false;document.getElementById('flow-bar')?.remove();};
+  brow.appendChild(nb);brow.appendChild(xb);
+  bar.appendChild(info);bar.appendChild(brow);
+  if(s.fn)s.fn();
+}
+
+function flowNext(){
+  FLOW.step++;
+  if(FLOW.step>=FLOW.steps.length){
+    FLOW.active=false;
+    document.getElementById('flow-bar')?.remove();
+    addXP(50);
+    const mins=Math.round((Date.now()-FLOW.startTime)/60000);
+    const fc=DB.get('flow_completions',0);DB.set('flow_completions',fc+1);
+    toast('🎉 Daily Flow! '+mins+' λεπτά · +50 XP · Συνολικά: '+( DB.get('flow_completions',0))+' flows','var(--gr)');
+    return;
+  }
+  renderFlowBar();
+}
+
+async function checkShadowPronunciation(){
+  const item=SHADOW_SENTS[SHST.idx];
+  if(!item||!SHST.transcript){toast('Μίλα πρώτα!','var(--am)');return;}
+  if(!hasAPIKey()){go('settings');return;}
+  const vm=document.querySelector('#speaking .vm');
+  const aiBtn=vm&&vm.querySelector('#shadow-ai-btn');
+  if(aiBtn)aiBtn.textContent='⏳...';
+  const sys='English pronunciation coach. Compare student vs original. Greek response max 50 words:\n🔴 Διαφορές: [missing/wrong words]\n🟡 Ρυθμός: [natural?]\n🟢 Score: X/10';
+  try{
+    const fb=await callAI('Original: "'+item.t+'" Student said: "'+SHST.transcript+'"',sys);
+    SHST.feedback=fb;
+    renderShadowing();
+  }catch(e){toast('Σφάλμα AI','var(--ro)');}
+}
+
+/* ══ INTEREST SYSTEM ══ */
+function getInterests(){return DB.get('user_interests',['travel','tech','gym','aviation']);}
+
+function toggleInterest(id){
+  const sel=getInterests();
+  const idx=sel.indexOf(id);
+  if(idx>=0) sel.splice(idx,1);
+  else sel.push(id);
+  DB.set('user_interests',sel);
+}
+
+function getInterestTopics(){
+  const map={
+    travel:['booking a flight','hotel check-in','asking for directions','travel problems'],
+    tech:['explaining a tech issue','discussing AI','software project update','startup pitch'],
+    gym:['talking to a personal trainer','discussing workout plans','sports injury'],
+    food:['ordering at a restaurant','describing a recipe','food allergy conversation'],
+    music:['discussing favourite music','concert planning','music recommendations'],
+    movies:['recommending a film','discussing a plot twist','streaming services'],
+    business:['job interview','work meeting','salary negotiation','client call'],
+    games:['discussing a video game','online gaming','game recommendations'],
+    aviation:['flight delay situation','CAMO procedures','ATC communication'],
+  };
+  const result=[];
+  getInterests().forEach(i=>{if(map[i])result.push(...map[i]);});
+  return result.length>0?result:['daily conversation','work meeting','coffee order'];
+}
+
+function escHTML(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+/* ══ ANDROID BACK BUTTON ══ */
+function handleAndroidBack(){
+  // If modal is open, close it
+  const modals=['quick-modal','placement-modal','cefr-modal','il-modal','er-modal',
+    'onboard-modal','error-analysis-modal','weekly-summary-modal','aviation-modal','wn-modal','phrases-modal'];
+  for(const m of modals){
+    const el=document.getElementById(m);
+    if(el&&el.style.display!=='none'&&el.offsetParent!==null){
+      el.remove();
+      return true;
+    }
+  }
+  // If Daily Flow bar is active, close it
+  const fb=document.getElementById('flow-bar');
+  if(fb){FLOW.active=false;fb.remove();return true;}
+  // If on a panel other than home, go home
+  const home=document.getElementById('home');
+  if(home&&home.style.display==='none'){go('home');return true;}
+  // Let Android handle (exit app)
+  return false;
+}
+
+/* ══ ANDROID KEYBOARD FIX ══ */
+document.addEventListener('focusin', function(e){
+  if((e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')&&window.AndroidTTS){
+    setTimeout(()=>{
+      e.target.scrollIntoView({behavior:'smooth',block:'nearest'});
+    },300);
+  }
+});
 </script>
 </body>
 </html>
