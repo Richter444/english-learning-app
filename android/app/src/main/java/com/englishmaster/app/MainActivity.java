@@ -72,11 +72,22 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
-        }
+        // Let JS handle back button first (for panel navigation)
+        webView.evaluateJavascript(
+            "(function(){ if(typeof handleAndroidBack==='function') return handleAndroidBack(); return false; })()",
+            value -> {
+                if (!"true".equals(value)) {
+                    // JS didn't handle it - use default
+                    runOnUiThread(() -> {
+                        if (webView.canGoBack()) {
+                            webView.goBack();
+                        } else {
+                            finish();
+                        }
+                    });
+                }
+            }
+        );
     }
 
     @Override
@@ -114,11 +125,28 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void speak(final String text) {
+            speak(text, "en-GB");
+        }
+
+        @JavascriptInterface
+        public void speak(final String text, final String lang) {
             if (text == null || text.trim().isEmpty()) return;
             mainHandler.post(() -> {
-                if (tts != null && ready) {
-                    tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, UUID.randomUUID().toString());
+                if (tts == null || !ready) return;
+                // Set language per call
+                java.util.Locale locale;
+                if ("en-US".equals(lang) || "en_US".equals(lang)) {
+                    locale = java.util.Locale.US;
+                } else if ("en-AU".equals(lang)) {
+                    locale = new java.util.Locale("en", "AU");
+                } else {
+                    locale = java.util.Locale.UK; // default en-GB
                 }
+                int result = tts.setLanguage(locale);
+                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                    tts.setLanguage(java.util.Locale.US); // fallback
+                }
+                tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, UUID.randomUUID().toString());
             });
         }
 
