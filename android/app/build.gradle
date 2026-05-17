@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 34
     defaultConfig {
         applicationId "com.englishmaster.app"
         minSdkVersion 24
-        targetSdkVersion 33
-        versionCode 1
-        versionName "1.0"
+        targetSdkVersion 34
+        versionCode 2
+        versionName "2.0"
     }
     buildTypes {
         release {
