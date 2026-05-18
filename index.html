@@ -631,6 +631,692 @@ input:focus, textarea:focus {
 <script>
 'use strict';
 
+
+/* ════════════════════════════════════════════════════════
+   AI LAYER — SINGLE SOURCE OF TRUTH
+   All AI calls go through callAI(). Nothing else talks
+   to the Anthropic API directly.
+   ════════════════════════════════════════════════════════ */
+
+/* ── Key helpers ── */
+function getAPIKey(){
+  return DB.get('anthropic_key','') || '';
+}
+function hasAPIKey(){
+  return getAPIKey().length > 20;
+}
+
+/* ── Core API call ── */
+async function callAI(userMsg, systemMsg, historyArr){
+  const key = getAPIKey();
+  if(!key){
+    toast('⚙ Χρειάζεσαι API Key — πήγαινε στα Settings.','var(--am)');
+    go('settings');
+    throw new Error('NO_KEY');
+  }
+
+  // Build messages array
+  let messages = [];
+  if(Array.isArray(historyArr) && historyArr.length){
+    messages = historyArr.filter(m => m && m.role && m.content);
+  }
+  messages.push({ role:'user', content: String(userMsg||'') });
+
+  const sysText = (typeof systemMsg === 'string' && systemMsg.trim())
+    ? systemMsg.trim()
+    : 'You are a helpful English learning assistant.';
+
+  // 28-second timeout
+  const ctrl = new AbortController();
+  const tid  = setTimeout(() => ctrl.abort(), 28000);
+
+  let res;
+  try {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
+      method : 'POST',
+      signal : ctrl.signal,
+      headers: {
+        'Content-Type'                             : 'application/json',
+        'x-api-key'                                : key,
+        'anthropic-version'                        : '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model     : 'claude-haiku-4-5-20251001',
+        max_tokens: 1000,
+        system    : sysText,
+        messages  : messages
+      })
+    });
+  } catch(fetchErr) {
+    clearTimeout(tid);
+    if(fetchErr.name === 'AbortError'){
+      throw new Error('⏱ Timeout (28s). Δοκίμασε ξανά.');
+    }
+    throw new Error('🌐 Σφάλμα σύνδεσης. Έλεγξε το internet.');
+  }
+  clearTimeout(tid);
+
+  if(!res.ok){
+    let errMsg = 'Σφάλμα ' + res.status;
+    try {
+      const j = await res.json();
+      if(res.status === 401){
+        DB.delete('anthropic_key');
+        toast('❌ Λάθος API Key. Βάλε νέο στα Settings.','var(--ro)');
+        go('settings');
+        throw new Error('BAD_KEY');
+      }
+      if(res.status === 429) throw new Error('⏳ Πολλά requests. Δοκίμασε σε λίγο.');
+      errMsg = j.error?.message || j.type || errMsg;
+    } catch(e2){
+      if(e2.message !== errMsg) throw e2;
+    }
+    throw new Error(errMsg);
+  }
+
+  const data = await res.json();
+  if(!data.content || !data.content[0] || !data.content[0].text){
+    throw new Error('Κενή απάντηση από AI.');
+  }
+  return data.content[0].text;
+}
+
+/* ── Settings: save key ── */
+function saveAPIKeyFromSettings(){
+  const inp = document.getElementById('settings-api-input');
+  if(!inp) return;
+  const key = inp.value.trim();
+  if(key.length < 20){
+    toast('Το key φαίνεται λανθασμένο.','var(--ro)');
+    return;
+  }
+  DB.set('anthropic_key', key);
+  toast('✅ API Key αποθηκεύτηκε!','var(--gr)');
+  rSettings();
+}
+
+/* ── Test API key ── */
+async function testAPIKey(){
+  if(!hasAPIKey()){ toast('Πρώτα αποθήκευσε ένα API Key.','var(--am)'); return; }
+  const btn = document.querySelector('[onclick="testAPIKey()"]');
+  if(btn){ btn.disabled = true; btn.textContent = '⏳...'; }
+  const restore = () => { if(btn){ btn.disabled=false; btn.textContent='🔌 Test'; } };
+  try {
+    const r = await callAI('Reply with exactly one word: OK', 'Reply with exactly: OK');
+    restore();
+    toast('✅ API Key λειτουργεί! (' + r.trim().substring(0,20) + ')','var(--gr)');
+  } catch(e) {
+    restore();
+    toast('❌ ' + e.message,'var(--ro)');
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   AI CONVERSATION
+   ════════════════════════════════════════════════════════ */
+
+/* ── Conversation state ── */
+// CONVST = { scenario, history, turn, loading, done, review }
+// Initialised globally elsewhere
+
+/* ── Start a scenario ── */
+function startConvScenario(id, title){
+  CONVST.scenario  = id;
+  CONVST.history   = [];
+  CONVST.turn      = 0;
+  CONVST.done      = false;
+  CONVST.review    = null;
+  CONVST.loading   = true;
+  rAIConversation();
+
+  const sc    = (CONVERSATIONS||[]).find(x => x.id === id);
+  const level = DB.get('placement_lv','B1');
+  const sys   = 'You are starting an English conversation practice session. Scenario: '
+    + (sc ? sc.title : title || 'casual chat')
+    + '. Student level: ' + level + '.'
+    + ' Start with a short natural greeting (1 sentence). Be friendly.';
+
+  callAI('Hello!', sys, [])
+    .then(reply => {
+      CONVST.history  = [{role:'assistant', content:reply}];
+      CONVST.loading  = false;
+      rAIConversation();
+      speak(reply, 'en-GB');
+    })
+    .catch(e => {
+      CONVST.loading = false;
+      toast('⚠ ' + e.message,'var(--am)');
+      rAIConversation();
+    });
+}
+
+/* ── Send user message ── */
+async function sendConvMsg(){
+  if(!hasAPIKey()){ toast('⚙ Χρειάζεσαι API Key στα Settings.','var(--am)'); go('settings'); return; }
+  if(CONVST.loading) return;
+  const input = document.getElementById('conv-input');
+  if(!input || !input.value.trim()) return;
+
+  const userText = input.value.trim();
+  input.value = '';
+  CONVST.loading = true;
+  CONVST.turn++;
+  CONVST.history.push({ role:'user', content:userText });
+  rAIConversation();
+
+  const sc    = (CONVERSATIONS||[]).find(x => x.id === CONVST.scenario);
+  const level = DB.get('placement_lv','B1');
+  const lvMap = {'B1':'use simple clear sentences','B2':'use natural expressions','C1':'speak like a native, use idioms'};
+  const sys   = 'You are a friendly English conversation partner. Scenario: '
+    + (sc ? sc.title : 'casual chat') + '. Student level: ' + level
+    + ' — ' + (lvMap[level]||lvMap.B1) + '.'
+    + ' Keep reply SHORT (1-3 sentences). If there is a grammar error, note it at the end in brackets [correction: ...].';
+
+  try {
+    const reply = await callAI(userText, sys, CONVST.history.slice(0,-1));
+    CONVST.history.push({ role:'assistant', content:reply });
+    CONVST.loading = false;
+    addXP(2);
+    DB.set('spk_stats', (() => {
+      const s = DB.get('spk_stats',{t:0,i:0,s:0,j:0,ai:0});
+      s.ai = (s.ai||0) + 1; s.t = (s.t||0) + 1; return s;
+    })());
+    if(CONVST.turn >= 6){ CONVST.done = true; _doConvReview(); return; }
+    rAIConversation();
+    speak(reply, 'en-GB');
+  } catch(e) {
+    CONVST.loading = false;
+    CONVST.turn--;
+    CONVST.history.pop();
+    toast('⚠ ' + e.message,'var(--am)');
+    rAIConversation();
+  }
+}
+
+async function _doConvReview(){
+  rAIConversation();
+  const convText = CONVST.history.map(m => m.role.toUpperCase() + ': ' + m.content).join('\n');
+  const sys = 'You are an English teacher reviewing a student conversation.'
+    + ' Student level: ' + DB.get('placement_lv','B1') + '.'
+    + ' Respond ONLY in Greek. Use EXACTLY this format:\n'
+    + '🔴 ΛΑΘΗ: [list errors or "Δεν υπάρχουν!"]\n'
+    + '🟡 ΦΥΣΙΚΟΤΕΡΕΣ ΕΚΦΡΑΣΕΙΣ: [suggest better phrases]\n'
+    + '🟢 ΘΕΤΙΚΑ: [what was good]\n'
+    + '⭐ ΣΚΟΡ: X/10';
+  try {
+    const review = await callAI('Review this conversation:\n' + convText, sys);
+    CONVST.review = review;
+    rAIConversation();
+  } catch(e) {
+    CONVST.review = '(Σφάλμα ανάλυσης: ' + e.message + ')';
+    rAIConversation();
+  }
+}
+
+/* ── Render AI Conversation ── */
+function rAIConversation(){
+  const el = document.getElementById('speaking');
+  if(!el) return;
+
+  // If no scenario chosen → show scenario grid
+  if(!CONVST.scenario){
+    _renderConvGrid(el);
+    return;
+  }
+
+  // Show chat UI
+  _renderConvChat(el);
+}
+
+function _renderConvGrid(el){
+  el.innerHTML = '';
+  const wrap = _mkDiv('sec fu', 'max-width:840px');
+  el.appendChild(wrap);
+  _mkEl(wrap, 'div', 'sl mb4', null, {style:'color:var(--gr)',text:'SPEAKING'});
+  _mkEl(wrap, 'div', 'fp f16 b mb16', null, {text:'AI Conversation Partner'});
+  _mkEl(wrap, 'p', 'f12 c2 mb16', null, {style:'line-height:1.6', text:'Επέλεξε σενάριο και εξασκήσου. Το AI θα σε διορθώνει και θα σε βοηθά να βελτιωθείς.'});
+
+  const grid = _mkDiv('g3 mb16');
+  wrap.appendChild(grid);
+
+  const scenarios = [
+    {id:'s1',ic:'☕',title:'Coffee Order',desc:'Παραγγελία καφέ'},
+    {id:'s2',ic:'🏨',title:'Hotel Check-in',desc:'Ρεσεψιόν ξενοδοχείου'},
+    {id:'s3',ic:'💼',title:'Job Interview',desc:'Συνέντευξη εργασίας'},
+    {id:'s4',ic:'🛒',title:'Shopping',desc:'Αγορές'},
+    {id:'s5',ic:'🍕',title:'Restaurant',desc:'Εστιατόριο'},
+    {id:'s6',ic:'🗺',title:'Asking Directions',desc:'Οδηγίες'},
+    {id:'s7',ic:'💊',title:'Doctor Visit',desc:'Γιατρός'},
+    {id:'s8',ic:'✈️',title:'Airport',desc:'Αεροδρόμιο'},
+    {id:'s9',ic:'📞',title:'Phone Call',desc:'Τηλεφωνική κλήση'},
+    {id:'s10',ic:'🤝',title:'Meeting Someone',desc:'Γνωριμία'},
+    {id:'s11',ic:'🏋️',title:'At the Gym',desc:'Γυμναστήριο'},
+    {id:'s12',ic:'🔧',title:'Maintenance Chat',desc:'Τεχνική συζήτηση'},
+  ];
+
+  scenarios.forEach(sc => {
+    const card = _mkDiv('card', 'cursor:pointer;transition:border .15s');
+    card.style.borderColor = 'var(--ln)';
+    card.onmouseover = () => card.style.borderColor = 'var(--bl)';
+    card.onmouseout  = () => card.style.borderColor = 'var(--ln)';
+    card.onclick = () => startConvScenario(sc.id, sc.title);
+    const row = _mkDiv(null,'display:flex;align-items:center;gap:10px;margin-bottom:6px');
+    const ic  = _mkEl(row,'span',null,null,{style:'font-size:24px',text:sc.ic});
+    const ttl = _mkEl(row,'div','fp f13 b',null,{text:sc.title});
+    const dsc = _mkEl(card,'div','f11 c3',null,{text:sc.desc});
+    card.appendChild(row);
+    grid.appendChild(card);
+  });
+}
+
+function _renderConvChat(el){
+  el.innerHTML = '';
+  const wrap = _mkDiv('sec fu','max-width:640px');
+  el.appendChild(wrap);
+
+  // Header
+  const hdr = _mkDiv(null,'display:flex;justify-content:space-between;align-items:center;margin-bottom:12px');
+  const sc  = (CONVERSATIONS||[]).find(x=>x.id===CONVST.scenario) || {title:CONVST.scenario};
+  _mkEl(hdr,'div','fp f14 b',null,{text: sc.title || CONVST.scenario});
+  const hdrRight = _mkDiv(null,'display:flex;gap:8px;align-items:center');
+  _mkEl(hdrRight,'span',null,null,{style:'font-size:11px;color:var(--t3)',text:'Turn '+CONVST.turn+'/6'});
+  const backBtn = document.createElement('button');
+  backBtn.style.cssText = 'font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer';
+  backBtn.textContent = '← Αλλαγή';
+  backBtn.onclick = () => { CONVST.scenario=null; CONVST.history=[]; CONVST.turn=0; CONVST.done=false; CONVST.review=null; CONVST.loading=false; rAIConversation(); };
+  hdrRight.appendChild(backBtn);
+  hdr.appendChild(hdrRight);
+  wrap.appendChild(hdr);
+
+  // Done: show review
+  if(CONVST.done){
+    const doneDiv = _mkDiv('card mb16',null);
+    if(CONVST.review){
+      _mkEl(doneDiv,'div','sl mb8 cgr',null,{text:'📊 ΑΝΑΛΥΣΗ'});
+      const rev = document.createElement('div');
+      rev.style.cssText = 'font-size:12px;color:var(--t2);line-height:1.9;white-space:pre-line';
+      rev.textContent = CONVST.review;
+      doneDiv.appendChild(rev);
+    } else {
+      _mkEl(doneDiv,'div','f12 c3',null,{text:'⏳ Ετοιμάζω ανάλυση...'});
+    }
+    wrap.appendChild(doneDiv);
+    const newBtn = document.createElement('button');
+    newBtn.className = 'btn bp';
+    newBtn.style.cssText = 'width:100%;justify-content:center';
+    newBtn.textContent = '🔄 Νέα Συνομιλία';
+    newBtn.onclick = () => { CONVST.scenario=null; CONVST.history=[]; CONVST.turn=0; CONVST.done=false; CONVST.review=null; CONVST.loading=false; rAIConversation(); };
+    wrap.appendChild(newBtn);
+    return;
+  }
+
+  // Chat messages
+  const chatBox = _mkDiv(null,'background:var(--s2);border-radius:12px;padding:12px;margin-bottom:12px;min-height:200px;max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:8px');
+  wrap.appendChild(chatBox);
+
+  if(!CONVST.history.length && CONVST.loading){
+    _mkEl(chatBox,'div','f12 c3',null,{style:'text-align:center;padding:20px',text:'⏳ Ξεκινάω συνομιλία...'});
+  }
+
+  CONVST.history.forEach(msg => {
+    const isUser = msg.role === 'user';
+    const bub = _mkDiv(null, 'max-width:85%;padding:8px 12px;border-radius:12px;font-size:13px;line-height:1.6;'
+      + (isUser ? 'align-self:flex-end;background:var(--bl);color:#fff;border-radius:12px 12px 2px 12px'
+                : 'align-self:flex-start;background:var(--s1);color:var(--t1);border-radius:12px 12px 12px 2px;border:1px solid var(--ln)'));
+    bub.textContent = msg.content;
+    if(!isUser){
+      const speakBtn = document.createElement('button');
+      speakBtn.style.cssText = 'display:block;background:none;border:none;cursor:pointer;font-size:11px;color:var(--t3);margin-top:4px;padding:0';
+      speakBtn.textContent = '🔊 Άκουσε';
+      speakBtn.onclick = () => speak(msg.content,'en-GB');
+      bub.appendChild(speakBtn);
+    }
+    chatBox.appendChild(bub);
+  });
+
+  if(CONVST.loading && CONVST.history.length > 0){
+    const typing = _mkDiv(null,'align-self:flex-start;background:var(--s1);border:1px solid var(--ln);border-radius:12px;padding:8px 12px;font-size:13px;color:var(--t3)');
+    typing.textContent = '...';
+    chatBox.appendChild(typing);
+  }
+
+  // Scroll to bottom
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  // Input row
+  const inputRow = _mkDiv(null,'display:flex;gap:8px;align-items:center');
+  const inp = document.createElement('input');
+  inp.id = 'conv-input';
+  inp.type = 'text';
+  inp.placeholder = 'Γράψε ή πάτα 🎤...';
+  inp.style.cssText = 'flex:1;padding:10px 14px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;color:var(--t1);font-size:13px;min-width:0';
+  inp.onkeydown = e => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendConvMsg(); } };
+  inputRow.appendChild(inp);
+
+  const micBtn = document.createElement('button');
+  micBtn.style.cssText = 'width:40px;height:40px;border-radius:50%;background:var(--s2);border:1px solid var(--ln);cursor:pointer;font-size:18px;flex-shrink:0';
+  micBtn.textContent = '🎤';
+  micBtn.onclick = () => startConvVoice(inp, micBtn);
+  inputRow.appendChild(micBtn);
+
+  const sendBtn = document.createElement('button');
+  sendBtn.className = 'btn bp';
+  sendBtn.style.cssText += ';flex-shrink:0;padding:10px 14px';
+  sendBtn.textContent = '→';
+  sendBtn.onclick = sendConvMsg;
+  if(CONVST.loading) sendBtn.disabled = true;
+  inputRow.appendChild(sendBtn);
+  wrap.appendChild(inputRow);
+}
+
+/* ════════════════════════════════════════════════════════
+   ROLEPLAY
+   ════════════════════════════════════════════════════════ */
+
+function rRoleplay(){
+  const el = document.getElementById('speaking');
+  if(!el) return;
+  el.innerHTML = '';
+  const wrap = _mkDiv('sec fu','max-width:640px');
+  el.appendChild(wrap);
+  _mkEl(wrap,'div','fp f16 b mb16',null,{text:'🎭 Roleplay'});
+
+  if(!RPST.scenario){
+    _mkEl(wrap,'p','f12 c2 mb16',null,{style:'line-height:1.6',text:'Επέλεξε ρόλο και εξασκήσου σε πραγματικές καταστάσεις.'});
+    const roles = [
+      {id:'r1',title:'Customer & Shop Assistant',ic:'🛒'},
+      {id:'r2',title:'Doctor & Patient',ic:'🏥'},
+      {id:'r3',title:'Boss & Employee',ic:'💼'},
+      {id:'r4',title:'Tourist & Local',ic:'🗺'},
+      {id:'r5',title:'Landlord & Tenant',ic:'🏠'},
+      {id:'r6',title:'Teacher & Student',ic:'📚'},
+    ];
+    roles.forEach(r => {
+      const card = _mkDiv('card mb10','cursor:pointer');
+      card.onclick = () => startRoleplay(r.id, r.title);
+      _mkEl(card,'div','fp f13 b',null,{text: r.ic + ' ' + r.title});
+      wrap.appendChild(card);
+    });
+    return;
+  }
+
+  // Chat UI same as conversation
+  const backBtn = document.createElement('button');
+  backBtn.style.cssText = 'font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer;margin-bottom:12px';
+  backBtn.textContent = '← Πίσω';
+  backBtn.onclick = () => { RPST.scenario=null; RPST.history=[]; RPST.loading=false; rRoleplay(); };
+  wrap.appendChild(backBtn);
+  _mkEl(wrap,'div','fp f14 b mb12',null,{text: RPST.scenario});
+
+  const chatBox = _mkDiv(null,'background:var(--s2);border-radius:12px;padding:12px;margin-bottom:12px;min-height:150px;max-height:350px;overflow-y:auto;display:flex;flex-direction:column;gap:8px');
+  wrap.appendChild(chatBox);
+
+  if(RPST.loading && !RPST.history.length){
+    _mkEl(chatBox,'div','f12 c3',null,{style:'text-align:center;padding:20px',text:'⏳...'});
+  }
+  RPST.history.forEach(msg => {
+    const isUser = msg.role === 'user';
+    const bub = _mkDiv(null,'max-width:85%;padding:8px 12px;border-radius:12px;font-size:13px;line-height:1.6;'
+      +(isUser?'align-self:flex-end;background:var(--bl);color:#fff':'align-self:flex-start;background:var(--s1);color:var(--t1);border:1px solid var(--ln)'));
+    bub.textContent = msg.content;
+    chatBox.appendChild(bub);
+  });
+  if(RPST.loading && RPST.history.length){
+    const t = _mkDiv(null,'align-self:flex-start;background:var(--s1);border:1px solid var(--ln);border-radius:12px;padding:8px 12px;font-size:13px;color:var(--t3)');
+    t.textContent='...'; chatBox.appendChild(t);
+  }
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  const row = _mkDiv(null,'display:flex;gap:8px;align-items:center');
+  const inp = document.createElement('input');
+  inp.id = 'rp-input'; inp.type='text'; inp.placeholder='Απάντησέ...';
+  inp.style.cssText='flex:1;padding:10px 14px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;color:var(--t1);font-size:13px;min-width:0';
+  inp.onkeydown = e => { if(e.key==='Enter') rpSend(); };
+  row.appendChild(inp);
+  const mic = document.createElement('button');
+  mic.style.cssText='width:40px;height:40px;border-radius:50%;background:var(--s2);border:1px solid var(--ln);cursor:pointer;font-size:18px';
+  mic.textContent='🎤'; mic.onclick=()=>startConvVoice(inp,mic);
+  row.appendChild(mic);
+  const sb = document.createElement('button');
+  sb.className='btn bp'; sb.style.cssText+=';flex-shrink:0;padding:10px 14px';
+  sb.textContent='→'; sb.onclick=rpSend;
+  if(RPST.loading) sb.disabled=true;
+  row.appendChild(sb);
+  wrap.appendChild(row);
+}
+
+function startRoleplay(id, title){
+  RPST.scenario = title; RPST.history=[]; RPST.loading=true;
+  rRoleplay();
+  const level = DB.get('placement_lv','B1');
+  const sys = 'You are playing the role of ' + title + ' (the non-student part).'
+    + ' Student level: '+level+'. Start with a natural opening line. Keep replies SHORT (1-2 sentences).';
+  callAI('Hello.',sys,[])
+    .then(r=>{ RPST.history=[{role:'assistant',content:r}]; RPST.loading=false; rRoleplay(); speak(r,'en-GB'); })
+    .catch(e=>{ RPST.loading=false; toast('⚠ '+e.message,'var(--am)'); rRoleplay(); });
+}
+
+async function rpSend(){
+  if(!hasAPIKey()){ toast('⚙ API Key στα Settings.','var(--am)'); return; }
+  if(RPST.loading) return;
+  const inp = document.getElementById('rp-input');
+  if(!inp||!inp.value.trim()) return;
+  const txt = inp.value.trim(); inp.value='';
+  RPST.loading=true;
+  RPST.history.push({role:'user',content:txt});
+  rRoleplay();
+  const sys = 'You are playing: '+RPST.scenario+'. Student level: '+DB.get('placement_lv','B1')+'. Keep replies SHORT (1-2 sentences).';
+  try {
+    const r = await callAI(txt, sys, RPST.history.slice(0,-1));
+    RPST.history.push({role:'assistant',content:r});
+    RPST.loading=false; rRoleplay(); speak(r,'en-GB');
+  } catch(e){ RPST.loading=false; RPST.history.pop(); toast('⚠ '+e.message,'var(--am)'); rRoleplay(); }
+}
+
+/* ════════════════════════════════════════════════════════
+   WRITING FEEDBACK
+   ════════════════════════════════════════════════════════ */
+
+async function getAIWritingFeedback(){
+  if(!hasAPIKey()){ toast('⚙ Χρειάζεσαι API Key στα Settings.','var(--am)'); go('settings'); return; }
+  const ta = document.getElementById('wptx') || document.querySelector('#writing textarea');
+  const text = ta && ta.value.trim();
+  if(!text || text.length < 10){ toast('Γράψε τουλάχιστον μια πρόταση!','var(--am)'); return; }
+
+  const btn = document.getElementById('wf-btn') || document.querySelector('[onclick*="getAIWritingFeedback"]');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Αναλύω...'; }
+  const restoreBtn = () => { if(btn){ btn.disabled=false; btn.textContent='🤖 AI Feedback'; } };
+
+  const sys = 'You are an English writing teacher. Analyse the student text.'
+    + ' Respond ONLY in Greek using EXACTLY this format:\n'
+    + '🔴 ΛΑΘΗ: [list each error with correction, or "Δεν υπάρχουν!"]\n'
+    + '🟡 ΒΕΛΤΙΩΣΕΙΣ: [suggest more natural phrasing]\n'
+    + '🟢 ΘΕΤΙΚΑ: [what is good]\n'
+    + '⭐ ΣΚΟΡ: X/10\n'
+    + 'Be specific, quote EXACT phrases from the text.';
+  try {
+    const result = await callAI(text, sys);
+    restoreBtn();
+    const fb = document.getElementById('wf-result');
+    if(fb){
+      fb.style.display = 'block';
+      fb.innerHTML = '';
+      const inner = document.createElement('div');
+      inner.style.cssText = 'font-size:12px;line-height:1.9;color:var(--t2);white-space:pre-line';
+      inner.textContent = result;
+      fb.appendChild(inner);
+    }
+  } catch(e){ restoreBtn(); toast('❌ '+e.message,'var(--ro)'); }
+}
+
+async function improveEmail(){
+  if(!hasAPIKey()){ toast('⚙ Χρειάζεσαι API Key στα Settings.','var(--am)'); return; }
+  const ta = document.getElementById('email-input');
+  const text = ta && ta.value.trim();
+  if(!text || text.length < 20){ toast('Γράψε ένα email πρώτα!','var(--am)'); return; }
+  const btn = document.querySelector('[onclick*="improveEmail"]');
+  if(btn){ btn.disabled=true; btn.textContent='⏳...'; }
+  const restore = () => { if(btn){ btn.disabled=false; btn.textContent='✨ Βελτίωσε'; } };
+  try {
+    const result = await callAI(
+      'Improve this email to be professional, clear and natural English. Return ONLY the improved email text, nothing else.\n\n' + text,
+      'You are a professional English writing assistant.'
+    );
+    restore();
+    const out = document.getElementById('email-output');
+    if(out){
+      out.innerHTML = '';
+      const d = document.createElement('div');
+      d.className = 'card mt10';
+      const lbl = document.createElement('div');
+      lbl.className = 'sl mb6';
+      lbl.style.color = 'var(--gr)';
+      lbl.textContent = '✓ Improved Version';
+      const txt = document.createElement('div');
+      txt.className = 'f12';
+      txt.style.cssText = 'line-height:1.8;white-space:pre-line;color:var(--t1)';
+      txt.textContent = result;
+      const copyBtn = document.createElement('button');
+      copyBtn.style.cssText = 'margin-top:10px;font-size:11px;color:var(--bl);background:none;border:none;cursor:pointer';
+      copyBtn.textContent = '📋 Αντιγραφή';
+      copyBtn.onclick = () => copyTxt(result);
+      d.appendChild(lbl); d.appendChild(txt); d.appendChild(copyBtn);
+      out.appendChild(d);
+    }
+  } catch(e){ restore(); toast('❌ '+e.message,'var(--ro)'); }
+}
+
+/* ════════════════════════════════════════════════════════
+   ERROR ANALYSIS
+   ════════════════════════════════════════════════════════ */
+
+async function runErrorAnalysis(){
+  if(!hasAPIKey()){ toast('⚙ Χρειάζεσαι API Key στα Settings.','var(--am)'); return; }
+  const btn = document.getElementById('ea-btn');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Αναλύω...'; }
+  const restore = () => { if(btn){ btn.disabled=false; btn.textContent='🔍 Error Analysis'; } };
+  try {
+    const errors = getTopErrors ? getTopErrors() : [];
+    if(!errors.length){ restore(); toast('Δεν υπάρχουν αρκετά λάθη ακόμα.','var(--am)'); return; }
+    const wordList = errors.slice(0,15).map(e=>e.w+' ('+e.err+' λάθη)').join(', ');
+    const sys = 'You are an English teacher. Analyse these student errors and give tips in Greek (max 120 words total).';
+    const result = await callAI('Student has errors with: ' + wordList, sys);
+    restore();
+    showErrorAnalysis(result);
+  } catch(e){ restore(); toast('❌ '+e.message,'var(--ro)'); }
+}
+
+/* ════════════════════════════════════════════════════════
+   JOURNAL FEEDBACK
+   ════════════════════════════════════════════════════════ */
+
+async function getJournalFeedback(){
+  if(!hasAPIKey()){ toast('⚙ Χρειάζεσαι API Key στα Settings.','var(--am)'); return; }
+  const text = VJST.transcript || '';
+  if(text.length < 10){ toast('Μίλα πρώτα!','var(--am)'); return; }
+  const sys = 'You are an English speaking coach. Give brief feedback in Greek (max 80 words). Format:\n'
+    + '🟢 Καλό: [one positive]\n'
+    + '🟡 Βελτίωση: [one suggestion]\n'
+    + '⭐ Score: X/10\n'
+    + '[one encouraging sentence]';
+  try {
+    const fb = await callAI('Student said: ' + text, sys);
+    VJST.feedback = fb;
+    renderJournal();
+  } catch(e){ toast('❌ '+e.message,'var(--ro)'); }
+}
+
+/* ════════════════════════════════════════════════════════
+   SHADOW PRONUNCIATION CHECK
+   ════════════════════════════════════════════════════════ */
+
+async function checkShadowPronunciation(){
+  if(!hasAPIKey()){ toast('⚙ Χρειάζεσαι API Key στα Settings.','var(--am)'); return; }
+  const item = SHADOW_SENTS[SHST.idx];
+  if(!item || !SHST.transcript){ toast('Μίλα πρώτα!','var(--am)'); return; }
+  const btn = document.getElementById('shadow-ai-btn');
+  if(btn){ btn.disabled=true; btn.textContent='⏳...'; }
+  const sys = 'English pronunciation coach. Compare student vs original. Respond in Greek max 50 words:\n'
+    + '🔴 Διαφορές: [missing/wrong words]\n'
+    + '🟡 Ρυθμός: [natural?]\n'
+    + '🟢 Score: X/10';
+  try {
+    const fb = await callAI('Original: "'+item.t+'" — Student said: "'+SHST.transcript+'"', sys);
+    SHST.feedback = fb;
+    renderShadowing();
+  } catch(e){
+    if(btn){ btn.disabled=false; btn.textContent='🤖 AI Check'; }
+    toast('❌ '+e.message,'var(--ro)');
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   WEEKLY SUMMARY
+   ════════════════════════════════════════════════════════ */
+
+async function showWeeklySummary(){
+  if(!hasAPIKey()){ toast('⚙ Χρειάζεσαι API Key στα Settings.','var(--am)'); return; }
+  const learned = learnedW ? learnedW().length : 0;
+  const xp      = DB.get('xp',0);
+  const streak  = calcStreak ? calcStreak() : 0;
+  const spk     = DB.get('spk_stats',{t:0});
+  const sys     = 'You are an English learning coach. Write a brief weekly summary in Greek (max 100 words). Be encouraging!';
+  const prompt  = 'Student stats this week: ' + learned + ' words learned, '
+    + xp + ' XP, ' + streak + ' day streak, '
+    + (spk.t||0) + ' speaking sessions.';
+  try {
+    const result = await callAI(prompt, sys);
+    // Show in modal
+    let m = document.getElementById('weekly-summary-modal');
+    if(m) m.remove();
+    m = document.createElement('div');
+    m.id = 'weekly-summary-modal';
+    m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px';
+    const box = document.createElement('div');
+    box.style.cssText = 'background:var(--s1);border-radius:16px;padding:24px;max-width:420px;width:100%';
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:16px';
+    const ttl = document.createElement('div');
+    ttl.className = 'fp f16 b';
+    ttl.textContent = '📊 Εβδομαδιαία Ανασκόπηση';
+    const cls = document.createElement('button');
+    cls.style.cssText = 'background:none;border:none;cursor:pointer;font-size:18px;color:var(--t3)';
+    cls.textContent = '✕'; cls.onclick = () => m.remove();
+    hdr.appendChild(ttl); hdr.appendChild(cls);
+    const body = document.createElement('div');
+    body.style.cssText = 'font-size:13px;line-height:1.8;color:var(--t2);white-space:pre-line';
+    body.textContent = result;
+    box.appendChild(hdr); box.appendChild(body);
+    m.appendChild(box);
+    m.onclick = e => { if(e.target===m) m.remove(); };
+    document.body.appendChild(m);
+  } catch(e){ toast('❌ '+e.message,'var(--ro)'); }
+}
+
+/* ════════════════════════════════════════════════════════
+   DOM HELPERS — used by AI UI builders
+   ════════════════════════════════════════════════════════ */
+function _mkDiv(cls, style){
+  const d = document.createElement('div');
+  if(cls) d.className = cls;
+  if(style) d.style.cssText = style;
+  return d;
+}
+function _mkEl(parent, tag, cls, style, opts){
+  const el = document.createElement(tag);
+  if(cls) el.className = cls;
+  if(style) el.style.cssText = style;
+  if(opts){
+    if(opts.text !== undefined) el.textContent = opts.text;
+    if(opts.html !== undefined) el.innerHTML = opts.html;
+    if(opts.style) el.style.cssText = opts.style;
+  }
+  if(parent) parent.appendChild(el);
+  return el;
+}
+
+
 /* ══ SPEECH SUPPORT ══ */
 function speechSupported(){ return 'speechSynthesis' in window; }
 
@@ -711,81 +1397,8 @@ function speak(text,lang='en-GB'){
 
 
 /* ══ AI API HELPER ══ */
-function getAPIKey(){
-  const stored=DB.get('anthropic_key','');
-  if(stored)return stored;
-  // Default key (replace with your own in Settings)
-  return '';
-}
 
-function hasAPIKey(){
-  return !!getAPIKey();
-}
 
-/* ══ ANTHROPIC AI ══ */
-async function callAI(prompt, system, history){
-  const key = DB.get('anthropic_key','');
-  if(!key){
-    toast('⚙ Πήγαινε στα Settings για να βάλεις API Key.','var(--am)');
-    go('settings');
-    throw new Error('NO_KEY');
-  }
-
-  let messages;
-  if(Array.isArray(history)){
-    messages = [...history, {role:'user', content:prompt}];
-  } else {
-    messages = [{role:'user', content: String(prompt||'')}];
-    if(typeof system === 'number'){
-      // callAI(prompt, maxTokens) — no system
-    }
-  }
-
-  const sysText = (typeof system === 'string' && system) ? system : 'You are a helpful English learning assistant.';
-  const maxTok  = (typeof history === 'number') ? history : (typeof system === 'number' ? system : 800);
-
-  const ctrl = new AbortController();
-  const tid  = setTimeout(() => ctrl.abort(), 28000);
-
-  let res;
-  try {
-    res = await fetch('https://api.anthropic.com/v1/messages', {
-      method  : 'POST',
-      signal  : ctrl.signal,
-      headers : {
-        'Content-Type'                             : 'application/json',
-        'x-api-key'                                : key,
-        'anthropic-version'                        : '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model      : 'claude-haiku-4-5-20251001',
-        max_tokens : maxTok,
-        system     : sysText,
-        messages   : messages
-      })
-    });
-  } catch(e) {
-    clearTimeout(tid);
-    if(e.name === 'AbortError') throw new Error('⏱ Timeout — δοκίμασε ξανά.');
-    throw new Error('🌐 Σφάλμα δικτύου. Έλεγξε σύνδεση και ξαναπροσπάθησε.');
-  }
-  clearTimeout(tid);
-
-  if(!res.ok){
-    let msg = 'API Error ' + res.status;
-    try {
-      const j = await res.json();
-      if(res.status === 401){ DB.delete('anthropic_key'); go('settings'); throw new Error('❌ Λάθος API Key — βάλε νέο στα Settings.'); }
-      if(res.status === 429){ throw new Error('⏳ Rate limit — δοκίμασε σε λίγο.'); }
-      msg = j.error?.message || msg;
-    } catch(innerErr){ if(innerErr.message.startsWith('❌')||innerErr.message.startsWith('⏳')) throw innerErr; }
-    throw new Error(msg);
-  }
-
-  const data = await res.json();
-  return (data.content && data.content[0] && data.content[0].text) ? data.content[0].text : '';
-}
 
 
 
@@ -6853,27 +7466,6 @@ function showLeaderboard(){
 }
 
 /* ══ ERROR ANALYSIS ══ */
-function runErrorAnalysis(){
-  if(!hasAPIKey()){toast('⚠ Χρειάζεσαι API Key — πήγαινε στα ⚙ Settings.','var(--am)');setTimeout(()=>go('settings'),1500);return;}
-  const errors=DB.get('errors',{});
-  const allW=getAllW();
-  const errWords=allW.filter(w=>errors[w.id]?.count>=2).sort((a,b)=>(errors[b.id]?.count||0)-(errors[a.id]?.count||0)).slice(0,5);
-  if(!errWords.length){toast('Δεν υπάρχουν αρκετά λάθη ακόμα!','var(--am)');return;}
-  const wordList=errWords.map(w=>w.w+' ('+w.g+')').join(', ');
-  const prompt='You are an English teacher. Briefly analyze why a Greek learner makes mistakes with these words and give tips in Greek (max 120 words): '+wordList;
-  callAI(prompt,'Ανάλυση λαθών...').then(result=>{
-    const m=document.createElement('div');
-    m.id='error-analysis-modal';
-    m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9997;display:flex;align-items:center;justify-content:center;padding:20px';
-    m.onclick=(e)=>{if(e.target===m)m.remove();};
-    m.innerHTML='<div style="background:var(--s1);border-radius:16px;padding:24px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto">'
-      +'<div style="font-size:16px;font-weight:700;margin-bottom:12px">🔍 Ανάλυση Λαθών</div>'
-      +'<div style="font-size:13px;line-height:1.8;color:var(--t2)">'+result+'</div>'
-      +'<button onclick="closeTopModal()" style="margin-top:16px;padding:8px 20px;background:var(--bl);border-radius:8px;color:#fff;cursor:pointer;border:none">OK</button>'
-      +'</div>';
-    document.body.appendChild(m);
-  }).catch(()=>toast('Σφάλμα AI','var(--ro)'));
-}
 
 /* ══ CEFR TEST ══ */
 const CEFR_QUESTIONS=[
@@ -7021,138 +7613,6 @@ window.addEventListener('load', function(){
 });
 
 /* ══ AI WRITING FEEDBACK ══ */
-async function getAIWritingFeedback(){
-  if(!hasAPIKey()){toast('⚠ Χρειάζεσαι API Key — πήγαινε στα ⚙ Settings.','var(--am)');setTimeout(()=>go('settings'),1500);return;}
-  const ta=document.getElementById('wptx')
-    ||document.querySelector('#writing textarea');
-  const text=ta?.value?.trim();
-  if(!text||text.length<10){toast('Γράψε τουλάχιστον μια πρόταση!','var(--am)');return;}
-  const _wfBtn=document.getElementById('wf-btn')||document.querySelector('[onclick*="getAIWritingFeedback"]');
-  if(_wfBtn){_wfBtn.disabled=true;_wfBtn.textContent='⏳ Αναλύω...';}
-
-  // Update button state
-  const btn=document.getElementById('ai-feedback-btn');
-  if(btn){btn.disabled=true;btn.textContent='⏳ Αναλύω...';}
-
-  // Show loading in result area
-  const fb=document.getElementById('ai-feedback-result');
-  if(fb)fb.innerHTML='<div class="f12 c3" style="padding:12px;text-align:center">⏳ Αναλύω το κείμενό σου...</div>';
-
-  try{
-    const wordCount=text.split(' ').filter(x=>x.trim()).length;
-    const level=DB.get('placement_lv','B1');
-    const sys='You are an experienced English teacher. The student is at level '+level+'. Analyze their writing and respond ONLY in Greek.\n\nFormat EXACTLY like this:\n\n🔴 ΛΑΘΗ:\n• Λάθος: "[exact wrong phrase from text]" → Σωστό: "[correct version]" ([brief Greek explanation])\n(2-4 specific errors, or "✅ Δεν βρέθηκαν λάθη!" if none)\n\n🟡 ΦΥΣΙΚΟΤΕΡΕΣ ΕΚΦΡΑΣΕΙΣ:\n• Αντί για "[what they wrote]" → "[more natural English]"\n(2 suggestions)\n\n🟢 ΒΑΘΜΟΣ: [X/10] — [one encouraging sentence]\n\nMax 180 words. Quote EXACT phrases from the text.';
-
-    const result=await callAI(text, sys);
-    if(fb){
-      fb.innerHTML='<div style="background:var(--s2);border:1px solid var(--ln);border-radius:10px;padding:16px;margin-top:12px">'
-        +'<div style="font-size:12px;font-weight:700;color:var(--bl);margin-bottom:12px">🤖 AI Grammar Check</div>'
-        +'<div style="font-size:12px;color:var(--t2);line-height:1.9;white-space:pre-line">'+result+'</div>'
-        +'</div>';
-    }
-    // XP based on text quality (length proxy)
-    const xpBonus=Math.min(Math.floor(text.split(' ').length/3),25)+5;
-    addXP(xpBonus);
-    DB.set('writing_count',(DB.get('writing_count',0))+1);
-    unlockAch('wr1');
-    toast('+'+xpBonus+' XP για το γράψιμο!','var(--am)');
-  }catch(e){
-    if(fb)fb.innerHTML='';
-    const msg=e.message.startsWith('{')?'Σφάλμα API — δοκίμασε σε λίγο':e.message;
-    toast('⚠ '+msg,'var(--am)');
-  }
-  if(btn){btn.disabled=false;btn.textContent='🤖 AI Feedback';}
-}
-
-async function improveEmail(){
-  if(!hasAPIKey()){toast('⚠ Χρειάζεσαι API Key — πήγαινε στα ⚙ Settings.','var(--am)');setTimeout(()=>go('settings'),1500);return;}
-  const text=document.getElementById('email-text')?.value?.trim();
-  if(!text){toast('Γράψε κάτι πρώτα!','var(--am)');return;}
-  try{
-    const result=await callAI('Improve this email to be more professional and natural in English. Show the improved version only, no explanations.\n\n'+text);
-    const out=document.getElementById('email-output');
-    if(out){out.innerHTML='<div class="card mt10"><div class="sl mb6 cgr">✓ Improved Version</div><div class="f13" style="line-height:1.8;white-space:pre-wrap">'+result+'</div></div>';}
-  }catch(e){toast('Σφάλμα AI','var(--ro)');}
-}
-
-async function sendConvMsg(){
-  if(!hasAPIKey()){ toast('⚙ Χρειάζεσαι API Key στα Settings.','var(--am)'); go('settings'); return; }
-  if(CONVST.loading) return;
-  const input = document.getElementById('conv-input');
-  if(!input || !input.value.trim()) return;
-  const userText = input.value.trim();
-  input.value = '';
-  CONVST.loading = true;
-  CONVST.turn++;
-  CONVST.history.push({role:'user', content:userText});
-  rAIConversation();
-  const sc = (CONVERSATIONS||[]).find(x => x.id === CONVST.scenario);
-  const level = DB.get('placement_lv','B1');
-  const guides = {'B1':'simple clear sentences','B2':'natural expressions','C1':'native-like, idioms'};
-  const lvGuide = guides[level] || guides.B1;
-  const sys = 'You are a friendly English conversation partner. Scenario: ' + (sc ? sc.title : 'casual chat')
-    + '. Student level: ' + level + ' (' + lvGuide + ').'
-    + ' Keep replies SHORT (1-3 sentences). Correct major errors ONLY at end in brackets like [correction: ...].'
-    + ' Be warm, encouraging, realistic.';
-  try {
-    const reply = await callAI(userText, sys, CONVST.history.slice(0,-1));
-    CONVST.history.push({role:'assistant', content:reply});
-    CONVST.loading = false;
-    if(CONVST.turn >= 6){ CONVST.done = true; doConvReview(); return; }
-    rAIConversation();
-    speak(reply,'en-GB');
-  } catch(e) {
-    CONVST.loading = false;
-    CONVST.turn--;
-    CONVST.history.pop();
-    toast('⚠ ' + e.message,'var(--am)');
-    rAIConversation();
-  }
-}
-
-async function doConvReview(){
-  rAIConversation();
-  const reviewSys = 'You are an English teacher. Review this conversation.'
-    + ' Student level: ' + DB.get('placement_lv','B1') + '.'
-    + ' Respond ONLY in Greek. Format EXACTLY:\n🔴 ΛΑΘΗ: [list errors or "Δεν υπάρχουν!"]\n🟡 ΦΥΣΙΚΟΤΕΡΕΣ ΕΚΦΡΑΣΕΙΣ: [better phrases]\n🟢 ΘΕΤΙΚΑ: [what was good]\n⭐ ΣΚΟΡ: X/10';
-  const convText = CONVST.history.map(m => m.role.toUpperCase()+': '+m.content).join('\n');
-  try {
-    const review = await callAI('Review this conversation:\n' + convText, reviewSys);
-    CONVST.review = review;
-    rAIConversation();
-  } catch(e) {
-    CONVST.review = '(Δεν ήταν δυνατή η ανάλυση: ' + e.message + ')';
-    rAIConversation();
-  }
-}
-
-
-
-function rpSend(){
-  if(!hasAPIKey()){toast('⚠ Χρειάζεσαι API Key — πήγαινε στα ⚙ Settings.','var(--am)');setTimeout(()=>go('settings'),1500);return;}
-  const input=document.getElementById('rp-input');
-  if(!input||!input.value.trim()||RPST.loading)return;
-  const userText=input.value.trim();
-  input.value='';
-  RPST.history.push({role:'user',content:userText});
-  RPST.loading=true;
-  rRoleplay();
-  const sys='You are roleplaying as a '+RPST.scenario+'. Stay in character. Respond naturally in English (2-3 sentences max). Be helpful and encouraging.';
-  const prevHistory=RPST.history.slice(0,-1);
-  callAI(userText, sys, prevHistory.slice(-10))
-    .then(r=>{
-      RPST.history.push({role:'assistant',content:r});
-      RPST.loading=false;
-      speak(r,'en-GB');
-      rRoleplay();
-    })
-    .catch(e=>{
-      RPST.history.pop();
-      RPST.loading=false;
-      toast('Σφάλμα AI: '+e.message,'var(--ro)');
-      rRoleplay();
-    });
-}
 
 /* ══ MISSING FUNCTIONS ══ */
 
@@ -7368,349 +7828,11 @@ function showPronunciationInListeningState(wordOrEl, word){
   if(text) speak(text,'en-US');
 }
 
-function showWeeklySummary(){
-  const xpd=DB.get('xpd',{});
-  const today=new Date();
-  let totalXP=0,days=0;
-  const rows=[];
-  for(let i=6;i>=0;i--){
-    const d=new Date(today);d.setDate(d.getDate()-i);
-    const k=d.toISOString().split('T')[0];
-    const dayXP=xpd[k]||0;
-    if(dayXP>0)days++;
-    totalXP+=dayXP;
-    rows.push('<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--ln)">'
-      +'<span style="font-size:12px;color:var(--t3)">'+d.toLocaleDateString('el',{weekday:'short',month:'short',day:'numeric'})+'</span>'
-      +'<span style="font-size:12px;font-weight:600;color:'+(dayXP>0?'var(--am)':'var(--t3)')+'">'+dayXP+' XP</span>'
-      +'</div>');
-  }
-  const m=document.createElement('div');
-  m.id='weekly-summary-modal';
-  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9997;display:flex;align-items:center;justify-content:center;padding:20px';
-  m.onclick=(e)=>{if(e.target===m)m.remove();};
-  m.innerHTML='<div style="background:var(--s1);border-radius:16px;padding:24px;max-width:400px;width:100%">'
-    +'<div style="font-size:16px;font-weight:700;margin-bottom:4px">📊 Εβδομαδιαία Σύνοψη</div>'
-    +'<div style="font-size:11px;color:var(--t3);margin-bottom:16px">'+days+'/7 ημέρες · '+totalXP+' XP σύνολο</div>'
-    +rows.join('')
-    +'<button onclick="document.getElementById(\'weekly-summary-modal\').remove()" style="margin-top:16px;padding:10px;background:var(--bl);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none;width:100%">OK</button>'
-    +'</div>';
-  document.body.appendChild(m);
-}
-
 /* ══ SPEAKING MODULE FUNCTIONS ══ */
 /* ══ MISSING STATE OBJECTS ══ */
 let CONVST={scenario:null,history:[],turn:0,loading:false,done:false,review:null};
 let RPST={scenario:null,history:[],turn:0,loading:false,done:false,scores:[]};
 let CLST={art:null,answers:{},checked:false};
-
-function rAIConversation(){
-  const sp=document.querySelector('#speaking .vm');
-  if(!sp)return;
-
-  // No API key
-  if(!hasAPIKey()){
-    sp.innerHTML='<div style="text-align:center;padding:40px 20px">'
-      +'<div style="font-size:40px;margin-bottom:12px">🤖</div>'
-      +'<div style="font-size:15px;font-weight:700;margin-bottom:8px">AI Conversation</div>'
-      +'<div style="font-size:12px;color:var(--t3);margin-bottom:20px">Χρειάζεσαι API Key για να ξεκινήσεις.</div>'
-      +'<button onclick="go(&quot;settings&quot;)" class="btn bp">⚙ Πήγαινε στα Settings</button>'
-      +'</div>';
-    return;
-  }
-
-  // Scenario selection
-  if(CONVST.scenario===null){
-    const convList=(typeof CONVERSATIONS!=='undefined'?CONVERSATIONS:[])
-      .filter(cv=>['cv1','cv4','cv5','cv7','cv8','cv9','cv10','cv11','cv12','cv13','cv14','cv15'].includes(cv.id));
-    sp.innerHTML='';
-    const wrap=document.createElement('div');
-    wrap.style.cssText='max-width:580px;margin:0 auto';
-    const hdr=document.createElement('div');
-    hdr.innerHTML='<div style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:1px;margin-bottom:12px">ΕΠΕΛΕΞΕ ΣΕΝΑΡΙΟ</div>';
-    const grid=document.createElement('div');
-    grid.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px';
-    convList.forEach(cv=>{
-      const btn=document.createElement('button');
-      btn.style.cssText='padding:12px 8px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;text-align:center;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:6px';
-      btn.innerHTML='<span style="font-size:22px">'+(cv.ic||'💬')+'</span><span style="font-size:11px;font-weight:600;color:var(--t2)">'+cv.title+'</span>';
-      btn.onmouseover=()=>btn.style.background='var(--s3)';
-      btn.onmouseout=()=>btn.style.background='var(--s2)';
-      const cvId=cv.id;
-      const cvTitle=cv.title;
-      btn.onclick=function(){startConvScenario(cvId,cvTitle);};
-      grid.appendChild(btn);
-    });
-    wrap.appendChild(hdr);
-    wrap.appendChild(grid);
-    sp.appendChild(wrap);
-    return;
-  }
-
-  // Completed → show review
-  if(CONVST.done){
-    sp.innerHTML='';
-    const wrap=document.createElement('div');
-    wrap.style.cssText='max-width:580px;margin:0 auto;padding:10px 0';
-    wrap.innerHTML='<div style="text-align:center;margin-bottom:20px">'
-      +'<div style="font-size:36px;margin-bottom:8px">✅</div>'
-      +'<div style="font-size:15px;font-weight:700;margin-bottom:4px">Conversation Complete!</div>'
-      +'<div style="font-size:11px;color:var(--t3)">'+CONVST.turn+' turns · +15 XP</div>'
-      +'</div>'
-      +(CONVST.review
-        ?'<div style="background:var(--s2);border-radius:10px;padding:16px;margin-bottom:16px">'
-          +'<div style="font-size:12px;font-weight:700;color:var(--bl);margin-bottom:10px">🤖 Ανάλυση Συνομιλίας</div>'
-          +'<div style="font-size:12px;color:var(--t2);line-height:1.9;white-space:pre-line">'+escHTML(CONVST.review)+'</div>'
-          +'</div>'
-        :'<div style="text-align:center;font-size:12px;color:var(--t3);margin-bottom:16px">⏳ Ετοιμάζω ανάλυση...</div>')
-      +'<button onclick="CONVST.scenario=null;CONVST.history=[];CONVST.turn=0;CONVST.done=false;CONVST.review=null;CONVST.loading=false;rAIConversation()" class="btn bp" style="width:100%;justify-content:center">🔄 Νέα Συνομιλία</button>';
-    sp.appendChild(wrap);
-    addXP(15);
-    return;
-  }
-
-  // Chat view - validate scenario still exists
-  const validScenario=(typeof CONVERSATIONS!=='undefined'?CONVERSATIONS:[]).find(x=>x.id===CONVST.scenario);
-  if(!validScenario){CONVST.scenario=null;rAIConversation();return;}
-  sp.innerHTML='';
-  const wrap=document.createElement('div');
-  wrap.style.cssText='max-width:580px;margin:0 auto;display:flex;flex-direction:column;min-height:400px';
-
-  // Header
-  const sc=(typeof CONVERSATIONS!=='undefined'?CONVERSATIONS:[]).find(x=>x.id===CONVST.scenario);
-  const hdr=document.createElement('div');
-  hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--ln)';
-  hdr.innerHTML='<div style="font-size:13px;font-weight:700">'+(sc&&sc.ic?sc.ic+' '+sc.title:'AI Conversation')+'</div>'
-    +'<div style="display:flex;gap:8px;align-items:center">'
-    +'<span style="font-size:10px;background:rgba(34,197,94,.15);color:var(--gr);padding:2px 7px;border-radius:8px">😌 No pressure</span>'
-    +'<span style="font-size:11px;color:var(--t3)">Turn '+CONVST.turn+'/6</span>'
-    +'<button onclick="CONVST.scenario=null;CONVST.history=[];CONVST.turn=0;CONVST.done=false;CONVST.review=null;CONVST.loading=false;rAIConversation()" style="font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer">← Αλλαγή</button>'
-    +'</div>';
-
-  // Messages
-  const msgs=document.createElement('div');
-  msgs.id='conv-msgs';
-  msgs.style.cssText='flex:1;overflow-y:auto;margin-bottom:12px;min-height:200px;max-height:350px;padding:4px 0';
-  CONVST.history.forEach(m=>{
-    const d=document.createElement('div');
-    d.style.cssText='display:flex;justify-content:'+(m.role==='user'?'flex-end':'flex-start')+';margin-bottom:8px;gap:8px;align-items:flex-end';
-    const bubble=document.createElement('div');
-    bubble.style.cssText='max-width:80%;padding:10px 14px;background:'+(m.role==='user'?'var(--bl)':'var(--s2)')+';border-radius:'+(m.role==='user'?'12px 12px 2px 12px':'12px 12px 12px 2px')+';font-size:13px;line-height:1.6;color:'+(m.role==='user'?'#fff':'var(--t1)');
-    bubble.textContent=m.content;
-    // Speak button for AI messages
-    if(m.role==='assistant'){
-      const speakBtn=document.createElement('button');
-      speakBtn.style.cssText='background:none;border:none;cursor:pointer;color:var(--t3);font-size:14px;flex-shrink:0;padding:2px';
-      speakBtn.textContent='🔊';
-      speakBtn.title='Άκουσε';
-      speakBtn.onclick=()=>speak(m.content,'en-GB');
-      d.appendChild(bubble);
-      d.appendChild(speakBtn);
-    } else {
-      d.appendChild(bubble);
-    }
-    msgs.appendChild(d);
-  });
-
-  // Loading indicator
-  if(CONVST.loading){
-    const loading=document.createElement('div');
-    loading.style.cssText='display:flex;justify-content:flex-start;margin-bottom:8px';
-    loading.innerHTML='<div style="padding:10px 14px;background:var(--s2);border-radius:12px 12px 12px 2px;font-size:13px;color:var(--t3)">⏳ ...</div>';
-    msgs.appendChild(loading);
-  }
-
-  wrap.appendChild(hdr);
-  wrap.appendChild(msgs);
-
-  // Input row (only when not loading)
-  if(!CONVST.loading){
-    const row=document.createElement('div');
-    row.style.cssText='display:flex;gap:8px';
-    const inp=document.createElement('input');
-    inp.id='conv-input';
-    inp.placeholder='Type or 🎤 speak...';
-    inp.style.cssText='flex:1;padding:10px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px';
-    inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey)sendConvMsg();});
-    // Mic button
-    const micBtn=document.createElement('button');
-    micBtn.id='conv-mic';
-    micBtn.textContent='🎤';
-    micBtn.title='Μίλα αντί να γράφεις';
-    micBtn.style.cssText='padding:10px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;cursor:pointer;font-size:16px;transition:all .2s';
-    micBtn.onclick=()=>startConvVoice(inp, micBtn);
-    const sendBtn=document.createElement('button');
-    sendBtn.textContent='→';
-    sendBtn.style.cssText='padding:10px 16px;background:var(--bl);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none;font-size:16px';
-    sendBtn.onclick=sendConvMsg;
-    row.appendChild(inp);
-    row.appendChild(micBtn);
-    row.appendChild(sendBtn);
-    wrap.appendChild(row);
-    setTimeout(()=>inp.focus(),50);
-  }
-
-  sp.appendChild(wrap);
-  // Auto-scroll to bottom
-  setTimeout(()=>{if(msgs)msgs.scrollTop=msgs.scrollHeight;},50);
-}
-
-function startConvScenario(id, title){
-  CONVST.scenario=id;
-  CONVST.history=[];
-  CONVST.turn=0;
-  CONVST.done=false;
-  CONVST.review=null;
-  CONVST.loading=true;
-  rAIConversation();
-  if(!hasAPIKey())return;
-  const level=DB.get('placement_lv','B1');
-  const levelGuide={'B1':'simple clear sentences','B2':'natural expressions, some idioms','B2+':'varied vocabulary','C1':'native-like, idioms freely'};
-  const guide=levelGuide[level]||levelGuide['B1'];
-  const greetSys='You are a friendly English conversation partner. Scenario: '+title+'. Student level: '+level+' ('+guide+'). Open with ONE natural greeting sentence. Be warm and conversational.';
-  callAI('Hello!',greetSys,[])
-    .then(r=>{
-      CONVST.history.push({role:'assistant',content:r});
-      CONVST.loading=false;
-      rAIConversation();
-      // Auto-speak the greeting
-      speak(r,'en-GB');
-    })
-    .catch(e=>{
-      CONVST.loading=false;
-      const msg=e.message.length>60?'Σφάλμα API — δοκίμασε σε λίγο':e.message;
-      toast('⚠ '+msg,'var(--am)');
-      rAIConversation();
-    });
-}
-
-
-function rRoleplay(){
-  const sp=document.querySelector('#speaking .vm');
-  if(!sp)return;
-  if(!hasAPIKey()){
-    sp.innerHTML='<div style="text-align:center;padding:40px 20px">'
-      +'<div style="font-size:40px;margin-bottom:12px">🎭</div>'
-      +'<div style="font-size:15px;font-weight:700;margin-bottom:8px">Roleplay</div>'
-      +'<div style="font-size:12px;color:var(--t3);margin-bottom:20px">Χρειάζεσαι API Key.</div>'
-      +'<button onclick="go(&quot;settings&quot;)" class="btn bp">⚙ Settings</button>'
-      +'</div>';
-    return;
-  }
-  if(!RPST.scenario){
-    const roles=[
-      {r:'Teacher',ic:'👩‍🏫',desc:'Μαθαίνεις κάτι νέο'},
-      {r:'Doctor',ic:'🏥',desc:'Ιατρική επίσκεψη'},
-      {r:'Colleague',ic:'👔',desc:'Στο γραφείο'},
-      {r:'Customer Service',ic:'📞',desc:'Λύνεις πρόβλημα'},
-      {r:'Friend',ic:'🤝',desc:'Casual συνομιλία'},
-      {r:'Job Interviewer',ic:'💼',desc:'Για δουλειά'},
-    ];
-    sp.innerHTML='';
-    const wrap=document.createElement('div');
-    wrap.style.cssText='max-width:500px;margin:0 auto';
-    wrap.innerHTML='<div style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:1px;margin-bottom:12px">ΕΠΕΛΕΞΕ ΡΟΛΟ</div>';
-    const grid=document.createElement('div');
-    grid.style.cssText='display:grid;grid-template-columns:repeat(2,1fr);gap:10px';
-    roles.forEach(item=>{
-      const btn=document.createElement('button');
-      btn.style.cssText='padding:16px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;text-align:left;transition:all .15s';
-      btn.innerHTML='<div style="font-size:24px;margin-bottom:8px">'+item.ic+'</div>'
-        +'<div style="font-size:13px;font-weight:600;margin-bottom:4px;color:var(--t1)">'+item.r+'</div>'
-        +'<div style="font-size:11px;color:var(--t3)">'+item.desc+'</div>';
-      btn.onmouseover=()=>btn.style.background='var(--s3)';
-      btn.onmouseout=()=>btn.style.background='var(--s2)';
-      btn.onclick=()=>{
-        RPST.scenario=item.r;
-        RPST.history=[];
-        RPST.loading=true;
-        rRoleplay();
-        if(!hasAPIKey())return;
-        const sys='You are roleplaying as a '+item.r+'. Start with ONE natural opening line in English. Be realistic and engaging.';
-        callAI('Hello.',sys,[])
-          .then(res=>{
-            RPST.history.push({role:'assistant',content:res});
-            RPST.loading=false;
-            speak(res,'en-GB');
-            rRoleplay();
-          })
-          .catch(()=>{RPST.loading=false;rRoleplay();});
-      };
-      grid.appendChild(btn);
-    });
-    wrap.appendChild(grid);
-    sp.appendChild(wrap);
-    return;
-  }
-  sp.innerHTML='';
-  const wrap=document.createElement('div');
-  wrap.style.cssText='max-width:580px;margin:0 auto;display:flex;flex-direction:column;min-height:400px';
-  const hdr=document.createElement('div');
-  hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--ln)';
-  hdr.innerHTML='<div style="font-size:13px;font-weight:700">🎭 '+RPST.scenario+'</div>'
-    +'<button onclick="RPST.scenario=null;RPST.history=[];RPST.loading=false;rRoleplay()" style="font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer">← Αλλαγή</button>';
-  const msgs=document.createElement('div');
-  msgs.id='rp-msgs';
-  msgs.style.cssText='flex:1;overflow-y:auto;margin-bottom:12px;min-height:200px;max-height:350px;padding:4px 0';
-  RPST.history.forEach(m=>{
-    const d=document.createElement('div');
-    d.style.cssText='display:flex;justify-content:'+(m.role==='user'?'flex-end':'flex-start')+';margin-bottom:8px;gap:6px;align-items:flex-end';
-    const bubble=document.createElement('div');
-    bubble.style.cssText='max-width:80%;padding:10px 14px;background:'+(m.role==='user'?'var(--vi)':'var(--s2)')+';border-radius:'+(m.role==='user'?'12px 12px 2px 12px':'12px 12px 12px 2px')+';font-size:13px;line-height:1.6;color:'+(m.role==='user'?'#fff':'var(--t1)');
-    bubble.textContent=m.content;
-    if(m.role==='assistant'){
-      const sb=document.createElement('button');
-      sb.style.cssText='background:none;border:none;cursor:pointer;color:var(--t3);font-size:14px;flex-shrink:0;padding:2px';
-      sb.textContent='🔊';sb.onclick=()=>speak(m.content,'en-GB');
-      d.appendChild(bubble);d.appendChild(sb);
-    } else {
-      d.appendChild(bubble);
-    }
-    msgs.appendChild(d);
-  });
-  if(RPST.loading){
-    const ld=document.createElement('div');
-    ld.style.cssText='display:flex;justify-content:flex-start;margin-bottom:8px';
-    ld.innerHTML='<div style="padding:10px 14px;background:var(--s2);border-radius:12px;font-size:13px;color:var(--t3)">⏳ ...</div>';
-    msgs.appendChild(ld);
-  }
-  wrap.appendChild(hdr);wrap.appendChild(msgs);
-  if(!RPST.loading){
-    const row=document.createElement('div');
-    row.style.cssText='display:flex;gap:8px';
-    const inp=document.createElement('input');
-    inp.id='rp-input';inp.placeholder='Type or 🎤 speak...';
-    inp.style.cssText='flex:1;padding:10px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px';
-    inp.addEventListener('keydown',e=>{if(e.key==='Enter')rpSend();});
-    const micBtn=document.createElement('button');
-    micBtn.textContent='🎤';
-    micBtn.style.cssText='padding:10px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;cursor:pointer;font-size:16px';
-    micBtn.onclick=()=>startConvVoice(inp,micBtn);
-    const btn=document.createElement('button');
-    btn.textContent='→';
-    btn.style.cssText='padding:10px 16px;background:var(--vi);border-radius:8px;color:#fff;font-weight:700;cursor:pointer;border:none;font-size:16px';
-    btn.onclick=rpSend;
-    row.appendChild(inp);row.appendChild(micBtn);row.appendChild(btn);
-    wrap.appendChild(row);
-    setTimeout(()=>inp.focus(),50);
-  }
-  sp.appendChild(wrap);
-  setTimeout(()=>{if(msgs)msgs.scrollTop=msgs.scrollHeight;},50);
-}
-
-function startRoleplay(btn){
-  RPST.scenario=btn.dataset.role;
-  RPST.history=[];RPST.loading=true;
-  rRoleplay();
-  const sys='You are roleplaying as a '+RPST.scenario+'. Start the roleplay with a natural opening line in English (1-2 sentences).';
-  callAI('Hello.', sys, [])
-    .then(r=>{
-      RPST.history.push({role:'assistant',content:r});
-      RPST.loading=false;
-      speak(r,'en-GB');
-      rRoleplay();
-    })
-    .catch(()=>{RPST.loading=false;rRoleplay();});
-}
 function startCloze(btn){
   CLST.art=btn.dataset.id;
   CLST.answers={};CLST.checked=false;
@@ -7790,19 +7912,6 @@ function downloadFile(content, filename, mime){
       toast('📋 Αντιγράφηκε στο clipboard!','var(--gr)');
     }
   }
-}
-
-function saveAPIKeyFromSettings(){
-  const inp=document.getElementById('settings-api-input');
-  if(!inp)return;
-  const key=inp.value.trim();
-  if(!key||!key.startsWith('sk-ant')){
-    toast('Το key πρέπει να αρχίζει με sk-ant-...','var(--ro)');
-    return;
-  }
-  DB.set('anthropic_key',key);
-  toast('✅ API Key αποθηκεύτηκε! Τα AI features είναι τώρα διαθέσιμα.','var(--gr)');
-  rSettings();
 }
 
 /* ══ PHRASES QUIZ (SM-2 for chunks) ══ */
@@ -8100,17 +8209,6 @@ function toggleJournalRec(){
   rec.onend=()=>{VJST.recording=false;VJST.rec=null;renderJournal();};
   rec.onerror=(e)=>{VJST.recording=false;if(e.error!=='aborted')toast('Σφάλμα: '+e.error,'var(--am)');renderJournal();};
   rec.start();renderJournal();
-}
-
-async function getJournalFeedback(){
-  const ta=document.getElementById('vj-text');
-  const text=(ta&&ta.value.trim())||VJST.transcript;
-  if(!text||text.length<15){toast('Γράψε ή μίλα πρώτα!','var(--am)');return;}
-  VJST.loading=true;VJST.transcript=text;renderJournal();
-  const sys='You are an English coach reviewing a journal entry. Respond ONLY in Greek.\n\n🔴 ΛΑΘΗ:\n- Λάθος: "[exact]" → Σωστό: "[correction]" (Greek explanation)\n(2-3 max, or "Δεν βρέθηκαν λάθη! ✅")\n\n🟡 ΦΥΣΙΚΟΤΕΡΕΣ ΕΚΦΡΑΣΕΙΣ:\n- Αντί: "[phrase]" → "[natural version]"\n(2 suggestions)\n\n🟢 ΒΑΘΜΟΣ: [X/10] — [one encouraging sentence]\n\nMax 150 words.';
-  try{const fb=await callAI(text,sys);VJST.feedback=fb;VJST.loading=false;addXP(20);toast('+20 XP!','var(--am)');}
-  catch(e){VJST.loading=false;toast('Σφάλμα AI','var(--ro)');}
-  renderJournal();
 }
 
 /* SHADOWING MODE */
@@ -8512,21 +8610,6 @@ function flowNext(){
   renderFlowBar();
 }
 
-async function checkShadowPronunciation(){
-  const item=SHADOW_SENTS[SHST.idx];
-  if(!item||!SHST.transcript){toast('Μίλα πρώτα!','var(--am)');return;}
-  if(!hasAPIKey()){go('settings');return;}
-  const vm=document.querySelector('#speaking .vm');
-  const aiBtn=vm&&vm.querySelector('#shadow-ai-btn');
-  if(aiBtn)aiBtn.textContent='⏳...';
-  const sys='English pronunciation coach. Compare student vs original. Greek response max 50 words:\n🔴 Διαφορές: [missing/wrong words]\n🟡 Ρυθμός: [natural?]\n🟢 Score: X/10';
-  try{
-    const fb=await callAI('Original: "'+item.t+'" Student said: "'+SHST.transcript+'"',sys);
-    SHST.feedback=fb;
-    renderShadowing();
-  }catch(e){toast('Σφάλμα AI','var(--ro)');}
-}
-
 /* ══ INTEREST SYSTEM ══ */
 function getInterests(){return DB.get('user_interests',['travel','tech','gym','aviation']);}
 
@@ -8593,24 +8676,6 @@ function selectReadingOpt(i, btn){
   const val = decodeURIComponent(btn.dataset.val||'');
   RST.ra[i] = val;
   rReading();
-}
-
-async function testAPIKey(){
-  if(!hasAPIKey()){toast('Πρώτα αποθήκευσε ένα API Key.','var(--am)');return;}
-  const btn=document.querySelector('[onclick="testAPIKey()"]');
-  if(btn){btn.textContent='⏳...';btn.disabled=true;}
-  try{
-    const r=await callAI('Say "OK" in one word.','Respond with exactly one word: OK');
-    if(btn){btn.textContent='🔌 Test';btn.disabled=false;}
-    if(r&&r.trim().length>0){
-      toast('✅ API Key λειτουργεί! Απάντηση: '+r.trim().substring(0,20),'var(--gr)');
-    } else {
-      toast('⚠ Αόριστη απάντηση από API','var(--am)');
-    }
-  }catch(e){
-    if(btn){btn.textContent='🔌 Test';btn.disabled=false;}
-    toast('❌ '+e.message,'var(--ro)');
-  }
 }
 
 /* ══ GLOBAL ERROR HANDLER ══ */
