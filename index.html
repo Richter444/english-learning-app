@@ -767,39 +767,8 @@ async function testAPIKey(){
 // Initialised globally elsewhere
 
 /* ── Start a scenario ── */
-function startConvScenario(id, title){
-  if(!hasAPIKey()){
-    showAPIKeyModal();
-    return;
-  }
-  CONVST.scenario  = id;
-  CONVST.history   = [];
-  CONVST.turn      = 0;
-  CONVST.done      = false;
-  CONVST.review    = null;
-  CONVST.loading   = true;
-  rAIConversation();
 
-  const level = DB.get('placement_lv','B1');
-  const scTitle = title || id;  // use title directly, no need to look up CONVERSATIONS
-  const sys   = 'You are starting an English conversation practice session. Scenario: '
-    + scTitle
-    + '. Student level: ' + level + '.'
-    + ' Start with a short natural greeting (1 sentence). Be friendly.';
 
-  callAI('Hello!', sys, [])
-    .then(reply => {
-      CONVST.history  = [{role:'assistant', content:reply}];
-      CONVST.loading  = false;
-      rAIConversation();
-      speak(reply, 'en-GB');
-    })
-    .catch(e => {
-      CONVST.loading = false;
-      if(e.message !== 'NO_KEY') toast('⚠ ' + e.message,'var(--am)');
-      rAIConversation();
-    });
-}
 
 /* ── Send user message ── */
 async function sendConvMsg(){
@@ -864,19 +833,8 @@ async function _doConvReview(){
 }
 
 /* ── Render AI Conversation ── */
-function rAIConversation(){
-  const el = document.getElementById('speaking');
-  if(!el) return;
 
-  // If no scenario chosen → show scenario grid
-  if(!CONVST.scenario){
-    _renderConvGrid(el);
-    return;
-  }
 
-  // Show chat UI
-  _renderConvChat(el);
-}
 
 function _renderConvGrid(el){
   el.innerHTML = '';
@@ -1117,22 +1075,7 @@ function startRoleplay(id, title){
     .catch(e=>{ RPST.loading=false; if(e.message!=='NO_KEY') toast('⚠ '+e.message,'var(--am)'); rRoleplay(); });
 }
 
-async function rpSend(){
-  if(!hasAPIKey()){ toast('⚙ API Key στα Settings.','var(--am)'); return; }
-  if(RPST.loading) return;
-  const inp = document.getElementById('rp-input');
-  if(!inp||!inp.value.trim()) return;
-  const txt = inp.value.trim(); inp.value='';
-  RPST.loading=true;
-  RPST.history.push({role:'user',content:txt});
-  rRoleplay();
-  const sys = 'You are playing: '+RPST.scenario+'. Student level: '+DB.get('placement_lv','B1')+'. Keep replies SHORT (1-2 sentences).';
-  try {
-    const r = await callAI(txt, sys, RPST.history.slice(0,-1));
-    RPST.history.push({role:'assistant',content:r});
-    RPST.loading=false; rRoleplay(); speak(r,'en-GB');
-  } catch(e){ RPST.loading=false; if(RPST.history.length) RPST.history.pop(); if(e.message!=='NO_KEY') toast('⚠ '+e.message,'var(--am)'); rRoleplay(); }
-}
+
 
 /* ════════════════════════════════════════════════════════
    WRITING FEEDBACK
@@ -1741,22 +1684,7 @@ function loseHeart(){
   return true;
 }
 
-function go(id){
-  if(['writing','reading','speaking','builder','falsefriends'].includes(id)&&!checkUnlock(id)){showLockedMessage(id);return;}
-  document.querySelectorAll('.pnl,.fpnl').forEach(p=>{p.style.display='none'});
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-  const p=document.getElementById(id);
-  if(!p){console.warn('Panel not found:',id);return;}
-  p.style.display=FPANELS.includes(id)?'flex':'block';
-  const t=document.getElementById('t-'+id);if(t)t.classList.add('on');
-  // Update mobile bottom nav
-  document.querySelectorAll('.mnb').forEach(b=>b.classList.remove('on'));
-  const mn=document.getElementById('mn-'+id);if(mn)mn.classList.add('on');
-  ({home:rHome,vocab:rVocab,tenses:rTenses,grammar:rGrammar,writing:rWriting,
-    reading:rReading,speaking:rSpeaking,lessons:rLessons,builder:rBuilder,falsefriends:rFalseFriends,stats:rStats,tracker:rTracker,settings:rSettings})[id]?.();
-  // If Daily Flow active, keep bar visible (re-append if moved)
-  if(FLOW&&FLOW.active){const fb=document.getElementById('flow-bar');if(fb&&!document.body.contains(fb))document.body.appendChild(fb);}
-}
+
 
 function showMobileMenu(){
   const el=document.getElementById('mobile-more');
@@ -7578,33 +7506,8 @@ if('serviceWorker' in navigator){
 }
 
 // ══ APP INITIALIZATION ══
-function initApp(){
-  // Apply theme
-  if(DB.get('light_mode',false)){
-    document.documentElement.setAttribute('data-theme','light');
-  }
-  // Update XP display
-  updXP();
-  // Show home
-  go('home');
-  // Check onboarding
-  if(!DB.get('onboarded',false)){
-    setTimeout(()=>showOnboarding(),500);
-  }
-  // Check achievements on load
-  const lc=learnedW().length;
-  if(lc>=1)unlockAch('w1');
-  if(lc>=10)unlockAch('w10');
-  if(lc>=50)unlockAch('w50');
-  if(lc>=100)unlockAch('w100');
-  if(lc>=200)unlockAch('w200');
-  unlockAch('start');
-  const s=calcStreak();
-  if(s>=3)unlockAch('s3');
-  if(s>=7)unlockAch('s7');
-  if(s>=14)unlockAch('s14');
-  if(s>=30)unlockAch('s30');
-}
+
+
 
 // Initialize when DOM is ready
 if(document.readyState==='loading'){
@@ -8744,34 +8647,9 @@ function goMain(id){
 
 // Keep old go() working (used everywhere in app)
 // But redirect to new system when going to main panels
-const _oldGo = go;
-function go(id){
-  const mainPanels = {
-    home:'home',
-    vocab:'learn', tenses:'learn', grammar:'learn', reading:'learn', falsefriends:'learn',
-    speaking:'practice', 
-    writing:'write',
-    stats:'more', settings:'more', lessons:'more', tracker:'more', builder:'more',
-  };
-  const subTabMap = {
-    vocab:'vocab', tenses:'tenses', grammar:'grammar', reading:'reading', falsefriends:'vocab',
-    speaking:'aiconv',
-    writing:'freewrite',
-    stats:'stats', settings:'settings', lessons:'lessons', tracker:'stats',
-  };
-  if(mainPanels[id]){
-    if(subTabMap[id]){
-      if(mainPanels[id]==='learn')    LEARN_TAB    = subTabMap[id];
-      if(mainPanels[id]==='practice') PRACTICE_TAB = subTabMap[id];
-      if(mainPanels[id]==='write')    WRITE_TAB    = subTabMap[id];
-      if(mainPanels[id]==='more')     MORE_TAB     = subTabMap[id];
-    }
-    goMain(mainPanels[id]);
-    return;
-  }
-  // For unknown panels, fall back to old go()
-  _oldGo(id);
-}
+
+
+
 
 /* ── HOME panel ── */
 function rHome2(){
@@ -9059,7 +8937,7 @@ function _renderRoleplay(vm){
 }
 
 // Override rAIConversation to also refresh practice panel
-const _orig_rAIC2 = typeof rAIConversation==='function' ? rAIConversation : null;
+
 function rAIConversation(){
   const vm=document.getElementById('practice-vm');
   const inPractice = document.getElementById('practice')?.style.display!=='none';
@@ -9180,7 +9058,7 @@ function _renderInto(vm, key, fnMap){
 }
 
 /* ── Override rpSend to refresh practice panel ── */
-const _orig_rpSend2 = typeof rpSend==='function' ? rpSend : null;
+
 async function rpSend(){
   if(!hasAPIKey()){ toast('⚙ API Key στα Settings.','var(--am)'); return; }
   if(RPST.loading) return;
@@ -9207,7 +9085,7 @@ async function rpSend(){
 }
 
 /* ── Fix startConvScenario to refresh practice panel ── */
-const _origSCS=typeof startConvScenario==='function'?startConvScenario:null;
+
 function startConvScenario(id,title){
   if(!hasAPIKey()){ showAPIKeyModal(); return; }
   CONVST.scenario=id; CONVST.history=[]; CONVST.turn=0;
