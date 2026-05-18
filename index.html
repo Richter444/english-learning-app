@@ -5252,6 +5252,10 @@ function rListeningEx(el){
 }
 
 let SPST={tab:'conversations',convIdx:null};
+let LEARN_TAB='vocab';
+let PRACTICE_TAB='aiconv';
+let WRITE_TAB='freewrite';
+let MORE_TAB='stats';
 /* ══ SPEAKING PANEL ══ */
 function rSpeaking(){
   unlockAch('sp1');
@@ -8621,28 +8625,14 @@ function phClick(el){
    ═══════════════════════════════════════════════════════════════ */
 
 // Current sub-tab state for each panel
-let LEARN_TAB    = 'vocab';
-let PRACTICE_TAB = 'aiconv';
-let WRITE_TAB    = 'freewrite';
-let MORE_TAB     = 'stats';
-
 function goMain(id){
-  // Hide all panels
-  document.querySelectorAll('.pnl,.fpnl').forEach(p=>p.style.display='none');
-  
-  // Update mobile nav
-  document.querySelectorAll('.mnb').forEach(b=>b.classList.remove('on'));
-  const mn = document.getElementById('mn-'+id);
-  if(mn) mn.classList.add('on');
-
-  // Show + render target panel
-  const el = document.getElementById(id);
-  if(!el){ console.warn('Panel missing:', id); return; }
-  el.style.display = 'flex';
-  el.scrollTop = 0;
-
-  const map = {home:rHome2, learn:rLearn2, practice:rPractice2, write:rWrite2, more:rMore2};
-  if(map[id]) map[id]();
+  // Map 5-tab nav to the correct panel to show
+  if(id==='home')          go('home');
+  else if(id==='learn')    go(LEARN_TAB||'vocab');
+  else if(id==='practice'){ SPST.tab=PRACTICE_TAB||'aiconv'; go('speaking'); }
+  else if(id==='write')    go('writing');
+  else if(id==='more')     go(MORE_TAB||'stats');
+  // go() already updates the nav buttons
 }
 
 // Keep old go() working (used everywhere in app)
@@ -8760,85 +8750,10 @@ function _statCell(ic,val,lbl){
 }
 
 /* ── LEARN panel ── */
-function rLearn2(){
-  const el = document.getElementById('learn');
-  if(!el) return;
-  el.innerHTML='';
-  const wrap = document.createElement('div');
-  wrap.style.cssText='max-width:840px;margin:0 auto;padding:16px;width:100%';
-  el.appendChild(wrap);
-
-  // Sub-tabs
-  const tabs=[{id:'vocab',lb:'📖 Vocab'},{id:'tenses',lb:'⏱ Tenses'},{id:'grammar',lb:'📝 Grammar'},{id:'reading',lb:'📚 Reading'}];
-  const bar=document.createElement('div');
-  bar.style.cssText='display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none';
-  tabs.forEach(t=>{
-    const btn=document.createElement('button');
-    btn.style.cssText='flex-shrink:0;padding:9px 16px;background:none;border:none;border-bottom:2px solid '+(LEARN_TAB===t.id?'var(--bl)':'transparent')+';cursor:pointer;font-size:12px;font-weight:600;color:'+(LEARN_TAB===t.id?'var(--bl)':'var(--t3)')+';white-space:nowrap;transition:all .15s';
-    btn.textContent=t.lb;
-    btn.onclick=()=>{LEARN_TAB=t.id;rLearn2();};
-    bar.appendChild(btn);
-  });
-  wrap.appendChild(bar);
-
-  // Content — render into a temp container then copy
-  const vm=document.createElement('div');
-  vm.style.minHeight='400px';
-  wrap.appendChild(vm);
-
-  _renderInto(vm, LEARN_TAB, {vocab:rVocab, tenses:rTenses, grammar:rGrammar, reading:rReading});
-}
+function rLearn2(){const t={vocab:"vocab",tenses:"tenses",grammar:"grammar",reading:"reading"};go(t[LEARN_TAB]||"vocab");document.querySelectorAll(".mnb").forEach(b=>b.classList.remove("on"));const mn=document.getElementById("mn-learn");if(mn)mn.classList.add("on");}
 
 /* ── PRACTICE panel ── */
-function rPractice2(){
-  const el=document.getElementById('practice');
-  if(!el) return;
-  el.innerHTML='';
-  const wrap=document.createElement('div');
-  wrap.style.cssText='max-width:640px;margin:0 auto;padding:16px;width:100%';
-  el.appendChild(wrap);
-
-  const tabs=[
-    {id:'aiconv',   lb:'🤖 AI Chat'},
-    {id:'roleplay', lb:'🎭 Roleplay'},
-    {id:'shadowing',lb:'📖 Shadow'},
-    {id:'thinking', lb:'🧠 Think'},
-    {id:'listening',lb:'🎧 Listen'},
-    {id:'phrases',  lb:'💬 Phrases'},
-  ];
-  const bar=document.createElement('div');
-  bar.style.cssText='display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none';
-  tabs.forEach(t=>{
-    const btn=document.createElement('button');
-    btn.style.cssText='flex-shrink:0;padding:9px 16px;background:none;border:none;border-bottom:2px solid '+(PRACTICE_TAB===t.id?'var(--gr)':'transparent')+';cursor:pointer;font-size:12px;font-weight:600;color:'+(PRACTICE_TAB===t.id?'var(--gr)':'var(--t3)')+';white-space:nowrap';
-    btn.textContent=t.lb;
-    btn.onclick=()=>{PRACTICE_TAB=t.id; SPST.tab=t.id; rPractice2();};
-    bar.appendChild(btn);
-  });
-  wrap.appendChild(bar);
-
-  // API key warning
-  if(!hasAPIKey() && ['aiconv','roleplay'].includes(PRACTICE_TAB)){
-    const banner=document.createElement('div');
-    banner.style.cssText='background:rgba(240,56,112,.1);border:1px solid rgba(240,56,112,.3);border-radius:10px;padding:14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px';
-    banner.innerHTML='<div><div style="font-size:13px;font-weight:700;color:var(--ro)">⚠ Χρειάζεσαι API Key</div>'
-      +'<div style="font-size:11px;color:var(--t3)">Δωρεάν από console.anthropic.com</div></div>';
-    const addBtn=document.createElement('button');
-    addBtn.className='btn bp bsm'; addBtn.textContent='➕ Προσθήκη';
-    addBtn.onclick=()=>showAPIKeyModal();
-    banner.appendChild(addBtn);
-    wrap.appendChild(banner);
-  }
-
-  const vm=document.createElement('div');
-  vm.id='practice-vm';
-  vm.style.minHeight='400px';
-  wrap.appendChild(vm);
-
-  // Route speaking to vm
-  SPST.tab = PRACTICE_TAB;
-  _renderSpeakingTab(vm, PRACTICE_TAB);
-}
+function rPractice2(){SPST.tab=PRACTICE_TAB||"aiconv";go("speaking");document.querySelectorAll(".mnb").forEach(b=>b.classList.remove("on"));const mn=document.getElementById("mn-practice");if(mn)mn.classList.add("on");}
 
 function _renderSpeakingTab(vm, tab){
   // Use the existing speaking panel as a rendering target
@@ -8955,36 +8870,7 @@ function rAIConversation(){
 }
 
 /* ── WRITE panel ── */
-function rWrite2(){
-  const el=document.getElementById('write');
-  if(!el) return;
-  el.innerHTML='';
-  const wrap=document.createElement('div');
-  wrap.style.cssText='max-width:640px;margin:0 auto;padding:16px;width:100%';
-  el.appendChild(wrap);
-
-  const tabs=[{id:'freewrite',lb:'✍️ Free Write'},{id:'email',lb:'📧 Email'},{id:'cloze',lb:'📝 Cloze'}];
-  const bar=document.createElement('div');
-  bar.style.cssText='display:flex;overflow-x:auto;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none';
-  tabs.forEach(t=>{
-    const btn=document.createElement('button');
-    btn.style.cssText='flex-shrink:0;padding:9px 16px;background:none;border:none;border-bottom:2px solid '+(WRITE_TAB===t.id?'var(--vi)':'transparent')+';cursor:pointer;font-size:12px;font-weight:600;color:'+(WRITE_TAB===t.id?'var(--vi)':'var(--t3)')+';white-space:nowrap';
-    btn.textContent=t.lb;
-    btn.onclick=()=>{WRITE_TAB=t.id;rWrite2();};
-    bar.appendChild(btn);
-  });
-  wrap.appendChild(bar);
-
-  const vm=document.createElement('div');
-  vm.style.minHeight='400px';
-  wrap.appendChild(vm);
-
-  if(WRITE_TAB==='freewrite') _buildFreeWrite2(vm);
-  else if(WRITE_TAB==='email') _buildEmail2(vm);
-  else if(WRITE_TAB==='cloze'){
-    _renderInto(vm,'cloze',{cloze:()=>{if(typeof rClozeTest==='function') rClozeTest(vm);}});
-  }
-}
+function rWrite2(){go("writing");document.querySelectorAll(".mnb").forEach(b=>b.classList.remove("on"));const mn=document.getElementById("mn-write");if(mn)mn.classList.add("on");}
 
 function _buildFreeWrite2(vm){
   vm.innerHTML='<div style="font-size:15px;font-weight:700;margin-bottom:6px">✍️ Free Writing</div>'
@@ -9006,32 +8892,7 @@ function _buildEmail2(vm){
 }
 
 /* ── MORE panel ── */
-function rMore2(){
-  const el=document.getElementById('more');
-  if(!el) return;
-  el.innerHTML='';
-  const wrap=document.createElement('div');
-  wrap.style.cssText='max-width:640px;margin:0 auto;padding:16px;width:100%';
-  el.appendChild(wrap);
-
-  const tabs=[{id:'stats',lb:'📊 Stats'},{id:'settings',lb:'⚙️ Settings'},{id:'lessons',lb:'📖 Lessons'}];
-  const bar=document.createElement('div');
-  bar.style.cssText='display:flex;overflow-x:auto;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none';
-  tabs.forEach(t=>{
-    const btn=document.createElement('button');
-    btn.style.cssText='flex-shrink:0;padding:9px 16px;background:none;border:none;border-bottom:2px solid '+(MORE_TAB===t.id?'var(--t1)':'transparent')+';cursor:pointer;font-size:12px;font-weight:600;color:'+(MORE_TAB===t.id?'var(--t1)':'var(--t3)')+';white-space:nowrap';
-    btn.textContent=t.lb;
-    btn.onclick=()=>{MORE_TAB=t.id;rMore2();};
-    bar.appendChild(btn);
-  });
-  wrap.appendChild(bar);
-
-  const vm=document.createElement('div');
-  vm.style.minHeight='400px';
-  wrap.appendChild(vm);
-
-  _renderInto(vm, MORE_TAB, {stats:rStats, settings:rSettings, lessons:rLessons});
-}
+function rMore2(){const t={stats:"stats",settings:"settings",lessons:"lessons"};go(t[MORE_TAB]||"stats");document.querySelectorAll(".mnb").forEach(b=>b.classList.remove("on"));const mn=document.getElementById("mn-more");if(mn)mn.classList.add("on");}
 
 /* ── Helper: render legacy panel into a container ── */
 function _renderInto(vm, key, fnMap){
@@ -9103,34 +8964,53 @@ function startConvScenario(id,title){
 
 /* ── Update go() to also handle old panel names ── */
 function go(id){
-  const map={
+  // Map legacy panel names to what they show
+  const panelTab={
     home:'home',
-    vocab:'learn',tenses:'learn',grammar:'learn',reading:'learn',falsefriends:'learn',
+    vocab:'vocab',tenses:'tenses',grammar:'grammar',reading:'reading',
+    writing:'writing',
+    speaking:'speaking',
+    stats:'stats',settings:'settings',lessons:'lessons',
+    tracker:'tracker',builder:'builder',falsefriends:'falsefriends',
+  };
+
+  // Set sub-tab state for the 5-nav
+  if(id==='vocab'||id==='tenses'||id==='grammar'||id==='reading') LEARN_TAB=id;
+  if(id==='speaking') {}  // SPST.tab already set before go() is called
+  if(id==='writing') WRITE_TAB='freewrite';
+  if(id==='stats'||id==='settings'||id==='lessons') MORE_TAB=id;
+
+  // Show the panel
+  const panelId = panelTab[id] || id;
+  document.querySelectorAll('.pnl,.fpnl').forEach(p=>p.style.display='none');
+  const p = document.getElementById(panelId);
+  if(!p){ console.warn('Panel not found:',panelId); return; }
+  p.style.display = FPANELS&&FPANELS.includes(panelId)?'flex':'block';
+
+  // Update nav: highlight the right 5-tab button
+  document.querySelectorAll('.mnb').forEach(b=>b.classList.remove('on'));
+  const navMap={
+    home:'home',
+    vocab:'learn',tenses:'learn',grammar:'learn',reading:'learn',
     speaking:'practice',
     writing:'write',
-    stats:'more',settings:'more',lessons:'more',tracker:'more',builder:'more',
+    stats:'more',settings:'more',lessons:'more',tracker:'more',
   };
-  const tabMap={
-    vocab:'vocab',tenses:'tenses',grammar:'grammar',reading:'reading',
-    speaking:'aiconv',
-    writing:'freewrite',
-    stats:'stats',settings:'settings',lessons:'lessons',tracker:'stats',
+  const navId='mn-'+(navMap[panelId]||'home');
+  const mn=document.getElementById(navId); if(mn) mn.classList.add('on');
+
+  // Also highlight desktop tab if exists
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  const dt=document.getElementById('t-'+panelId); if(dt) dt.classList.add('on');
+
+  // Render
+  const renderers={
+    home:rHome2,vocab:rVocab,tenses:rTenses,grammar:rGrammar,writing:rWriting,
+    reading:rReading,speaking:rSpeaking,lessons:rLessons,builder:rBuilder,
+    falsefriends:rFalseFriends,stats:rStats,tracker:rTracker,settings:rSettings,
   };
-  if(map[id]){
-    if(tabMap[id]){
-      const target=map[id];
-      if(target==='learn')    LEARN_TAB=tabMap[id];
-      if(target==='practice') PRACTICE_TAB=tabMap[id];
-      if(target==='write')    WRITE_TAB=tabMap[id];
-      if(target==='more')     MORE_TAB=tabMap[id];
-    }
-    goMain(map[id]);
-    return;
-  }
-  // Unknown panel — direct show
-  document.querySelectorAll('.pnl,.fpnl').forEach(p=>p.style.display='none');
-  const p=document.getElementById(id);
-  if(p){ p.style.display='flex'; }
+  if(renderers[panelId]) renderers[panelId]();
+  if(p) p.scrollTop=0;
 }
 
 /* ── Update initApp ── */
