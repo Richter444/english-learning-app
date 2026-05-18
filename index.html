@@ -704,8 +704,8 @@ async function callAI(userMsg, systemMsg, historyArr){
       if(res.status === 401){
         DB.delete('anthropic_key');
         toast('❌ Λάθος API Key. Βάλε νέο στα Settings.','var(--ro)');
-        go('settings');
-        throw new Error('BAD_KEY');
+        setTimeout(()=>go('settings'),500);
+        throw new Error('NO_KEY');  // NO_KEY is filtered by callers
       }
       if(res.status === 429) throw new Error('⏳ Πολλά requests. Δοκίμασε σε λίγο.');
       errMsg = j.error?.message || j.type || errMsg;
@@ -770,10 +770,10 @@ function startConvScenario(id, title){
   CONVST.loading   = true;
   rAIConversation();
 
-  const sc    = (CONVERSATIONS||[]).find(x => x.id === id);
   const level = DB.get('placement_lv','B1');
+  const scTitle = title || id;  // use title directly, no need to look up CONVERSATIONS
   const sys   = 'You are starting an English conversation practice session. Scenario: '
-    + (sc ? sc.title : title || 'casual chat')
+    + scTitle
     + '. Student level: ' + level + '.'
     + ' Start with a short natural greeting (1 sentence). Be friendly.';
 
@@ -786,7 +786,7 @@ function startConvScenario(id, title){
     })
     .catch(e => {
       CONVST.loading = false;
-      toast('⚠ ' + e.message,'var(--am)');
+      if(e.message !== 'NO_KEY') toast('⚠ ' + e.message,'var(--am)');
       rAIConversation();
     });
 }
@@ -805,11 +805,10 @@ async function sendConvMsg(){
   CONVST.history.push({ role:'user', content:userText });
   rAIConversation();
 
-  const sc    = (CONVERSATIONS||[]).find(x => x.id === CONVST.scenario);
   const level = DB.get('placement_lv','B1');
   const lvMap = {'B1':'use simple clear sentences','B2':'use natural expressions','C1':'speak like a native, use idioms'};
   const sys   = 'You are a friendly English conversation partner. Scenario: '
-    + (sc ? sc.title : 'casual chat') + '. Student level: ' + level
+    + (CONVST.scenario||'casual chat') + '. Student level: ' + level
     + ' — ' + (lvMap[level]||lvMap.B1) + '.'
     + ' Keep reply SHORT (1-3 sentences). If there is a grammar error, note it at the end in brackets [correction: ...].';
 
@@ -828,8 +827,8 @@ async function sendConvMsg(){
   } catch(e) {
     CONVST.loading = false;
     CONVST.turn--;
-    CONVST.history.pop();
-    toast('⚠ ' + e.message,'var(--am)');
+    if(CONVST.history.length) CONVST.history.pop();
+    if(e.message !== 'NO_KEY') toast('⚠ ' + e.message,'var(--am)');
     rAIConversation();
   }
 }
@@ -917,8 +916,7 @@ function _renderConvChat(el){
 
   // Header
   const hdr = _mkDiv(null,'display:flex;justify-content:space-between;align-items:center;margin-bottom:12px');
-  const sc  = (CONVERSATIONS||[]).find(x=>x.id===CONVST.scenario) || {title:CONVST.scenario};
-  _mkEl(hdr,'div','fp f14 b',null,{text: sc.title || CONVST.scenario});
+  _mkEl(hdr,'div','fp f14 b',null,{text: CONVST.scenario || 'AI Conversation'});
   const hdrRight = _mkDiv(null,'display:flex;gap:8px;align-items:center');
   _mkEl(hdrRight,'span',null,null,{style:'font-size:11px;color:var(--t3)',text:'Turn '+CONVST.turn+'/6'});
   const backBtn = document.createElement('button');
@@ -1094,7 +1092,7 @@ function startRoleplay(id, title){
     + ' Student level: '+level+'. Start with a natural opening line. Keep replies SHORT (1-2 sentences).';
   callAI('Hello.',sys,[])
     .then(r=>{ RPST.history=[{role:'assistant',content:r}]; RPST.loading=false; rRoleplay(); speak(r,'en-GB'); })
-    .catch(e=>{ RPST.loading=false; toast('⚠ '+e.message,'var(--am)'); rRoleplay(); });
+    .catch(e=>{ RPST.loading=false; if(e.message!=='NO_KEY') toast('⚠ '+e.message,'var(--am)'); rRoleplay(); });
 }
 
 async function rpSend(){
@@ -1111,7 +1109,7 @@ async function rpSend(){
     const r = await callAI(txt, sys, RPST.history.slice(0,-1));
     RPST.history.push({role:'assistant',content:r});
     RPST.loading=false; rRoleplay(); speak(r,'en-GB');
-  } catch(e){ RPST.loading=false; RPST.history.pop(); toast('⚠ '+e.message,'var(--am)'); rRoleplay(); }
+  } catch(e){ RPST.loading=false; if(RPST.history.length) RPST.history.pop(); if(e.message!=='NO_KEY') toast('⚠ '+e.message,'var(--am)'); rRoleplay(); }
 }
 
 /* ════════════════════════════════════════════════════════
@@ -5261,7 +5259,7 @@ function rListeningEx(el){
   if(!LEST.art){
     el.innerHTML=`<div class="fp f13 b mb16">Listening Comprehension Exercises</div>
       <p class="f12 c2 mb16" style="line-height:1.6">7 texts · British, American, Australian accents · Read → answer → listen → shadow.</p>
-      ${LISTENING_EX.map(ex=>`<div class="scard" onclick="LEST.art='${ex.id}';LEST.ans={};LEST.done=false;LEST.score=0;rSpeaking()">
+      ${(LISTENING_EX||[]).map(ex=>`<div class="scard" onclick="LEST.art='${ex.id}';LEST.ans={};LEST.done=false;LEST.score=0;rSpeaking()">
         <div class="fx ac jb mb8">
           <div class="fp f13 b" style="color:var(--tl)">${ex.title}</div>
           <div class="fx ac g6">
