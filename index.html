@@ -722,78 +722,72 @@ function hasAPIKey(){
   return !!getAPIKey();
 }
 
-async function callAI(promptOrUser, systemOrExtra, messagesOrTokens){
-  const key = getAPIKey();
+/* ══ ANTHROPIC AI ══ */
+async function callAI(prompt, system, history){
+  const key = DB.get('anthropic_key','');
   if(!key){
-    toast('⚠ Δεν έχεις API Key — πήγαινε στα Settings για να το προσθέσεις.','var(--am)');
-    setTimeout(()=>go('settings'),1500);
-    throw new Error('NO_API_KEY');
+    toast('⚙ Πήγαινε στα Settings για να βάλεις API Key.','var(--am)');
+    go('settings');
+    throw new Error('NO_KEY');
   }
 
-  // Support two call styles:
-  // Style A (simple): callAI(userPrompt) or callAI(userPrompt, systemPrompt)
-  // Style B (conversation): callAI(userText, systemPrompt, historyArray)
-  let system = 'You are a helpful English learning assistant.';
-  let messages = [];
-  let maxTokens = 800;
-
-  if(Array.isArray(messagesOrTokens)){
-    // Style B: conversation with history
-    system = systemOrExtra || system;
-    const history = messagesOrTokens;
-    messages = [...history, {role:'user', content: promptOrUser}];
-  } else if(typeof messagesOrTokens === 'number'){
-    // Style A with custom maxTokens
-    system = systemOrExtra || system;
-    messages = [{role:'user', content: promptOrUser}];
-    maxTokens = messagesOrTokens;
+  let messages;
+  if(Array.isArray(history)){
+    messages = [...history, {role:'user', content:prompt}];
   } else {
-    // Style A: simple prompt
-    system = systemOrExtra || system;
-    messages = [{role:'user', content: promptOrUser}];
-  }
-
-  let response;
-  try{
-    response = await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{
-      'Content-Type':'application/json',
-      'x-api-key': key,
-      'anthropic-version':'2023-06-01',
-      'anthropic-dangerous-direct-browser-access':'true'
-    },
-    body:JSON.stringify({
-      model:'claude-haiku-4-5-20251001',
-      max_tokens: maxTokens,
-      system: system,
-      messages: messages
-    })
-  });
-
-  } catch(netErr){
-    throw new Error('Δεν υπάρχει σύνδεση. Έλεγξε το internet και ξαναπροσπάθησε.');
-  }
-  if(!response.ok){
-    if(response.status===401){
-      showAPIKeyModal('invalid');
-      throw new Error('INVALID_KEY');
+    messages = [{role:'user', content: String(prompt||'')}];
+    if(typeof system === 'number'){
+      // callAI(prompt, maxTokens) — no system
     }
-    if(response.status===429){
-      throw new Error('Έχεις εξαντλήσει το usage limit. Δοκίμασε σε λίγη ώρα.');
-    }
-    let errMsg='API error '+response.status;
-    try{
-      const err=await response.json();
-      if(err.type==='exceeded_limit')errMsg='Usage limit εξαντλήθηκε. Επαναφέρεται σε λίγες ώρες.';
-      else errMsg=err.error?.message||errMsg;
-    }catch{}
-    throw new Error(errMsg);
   }
 
-  const data = await response.json();
-  return data.content?.[0]?.text||'';
+  const sysText = (typeof system === 'string' && system) ? system : 'You are a helpful English learning assistant.';
+  const maxTok  = (typeof history === 'number') ? history : (typeof system === 'number' ? system : 800);
+
+  const ctrl = new AbortController();
+  const tid  = setTimeout(() => ctrl.abort(), 28000);
+
+  let res;
+  try {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
+      method  : 'POST',
+      signal  : ctrl.signal,
+      headers : {
+        'Content-Type'                             : 'application/json',
+        'x-api-key'                                : key,
+        'anthropic-version'                        : '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model      : 'claude-haiku-4-5-20251001',
+        max_tokens : maxTok,
+        system     : sysText,
+        messages   : messages
+      })
+    });
+  } catch(e) {
+    clearTimeout(tid);
+    if(e.name === 'AbortError') throw new Error('⏱ Timeout — δοκίμασε ξανά.');
+    throw new Error('🌐 Σφάλμα δικτύου. Έλεγξε σύνδεση και ξαναπροσπάθησε.');
+  }
+  clearTimeout(tid);
+
+  if(!res.ok){
+    let msg = 'API Error ' + res.status;
+    try {
+      const j = await res.json();
+      if(res.status === 401){ DB.delete('anthropic_key'); go('settings'); throw new Error('❌ Λάθος API Key — βάλε νέο στα Settings.'); }
+      if(res.status === 429){ throw new Error('⏳ Rate limit — δοκίμασε σε λίγο.'); }
+      msg = j.error?.message || msg;
+    } catch(innerErr){ if(innerErr.message.startsWith('❌')||innerErr.message.startsWith('⏳')) throw innerErr; }
+    throw new Error(msg);
+  }
+
+  const data = await res.json();
+  return (data.content && data.content[0] && data.content[0].text) ? data.content[0].text : '';
 }
+
+
 
 function showAPIKeyModal(reason){
   let existing = document.getElementById('apikey-modal');
@@ -849,8 +843,8 @@ function showAPIKeyModal(reason){
 
 function saveAPIKey(){
   const key = document.getElementById('api-key-input')?.value?.trim();
-  if(!key||!key.startsWith('sk-ant')){
-    toast('Το key πρέπει να αρχίζει με sk-ant-...','var(--ro)');
+  if(!key||key.length<20){
+    toast('Το key φαίνεται λανθασμένο (πολύ μικρό).','var(--ro)');
     return;
   }
   DB.set('anthropic_key',key);
@@ -4650,6 +4644,7 @@ const READINGS=[
 ];
 
 function rListeningEx(el){
+  if(!el)return;
   if(!LEST.art){
     el.innerHTML=`<div class="fp f13 b mb16">Listening Comprehension Exercises</div>
       <p class="f12 c2 mb16" style="line-height:1.6">7 texts · British, American, Australian accents · Read → answer → listen → shadow.</p>
@@ -4696,131 +4691,205 @@ function rListeningEx(el){
 }
 
 let SPST={tab:'conversations',convIdx:null};
+/* ══ SPEAKING PANEL ══ */
 function rSpeaking(){
   unlockAch('sp1');
-  const el=document.getElementById('speaking');
-  const tabs=[['conversations','💬'],['aiconv','🤖 Chat'],['roleplay','🎭'],['shadowing','📖'],['thinking','🧠'],['instant','⚡'],['journal','📔'],['slang','🗣'],['listening','🎧'],['pronunciation','🔤']].map(([id,lb])=>
-    `<button class="ttab ${SPST.tab===id?'on':''}" onclick="SPST.tab='${id}';SPST.convIdx=null;rSpeaking()" style="--tc:var(--gr);white-space:nowrap;flex-shrink:0">${lb}</button>`
-  ).join('');
+  const el = document.getElementById('speaking');
+  if(!el) return;
+  el.innerHTML = '';
 
-  let body='';
+  const TABS = [
+    ['conversations','💬 Phrases'],
+    ['aiconv','🤖 AI Chat'],
+    ['roleplay','🎭 Roleplay'],
+    ['shadowing','📖 Shadow'],
+    ['thinking','🧠 Think'],
+    ['instant','⚡ Instant'],
+    ['journal','📔 Journal'],
+    ['slang','🗣 Slang'],
+    ['listening','🎧 Listen'],
+    ['pronunciation','🔤 Pron'],
+  ];
 
-  if(SPST.tab==='conversations'){
-    if(SPST.convIdx===null){
-      body=`<div class="fp f13 b mb16">Φράσεις για Καθημερινές Συνομιλίες</div>
-        <p class="f12 c2 mb16" style="line-height:1.6">Κλικ σε μια κατηγορία για να δεις τις φράσεις.</p>
-        <div class="g2">
-          ${SPEAKING_DATA.conversations.map((cv,i)=>`<div class="scard" onclick="SPST.convIdx=${i};rSpeaking()">
-            <div class="fx ac g10 mb8">
-              <span style="font-size:24px">${cv.ic}</span>
-              <div><div class="fp f13 b mb1" style="color:${cv.col}">${cv.title}</div>
-              <div class="f10 c3">${cv.phrases.length} φράσεις</div></div>
-            </div>
-            <div class="pb" style="height:3px"><div class="pf" style="width:100%;background:${cv.col}"></div></div>
-          </div>`).join('')}
-        </div>`;
-    } else {
-      const cv=SPEAKING_DATA.conversations[SPST.convIdx];
-      body=`<button onclick="SPST.convIdx=null;rSpeaking()" style="color:var(--t3);font-size:11px;background:none;border:none;cursor:pointer;margin-bottom:16px">← Πίσω</button>
-        <div class="fp f16 b mb4" style="color:${cv.col}">${cv.ic} ${cv.title}</div>
-        <p class="f11 c3 mb16">Κλικ σε φράση για αντιγραφή · Εξάσκησε δυνατά!</p>
-        ${cv.phrases.map(ph=>`<div class="phrase-item" onclick="copyTxt('${ph.en.replace(/'/g,"\\'")}')">
-          <div style="flex:1"><div class="f14 mb4">${ph.en}</div><div class="f11 c3 it">${ph.gr}</div></div>
-          <span class="f10 c3">📋</span>
-        </div>`).join('')}`;
-    }
+  // Outer wrapper
+  const wrap = document.createElement('div');
+  wrap.className = 'sec fu';
+  wrap.style.maxWidth = '840px';
+  el.appendChild(wrap);
 
-  } else if(SPST.tab==='aiconv'){
-    el.innerHTML=`<div class="sec fu" style="max-width:840px">
-    <div class="sl mb4" style="color:var(--gr)">SPEAKING</div>
-    <div class="fp f16 b mb16">Ομιλία & Προφορά</div>
-    <div style="display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none">${tabs}</div>
-    <div class="vm" style="min-height:400px"></div>
-    </div>`;
-    rAIConversation();return;
-  } else if(SPST.tab==='roleplay'){
-    el.innerHTML=`<div class="sec fu" style="max-width:840px">
-    <div class="sl mb4" style="color:var(--gr)">SPEAKING</div>
-    <div class="fp f16 b mb16">Ομιλία & Προφορά</div>
-    <div style="display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none">${tabs}</div>
-    <div class="vm" style="min-height:400px"></div>
-    </div>`;
-    rRoleplay();return;
-  } else if(SPST.tab==='thinking'){
-    el.innerHTML=`<div class="sec fu" style="max-width:840px"><div class="sl mb4" style="color:var(--gr)">SPEAKING</div><div class="fp f16 b mb16">Ομιλία & Προφορά</div><div style="display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none">${tabs}</div><div class="vm" style="min-height:400px"></div></div>`;
-    startThinkingMode();return;
-  } else if(SPST.tab==='instant'){
-    el.innerHTML=`<div class="sec fu" style="max-width:840px"><div class="sl mb4" style="color:var(--gr)">SPEAKING</div><div class="fp f16 b mb16">Ομιλία & Προφορά</div><div style="display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none">${tabs}</div><div class="vm" style="min-height:400px"></div></div>`;
-    startInstantTraining();return;
-  } else if(SPST.tab==='journal'){
-    el.innerHTML=`<div class="sec fu" style="max-width:840px"><div class="sl mb4" style="color:var(--gr)">SPEAKING</div><div class="fp f16 b mb16">Ομιλία & Προφορά</div><div style="display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none">${tabs}</div><div class="vm" style="min-height:400px"></div></div>`;
-    startVoiceJournal();return;
-  } else if(SPST.tab==='shadowing'){
-    el.innerHTML=`<div class="sec fu" style="max-width:840px"><div class="sl mb4" style="color:var(--gr)">SPEAKING</div><div class="fp f16 b mb16">Ομιλία & Προφορά</div><div style="display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none">${tabs}</div><div class="vm" style="min-height:400px"></div></div>`;
-    startShadowing();return;
-  } else if(SPST.tab==='slang'){
-    el.innerHTML=`<div class="sec fu" style="max-width:840px"><div class="sl mb4" style="color:var(--gr)">SPEAKING</div><div class="fp f16 b mb16">Ομιλία & Προφορά</div><div style="display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none">${tabs}</div><div style="display:flex;gap:8px;margin-bottom:16px"><button onclick="startSlangMode('learn')" class="btn bp bsm">📖 Learn</button><button onclick="startSlangMode('quiz')" style="padding:6px 14px;background:var(--vi);border-radius:8px;color:#fff;border:none;cursor:pointer;font-size:13px">🧠 Quiz</button></div><div class="vm"></div></div>`;
-    startSlangMode('learn');return;
-  } else if(SPST.tab==='simulator'){
-    const simDiv=document.createElement('div');
-    rSimulator(simDiv);
-    body=simDiv.innerHTML;
+  // Header
+  const hdr = document.createElement('div');
+  hdr.innerHTML = '<div class="sl mb4" style="color:var(--gr)">SPEAKING</div>'
+    + '<div class="fp f16 b mb16">Ομιλία & Προφορά</div>';
+  wrap.appendChild(hdr);
 
-  } else if(SPST.tab==='listening'){
-    const lisDiv=document.createElement('div');
-    rListeningEx(lisDiv);
-    body=lisDiv.innerHTML;
+  // Tab bar — scrollable
+  const tabBar = document.createElement('div');
+  tabBar.style.cssText = 'display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:0';
+  TABS.forEach(([id, lb]) => {
+    const btn = document.createElement('button');
+    btn.className = 'ttab' + (SPST.tab === id ? ' on' : '');
+    btn.style.cssText = '--tc:var(--gr);white-space:nowrap;flex-shrink:0';
+    btn.textContent = lb;
+    btn.onclick = () => { SPST.tab = id; SPST.convIdx = null; rSpeaking(); };
+    tabBar.appendChild(btn);
+  });
+  wrap.appendChild(tabBar);
 
-  } else if(SPST.tab==='pronunciation'){
-    body=`<div class="fp f13 b mb16">Προφορά — Κοινές Παγίδες</div>
-      <div class="card c-info mb16">
-        <div class="sl mb8 cbl">💡 ΒΑΣΙΚΕΣ ΑΡΧΕΣ</div>
-        <div class="f12 c2" style="line-height:1.8">
-          <strong>Word stress</strong>: Κάθε λέξη έχει ένα κύριο τόνο — λάθος τόνος = δεν καταλαβαίνουν!<br>
-          <strong>Schwa /ə/</strong>: Unstressed φωνήεντα γίνονται /ə/<br>
-          <strong>Linking</strong>: Φυσικά αγγλικά = λέξεις συνδέονται ("not_at_all")<br>
-          <strong>Μέθοδος</strong>: Shadowing με native speakers κάθε μέρα
-        </div>
-      </div>
-      <div class="sl mb10">ΔΥΣΚΟΛΕΣ ΛΕΞΕΙΣ</div>
-      <div class="card mb16">
-        ${SPEAKING_DATA.pronunciation.map((p,i)=>`<div class="fx g12" style="padding:10px 0;${i<SPEAKING_DATA.pronunciation.length-1?'border-bottom:1px solid var(--ln)':''}">
-          <div style="min-width:150px"><div class="fp f13 b">${p.w}</div><div class="mono f11 cam mt4">${p.ph}</div></div>
-          <div class="f11 c2" style="line-height:1.5">💡 ${p.t}</div>
-        </div>`).join('')}
-      </div>
-      <div class="sl mb10">SOUND PATTERNS</div>
-      ${SPEAKING_DATA.soundPatterns.map(sp=>`<div class="card mb10">
-        <div class="fp f13 b mb4" style="color:var(--am)">${sp.sound}</div>
-        <div class="f12 c2 mb8">${sp.desc}</div>
-        ${sp.examples.map(ex=>`<div class="f11 c3 mb4 it" style="padding-left:10px">• ${ex}</div>`).join('')}
-      </div>`).join('')}`;
+  // Content area
+  const vm = document.createElement('div');
+  vm.className = 'vm';
+  vm.style.minHeight = '400px';
+  wrap.appendChild(vm);
 
-  } else {
-    const sg=SPEAKING_DATA.shadowingGuide;
-    body=`<div class="fp f13 b mb4" style="color:var(--gr)">${sg.title}</div>
-      <p class="f12 c2 mb16" style="line-height:1.6">Η πιο αποτελεσματική μέθοδος για Passive → Active.</p>
-      <div class="sl mb10">ΒΗΜΑΤΑ</div>
-      ${sg.steps.map(s=>`<div class="fx g12 mb10" style="padding:12px;background:var(--s2);border:1px solid var(--ln);border-radius:8px">
-        <div class="fp f18 b" style="color:var(--gr);min-width:28px">${s.n}</div>
-        <div><div class="f12 b mb2">${s.t}</div><div class="f11 c3">${s.d}</div></div>
-      </div>`).join('')}
-      <div class="sl mb10 mt16">ΣΥΝΙΣΤΩΜΕΝΕΣ ΠΗΓΕΣ</div>
-      <div class="card">
-        ${sg.resources.map((r,i)=>`<div class="fx ac jb" style="padding:10px 0;${i<sg.resources.length-1?'border-bottom:1px solid var(--ln)':''}">
-          <div><div class="f12 b mb2">${r.n}</div><div class="f10 c3">${r.d}</div></div>
-          <a href="${r.u}" target="_blank" style="color:var(--bl);font-size:10px;font-weight:700;padding:4px 10px;border:1px solid var(--bl)33;border-radius:6px;margin-left:10px">ΑΝΟΙΓΜΑ →</a>
-        </div>`).join('')}
-      </div>`;
+  // Route to tab
+  try {
+    spkRoute(vm, SPST.tab);
+  } catch(e) {
+    vm.innerHTML = '<div style="color:var(--ro);padding:20px;text-align:center">⚠ ' + (e.message||'Σφάλμα') + '</div>';
+    console.error('rSpeaking tab error:', e);
   }
-
-  el.innerHTML=`<div class="sec fu" style="max-width:840px">
-    <div class="sl mb4" style="color:var(--gr)">SPEAKING</div>
-    <div class="fp f16 b mb16">Ομιλία & Προφορά</div>
-    <div style="display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none">${tabs}</div>
-    ${body}
-  </div>`;
 }
+
+function spkRoute(vm, tab){
+  if(tab === 'conversations')    { spkConversations(vm); return; }
+  if(tab === 'aiconv')           { rAIConversation();    return; }
+  if(tab === 'roleplay')         { rRoleplay();          return; }
+  if(tab === 'shadowing')        { renderShadowing();    return; }
+  if(tab === 'thinking')         { renderThinking();     return; }
+  if(tab === 'instant')          { renderInstant();      return; }
+  if(tab === 'journal')          { renderJournal();      return; }
+  if(tab === 'slang')            { spkSlang(vm);         return; }
+  if(tab === 'listening')        { rListeningEx(vm);     return; }
+  if(tab === 'pronunciation')    { spkPronunciation(vm); return; }
+}
+
+/* Conversations tab */
+function spkConversations(vm){
+  if(!vm) return;
+  if(SPST.convIdx === null){
+    // Category list
+    const title = document.createElement('div');
+    title.className = 'fp f13 b mb16';
+    title.textContent = 'Φράσεις για Καθημερινές Συνομιλίες';
+    vm.appendChild(title);
+    const sub = document.createElement('p');
+    sub.className = 'f12 c2 mb16';
+    sub.style.lineHeight = '1.6';
+    sub.textContent = 'Κλικ σε κατηγορία για τις φράσεις.';
+    vm.appendChild(sub);
+    const grid = document.createElement('div');
+    grid.className = 'g2';
+    (SPEAKING_DATA.conversations||[]).forEach((cv, i) => {
+      const card = document.createElement('div');
+      card.className = 'scard';
+      card.onclick = () => { SPST.convIdx = i; rSpeaking(); };
+      const row = document.createElement('div');
+      row.className = 'fx ac g10 mb8';
+      const ic = document.createElement('span');
+      ic.style.fontSize = '24px';
+      ic.textContent = cv.ic || '💬';
+      const info = document.createElement('div');
+      const ttl = document.createElement('div');
+      ttl.className = 'fp f13 b mb1';
+      ttl.style.color = cv.col || 'var(--bl)';
+      ttl.textContent = cv.title || '';
+      const cnt = document.createElement('div');
+      cnt.className = 'f10 c3';
+      cnt.textContent = (cv.phrases||[]).length + ' φράσεις';
+      info.appendChild(ttl); info.appendChild(cnt);
+      row.appendChild(ic); row.appendChild(info);
+      card.appendChild(row);
+      grid.appendChild(card);
+    });
+    vm.appendChild(grid);
+  } else {
+    const cv = (SPEAKING_DATA.conversations||[])[SPST.convIdx];
+    if(!cv){ SPST.convIdx=null; spkConversations(vm); return; }
+    const backBtn = document.createElement('button');
+    backBtn.style.cssText = 'color:var(--t3);font-size:11px;background:none;border:none;cursor:pointer;margin-bottom:16px';
+    backBtn.textContent = '← Πίσω';
+    backBtn.onclick = () => { SPST.convIdx=null; rSpeaking(); };
+    vm.appendChild(backBtn);
+    const ttl = document.createElement('div');
+    ttl.className = 'fp f16 b mb4';
+    ttl.style.color = cv.col || 'var(--bl)';
+    ttl.textContent = (cv.ic||'') + ' ' + (cv.title||'');
+    vm.appendChild(ttl);
+    const hint = document.createElement('p');
+    hint.className = 'f11 c3 mb16';
+    hint.textContent = 'Κλικ σε φράση για αντιγραφή · Πάτα 🔊 για να ακούσεις';
+    vm.appendChild(hint);
+    (cv.phrases||[]).forEach(ph => {
+      const item = document.createElement('div');
+      item.className = 'phrase-item';
+      item.onclick = () => copyTxt(ph.en||'');
+      const txt = document.createElement('div');
+      txt.style.flex = '1';
+      const en = document.createElement('div');
+      en.className = 'f14 mb4';
+      en.textContent = ph.en || '';
+      const gr = document.createElement('div');
+      gr.className = 'f11 c3 it';
+      gr.textContent = ph.gr || '';
+      txt.appendChild(en); txt.appendChild(gr);
+      const actions = document.createElement('div');
+      actions.style.cssText = 'display:flex;gap:6px;align-items:center';
+      const speakBtn = document.createElement('button');
+      speakBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:16px;padding:2px';
+      speakBtn.textContent = '🔊';
+      speakBtn.onclick = (e) => { e.stopPropagation(); speak(ph.en||'','en-GB'); };
+      actions.appendChild(speakBtn);
+      item.appendChild(txt); item.appendChild(actions);
+      vm.appendChild(item);
+    });
+  }
+}
+
+/* Slang tab */
+function spkSlang(vm){
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:8px;margin-bottom:16px';
+  const lb = document.createElement('button');
+  lb.className = 'btn bp bsm';
+  lb.textContent = '📖 Learn';
+  lb.onclick = () => startSlangMode('learn');
+  const qb = document.createElement('button');
+  qb.style.cssText = 'padding:6px 14px;background:var(--vi);border-radius:8px;color:#fff;border:none;cursor:pointer;font-size:13px';
+  qb.textContent = '🧠 Quiz';
+  qb.onclick = () => startSlangMode('quiz');
+  row.appendChild(lb); row.appendChild(qb);
+  vm.appendChild(row);
+  startSlangMode('learn');
+}
+
+/* Pronunciation tab */
+function spkPronunciation(vm){
+  vm.innerHTML = '<div class="fp f13 b mb16">Προφορά — Κοινές Παγίδες</div>'
+    + '<div class="card c-info mb16"><div class="sl mb8 cbl">💡 ΒΑΣΙΚΕΣ ΑΡΧΕΣ</div>'
+    + '<div class="f12 c2" style="line-height:1.8">'
+    + '<strong>Word stress</strong>: Κάθε λέξη έχει ένα κύριο τόνο — λάθος τόνος = δεν καταλαβαίνουν!<br>'
+    + '<strong>Th sounds</strong>: /θ/ (think) vs /ð/ (this) — δόντι+γλώσσα<br>'
+    + '<strong>Final consonants</strong>: Πάντα πρόφερε το τελικό γράμμα (stopped, books)<br>'
+    + '<strong>Schwa /ə/</strong>: Η πιο κοινή φωνή — about, the, a<br>'
+    + '<strong>Silent letters</strong>: knife, write, hour, would<br>'
+    + '</div></div>'
+    + '<div class="card mb16"><div class="sl mb8 cbl">🎯 ΕΠΙΚΙΝΔΥΝΕΣ ΛΕΞΕΙΣ</div>'
+    + '<div class="f12 c2" style="line-height:2">'
+    + 'comfortable /ˈkʌmftəbl/<br>vegetable /ˈvedʒtəbl/<br>'
+    + 'Wednesday /ˈwenzdi/<br>February /ˈfebrueri/<br>'
+    + 'colonel /ˈkɜːnl/<br>island /ˈaɪlənd/<br>'
+    + 'receipt /rɪˈsiːt/<br>debt /det/<br>'
+    + '</div></div>'
+    + '<div class="card"><div class="sl mb8 cbl">🇬🇧 vs 🇺🇸</div>'
+    + '<div class="f12 c2" style="line-height:2">'
+    + 'water: /ˈwɔːtə/ vs /ˈwɑːɾər/<br>'
+    + "can't: /kɑːnt/ vs /kænt/<br>"
+    + 'schedule: /ˈʃedjuːl/ vs /ˈskedʒuːl/<br>'
+    + '</div></div>';
+}
+
+
 
 /* ══ DAILY LESSONS ══ */
 const LESSON_TEMPLATES=[
@@ -6234,8 +6303,9 @@ function rSettings(){
       <div style="margin-top:12px">
         <div class="f11 c3 mb6">API Key:</div>
         <div class="fx g8 mb8" style="align-items:center">
-          <input id="settings-api-input" type="password" placeholder="sk-ant-api03-..." style="flex:1;padding:9px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:12px;font-family:monospace;min-width:0">
+          <input id="settings-api-input" type="password" placeholder="sk-ant-api03-..." value="${DB.get('anthropic_key','')}" style="flex:1;padding:9px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:12px;font-family:monospace;min-width:0">
           <button onclick="saveAPIKeyFromSettings()" class="btn bp bsm" style="white-space:nowrap;flex-shrink:0">💾 Αποθήκευση</button>
+          <button onclick="testAPIKey()" class="btn bgh bsm" style="white-space:nowrap;flex-shrink:0" title="Δοκιμή σύνδεσης">🔌 Test</button>
         </div>
         ${hasAPIKey()
           ?'<div class="fx ac jb"><span class="f10 c3">✓ sk-ant-...'+DB.get('anthropic_key','').slice(-4)+'</span><button onclick="DB.set(\'anthropic_key\',\'\');rSettings()" style="color:var(--ro);background:none;border:none;cursor:pointer;font-size:10px">Διαγραφή</button></div>'
@@ -6957,6 +7027,8 @@ async function getAIWritingFeedback(){
     ||document.querySelector('#writing textarea');
   const text=ta?.value?.trim();
   if(!text||text.length<10){toast('Γράψε τουλάχιστον μια πρόταση!','var(--am)');return;}
+  const _wfBtn=document.getElementById('wf-btn')||document.querySelector('[onclick*="getAIWritingFeedback"]');
+  if(_wfBtn){_wfBtn.disabled=true;_wfBtn.textContent='⏳ Αναλύω...';}
 
   // Update button state
   const btn=document.getElementById('ai-feedback-btn');
@@ -7004,59 +7076,57 @@ async function improveEmail(){
 }
 
 async function sendConvMsg(){
-  if(!hasAPIKey()){toast('⚠ Χρειάζεσαι API Key — πήγαινε στα ⚙ Settings.','var(--am)');setTimeout(()=>go('settings'),1500);return;}
-  if(CONVST.loading)return; // Prevent double-send
-  const input=document.getElementById('conv-input');
-  if(!input||!input.value.trim())return;
-  const userText=input.value.trim();
-  input.value='';
+  if(!hasAPIKey()){ toast('⚙ Χρειάζεσαι API Key στα Settings.','var(--am)'); go('settings'); return; }
+  if(CONVST.loading) return;
+  const input = document.getElementById('conv-input');
+  if(!input || !input.value.trim()) return;
+  const userText = input.value.trim();
+  input.value = '';
+  CONVST.loading = true;
   CONVST.turn++;
-  CONVST.loading=true;
-  // Push user message to history
-  CONVST.history.push({role:'user',content:userText});
+  CONVST.history.push({role:'user', content:userText});
   rAIConversation();
-  // Build system prompt using CONVERSATIONS data
-  const sc=(typeof CONVERSATIONS!=='undefined'?CONVERSATIONS:[]).find(x=>x.id===CONVST.scenario);
-  const level=DB.get('placement_lv','B1');
-  const levelGuide={'B1':'use simple clear sentences, common vocabulary','B2':'use natural expressions, some idioms','B2+':'use varied vocabulary and natural flow','C1':'speak as with a native, use idioms freely'};
-  const guide=levelGuide[level]||levelGuide['B1'];
-  const sys=sc
-    ?'You are a friendly English conversation partner. Scenario: '+sc.title+'. Student level: '+level+' — '+guide+'. Respond naturally (2-3 sentences). Keep it realistic and conversational.'
-    :'You are a friendly English conversation partner. Student level: '+level+' — '+guide+'. Respond naturally (2-3 sentences).';
-  // Build message history (exclude last user message - it will be the userContent)
-  const prevHistory=CONVST.history.slice(0,-1); // exclude the just-added user msg
-  try{
-    const result=await callAI(userText, sys, prevHistory.slice(-10));
-    CONVST.history.push({role:'assistant',content:result});
-    CONVST.loading=false;
-    // Auto-speak AI response
-    speak(result,'en-GB');
-    if(CONVST.turn>=6){
-      unlockAch('ai1');CONVST.done=true;
-      const _spk5=DB.get('spk_stats',{t:0,i:0,s:0,j:0,ai:0});_spk5.ai++;DB.set('spk_stats',_spk5);
-      // Generate post-conversation review
-      if(hasAPIKey()&&CONVST.history.length>0){
-        const transcript=CONVST.history.map(m=>(m.role==='user'?'Me: ':'AI: ')+m.content).join('\n');
-        const reviewSys='You are an English coach reviewing a conversation. Respond ONLY in Greek with this exact format:\n\n🔴 ΛΑΘΗ / ΑΔΥΝΑΜΙΕΣ:\n• [specific error or weak phrasing] → Καλύτερα: [natural English alternative]\n(list 2-3 items, or "Δεν βρέθηκαν σοβαρά λάθη! ✅" if none)\n\n🟡 ΦΥΣΙΚΟΤΕΡΕΣ ΕΚΦΡΑΣΕΙΣ:\n• [what the user said] → [more natural/native version]\n(list 2-3 phrases)\n\n🟢 ΘΕΤΙΚΑ: [one encouraging sentence about what they did well]\n\nMax 150 words total.';
-        callAI(transcript, reviewSys, []).then(review=>{
-          CONVST.review=review;
-          rAIConversation();
-        }).catch(()=>{rAIConversation();});
-      } else {
-        rAIConversation();
-      }
-    } else {
-      rAIConversation();
-    }
-  }catch(e){
-    CONVST.history.pop();
+  const sc = (CONVERSATIONS||[]).find(x => x.id === CONVST.scenario);
+  const level = DB.get('placement_lv','B1');
+  const guides = {'B1':'simple clear sentences','B2':'natural expressions','C1':'native-like, idioms'};
+  const lvGuide = guides[level] || guides.B1;
+  const sys = 'You are a friendly English conversation partner. Scenario: ' + (sc ? sc.title : 'casual chat')
+    + '. Student level: ' + level + ' (' + lvGuide + ').'
+    + ' Keep replies SHORT (1-3 sentences). Correct major errors ONLY at end in brackets like [correction: ...].'
+    + ' Be warm, encouraging, realistic.';
+  try {
+    const reply = await callAI(userText, sys, CONVST.history.slice(0,-1));
+    CONVST.history.push({role:'assistant', content:reply});
+    CONVST.loading = false;
+    if(CONVST.turn >= 6){ CONVST.done = true; doConvReview(); return; }
+    rAIConversation();
+    speak(reply,'en-GB');
+  } catch(e) {
+    CONVST.loading = false;
     CONVST.turn--;
-    CONVST.loading=false;
-    const msg=e.message.startsWith('{')||e.message.length>80?'Σφάλμα API — δοκίμασε σε λίγο':e.message;
-    toast('⚠ '+msg,'var(--am)');
+    CONVST.history.pop();
+    toast('⚠ ' + e.message,'var(--am)');
     rAIConversation();
   }
 }
+
+async function doConvReview(){
+  rAIConversation();
+  const reviewSys = 'You are an English teacher. Review this conversation.'
+    + ' Student level: ' + DB.get('placement_lv','B1') + '.'
+    + ' Respond ONLY in Greek. Format EXACTLY:\n🔴 ΛΑΘΗ: [list errors or "Δεν υπάρχουν!"]\n🟡 ΦΥΣΙΚΟΤΕΡΕΣ ΕΚΦΡΑΣΕΙΣ: [better phrases]\n🟢 ΘΕΤΙΚΑ: [what was good]\n⭐ ΣΚΟΡ: X/10';
+  const convText = CONVST.history.map(m => m.role.toUpperCase()+': '+m.content).join('\n');
+  try {
+    const review = await callAI('Review this conversation:\n' + convText, reviewSys);
+    CONVST.review = review;
+    rAIConversation();
+  } catch(e) {
+    CONVST.review = '(Δεν ήταν δυνατή η ανάλυση: ' + e.message + ')';
+    rAIConversation();
+  }
+}
+
+
 
 function rpSend(){
   if(!hasAPIKey()){toast('⚠ Χρειάζεσαι API Key — πήγαινε στα ⚙ Settings.','var(--am)');setTimeout(()=>go('settings'),1500);return;}
@@ -8517,6 +8587,54 @@ document.addEventListener('focusin', function(e){
     },300);
   }
 });
+
+function selectReadingOpt(i, btn){
+  if(RST.rs) return;
+  const val = decodeURIComponent(btn.dataset.val||'');
+  RST.ra[i] = val;
+  rReading();
+}
+
+async function testAPIKey(){
+  if(!hasAPIKey()){toast('Πρώτα αποθήκευσε ένα API Key.','var(--am)');return;}
+  const btn=document.querySelector('[onclick="testAPIKey()"]');
+  if(btn){btn.textContent='⏳...';btn.disabled=true;}
+  try{
+    const r=await callAI('Say "OK" in one word.','Respond with exactly one word: OK');
+    if(btn){btn.textContent='🔌 Test';btn.disabled=false;}
+    if(r&&r.trim().length>0){
+      toast('✅ API Key λειτουργεί! Απάντηση: '+r.trim().substring(0,20),'var(--gr)');
+    } else {
+      toast('⚠ Αόριστη απάντηση από API','var(--am)');
+    }
+  }catch(e){
+    if(btn){btn.textContent='🔌 Test';btn.disabled=false;}
+    toast('❌ '+e.message,'var(--ro)');
+  }
+}
+
+/* ══ GLOBAL ERROR HANDLER ══ */
+window.addEventListener('unhandledrejection', function(event){
+  const msg = event.reason?.message || String(event.reason) || 'Άγνωστο σφάλμα';
+  if(msg.includes('NO_API_KEY') || msg.includes('INVALID_KEY')) return; // Already handled
+  if(msg.includes('INVALID_KEY_FORMAT')) return;
+  console.error('Unhandled rejection:', msg);
+  // Don't show toast for every promise rejection - only user-facing ones
+});
+window.addEventListener('error', function(event){
+  // Log but don't crash the app
+  console.error('Script error:', event.message, event.filename, event.lineno);
+  // Prevent "Script error" from propagating if it's from our code
+  if(event.filename && event.filename.includes(location.hostname)){
+    event.preventDefault();
+  }
+});
+
+function phClick(el){
+  const en=decodeURIComponent(el.dataset.en||'');
+  copyTxt(en);
+  speak(en,'en-GB');
+}
 </script>
 </body>
 </html>
