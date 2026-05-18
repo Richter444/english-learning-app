@@ -554,38 +554,44 @@ input:focus, textarea:focus {
   </div>
 </nav>
 <div id="cnt">
-  <div id="home" class="pnl" style="display:block"></div>
-  <div id="vocab" class="pnl fpnl"></div>
-  <div id="tenses" class="pnl fpnl"></div>
-  <div id="grammar" class="pnl"></div>
-  <div id="writing" class="pnl"></div>
-  <div id="reading" class="pnl"></div>
-  <div id="speaking" class="pnl"></div>
-  <div id="lessons" class="pnl"></div>
-  <div id="builder" class="pnl"></div>
-  <div id="falsefriends" class="pnl"></div>
-  <div id="stats" class="pnl"></div>
-  <div id="tracker" class="pnl fpnl"></div>
-  <div id="settings" class="pnl"></div>
+  <!-- NEW 5 main panels -->
+  <div id="home"     class="pnl" style="display:flex"></div>
+  <div id="learn"    class="pnl fpnl"></div>
+  <div id="practice" class="pnl fpnl"></div>
+  <div id="write"    class="pnl fpnl"></div>
+  <div id="more"     class="pnl fpnl"></div>
+  <!-- Legacy panels (hidden, used as content sources) -->
+  <div id="vocab"        class="pnl fpnl" style="display:none"></div>
+  <div id="tenses"       class="pnl fpnl" style="display:none"></div>
+  <div id="grammar"      class="pnl"      style="display:none"></div>
+  <div id="writing"      class="pnl"      style="display:none"></div>
+  <div id="reading"      class="pnl"      style="display:none"></div>
+  <div id="speaking"     class="pnl"      style="display:none"></div>
+  <div id="lessons"      class="pnl"      style="display:none"></div>
+  <div id="builder"      class="pnl"      style="display:none"></div>
+  <div id="falsefriends" class="pnl"      style="display:none"></div>
+  <div id="stats"        class="pnl"      style="display:none"></div>
+  <div id="tracker"      class="pnl fpnl" style="display:none"></div>
+  <div id="settings"     class="pnl"      style="display:none"></div>
 </div>
 </div>
 
-<!-- Mobile Bottom Navigation -->
+<!-- Mobile Bottom Navigation - 5 tabs -->
 <nav id="mobile-nav">
-  <button class="mnb" onclick="go('home')" id="mn-home">
+  <button class="mnb on" onclick="goMain('home')" id="mn-home">
     <span class="mn-ic">🏠</span><span class="mn-lb">Home</span>
   </button>
-  <button class="mnb" onclick="go('vocab')" id="mn-vocab">
-    <span class="mn-ic">📚</span><span class="mn-lb">Vocab</span>
+  <button class="mnb" onclick="goMain('learn')" id="mn-learn">
+    <span class="mn-ic">📚</span><span class="mn-lb">Learn</span>
   </button>
-  <button class="mnb" onclick="go('lessons')" id="mn-lessons">
-    <span class="mn-ic">🎯</span><span class="mn-lb">Lesson</span>
+  <button class="mnb" onclick="goMain('practice')" id="mn-practice">
+    <span class="mn-ic">🗣</span><span class="mn-lb">Practice</span>
   </button>
-  <button class="mnb" onclick="go('grammar')" id="mn-grammar">
-    <span class="mn-ic">✏</span><span class="mn-lb">Grammar</span>
+  <button class="mnb" onclick="goMain('write')" id="mn-write">
+    <span class="mn-ic">✍️</span><span class="mn-lb">Write</span>
   </button>
-  <button class="mnb" onclick="showMobileMenu()" id="mn-more">
-    <span class="mn-ic">☰</span><span class="mn-lb">Περισσότερα</span>
+  <button class="mnb" onclick="goMain('more')" id="mn-more">
+    <span class="mn-ic">⚙️</span><span class="mn-lb">More</span>
   </button>
 </nav>
 
@@ -8702,6 +8708,573 @@ function phClick(el){
   copyTxt(en);
   speak(en,'en-GB');
 }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   NEW 5-PANEL NAVIGATION SYSTEM
+   goMain() = navigate to one of 5 main panels
+   Each panel has sub-tabs for its content
+   All existing functions are reused unchanged
+   ═══════════════════════════════════════════════════════════════ */
+
+// Current sub-tab state for each panel
+let LEARN_TAB    = 'vocab';
+let PRACTICE_TAB = 'aiconv';
+let WRITE_TAB    = 'freewrite';
+let MORE_TAB     = 'stats';
+
+function goMain(id){
+  // Hide all panels
+  document.querySelectorAll('.pnl,.fpnl').forEach(p=>p.style.display='none');
+  
+  // Update mobile nav
+  document.querySelectorAll('.mnb').forEach(b=>b.classList.remove('on'));
+  const mn = document.getElementById('mn-'+id);
+  if(mn) mn.classList.add('on');
+
+  // Show + render target panel
+  const el = document.getElementById(id);
+  if(!el){ console.warn('Panel missing:', id); return; }
+  el.style.display = 'flex';
+  el.scrollTop = 0;
+
+  const map = {home:rHome2, learn:rLearn2, practice:rPractice2, write:rWrite2, more:rMore2};
+  if(map[id]) map[id]();
+}
+
+// Keep old go() working (used everywhere in app)
+// But redirect to new system when going to main panels
+const _oldGo = go;
+function go(id){
+  const mainPanels = {
+    home:'home',
+    vocab:'learn', tenses:'learn', grammar:'learn', reading:'learn', falsefriends:'learn',
+    speaking:'practice', 
+    writing:'write',
+    stats:'more', settings:'more', lessons:'more', tracker:'more', builder:'more',
+  };
+  const subTabMap = {
+    vocab:'vocab', tenses:'tenses', grammar:'grammar', reading:'reading', falsefriends:'vocab',
+    speaking:'aiconv',
+    writing:'freewrite',
+    stats:'stats', settings:'settings', lessons:'lessons', tracker:'stats',
+  };
+  if(mainPanels[id]){
+    if(subTabMap[id]){
+      if(mainPanels[id]==='learn')    LEARN_TAB    = subTabMap[id];
+      if(mainPanels[id]==='practice') PRACTICE_TAB = subTabMap[id];
+      if(mainPanels[id]==='write')    WRITE_TAB    = subTabMap[id];
+      if(mainPanels[id]==='more')     MORE_TAB     = subTabMap[id];
+    }
+    goMain(mainPanels[id]);
+    return;
+  }
+  // For unknown panels, fall back to old go()
+  _oldGo(id);
+}
+
+/* ── HOME panel ── */
+function rHome2(){
+  const el = document.getElementById('home');
+  if(!el) return;
+  el.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'max-width:520px;margin:0 auto;padding:20px 16px;width:100%';
+  el.appendChild(wrap);
+
+  const xp     = DB.get('xp',0);
+  const streak = typeof calcStreak==='function' ? calcStreak() : 0;
+  const level  = DB.get('placement_lv','B1');
+  const learned= typeof learnedW==='function' ? learnedW().length : 0;
+  const due    = typeof dueW==='function' ? dueW().length : 0;
+  const spk    = DB.get('spk_stats',{t:0});
+
+  // Header
+  wrap.innerHTML += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">'
+    + '<div><div style="font-size:22px;font-weight:800">English<span style="color:var(--bl)">Master</span></div>'
+    + '<div style="font-size:11px;color:var(--t3)">Level '+level+' · '+xp+' XP</div></div>'
+    + '<div style="display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--ln);border-radius:20px;padding:6px 12px">'
+    + '<span style="font-size:18px">🔥</span>'
+    + '<div><div style="font-size:15px;font-weight:700;color:var(--am)">'+streak+'</div>'
+    + '<div style="font-size:9px;color:var(--t3)">STREAK</div></div></div>'
+    + '</div>';
+
+  // XP bar
+  const xpLvls = typeof LVLS!=='undefined' ? LVLS : [{xp:0},{xp:100},{xp:300},{xp:600},{xp:1200}];
+  let curLvl=0, nextXp=100;
+  for(let i=0;i<xpLvls.length;i++){ if(xp>=(xpLvls[i].xp||0)) curLvl=i; else{nextXp=xpLvls[i].xp;break;} }
+  const pct=Math.min(100,Math.round((xp-(xpLvls[curLvl]?.xp||0))/Math.max(1,(nextXp-(xpLvls[curLvl]?.xp||0)))*100));
+  wrap.innerHTML += '<div style="background:var(--s2);border:1px solid var(--ln);border-radius:12px;padding:12px 16px;margin-bottom:16px">'
+    + '<div style="display:flex;justify-content:space-between;margin-bottom:6px">'
+    + '<span style="font-size:12px;font-weight:700">⭐ '+xp+' XP</span>'
+    + '<span style="font-size:11px;color:var(--t3)">'+(nextXp-xp)+' → Lv '+(curLvl+1)+'</span></div>'
+    + '<div style="height:6px;background:var(--s3);border-radius:6px"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,var(--bl),var(--vi));border-radius:6px"></div></div>'
+    + '</div>';
+
+  // Stats row
+  wrap.innerHTML += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px">'
+    + _statCell('📖',learned,'Λέξεις') + _statCell('🗣',spk.t||0,'Sessions') + _statCell('🔔',due,'Due')
+    + '</div>';
+
+  // Daily Flow CTA
+  const today = new Date().toISOString().slice(0,10);
+  const flowDone = DB.get('flow_date','')=== today;
+  if(!flowDone){
+    wrap.innerHTML += '<div onclick="startDailyFlow()" style="background:linear-gradient(135deg,rgba(79,142,247,.15),rgba(124,92,245,.1));border:1px solid rgba(79,142,247,.3);border-radius:14px;padding:16px;margin-bottom:20px;cursor:pointer">'
+      + '<div style="display:flex;align-items:center;gap:12px">'
+      + '<span style="font-size:28px">📅</span>'
+      + '<div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--bl)">20-min Daily Session</div>'
+      + '<div style="font-size:11px;color:var(--t3)">Warm-up · Phrases · Shadow · AI Chat · Journal</div></div>'
+      + '<span style="color:var(--bl);font-size:18px">→</span></div></div>';
+  }
+
+  // Today tasks
+  wrap.innerHTML += '<div style="font-size:12px;font-weight:700;color:var(--t3);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">📋 Σημερινές Εργασίες</div>';
+
+  const todayKey = today;
+  const doneTasks = DB.get('done_tasks_'+todayKey, []);
+  const tasks = [
+    {id:'vocab',   ic:'📖', title:'Vocabulary',        sub:'Νέες λέξεις + επανάληψη',      panel:'learn',    tab:'vocab'},
+    {id:'grammar', ic:'📝', title:'Grammar',           sub:'1 θέμα γραμματικής',           panel:'learn',    tab:'grammar'},
+    {id:'shadow',  ic:'🎤', title:'Shadowing',         sub:'Άκουσε & επανέλαβε',           panel:'practice', tab:'shadowing'},
+    {id:'aichat',  ic:'🤖', title:'AI Conversation',  sub:'6 turns με AI partner',         panel:'practice', tab:'aiconv'},
+    {id:'read',    ic:'📚', title:'Reading',           sub:'1 κείμενο + ερωτήσεις',        panel:'learn',    tab:'reading'},
+  ];
+  tasks.forEach(task=>{
+    const done = doneTasks.includes(task.id);
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:border-color .15s';
+    row.onmouseover=()=>row.style.borderColor='var(--bl)';
+    row.onmouseout=()=>row.style.borderColor='var(--ln)';
+    row.onclick=()=>{
+      if(task.panel==='learn'){LEARN_TAB=task.tab; goMain('learn');}
+      else if(task.panel==='practice'){PRACTICE_TAB=task.tab; goMain('practice');}
+    };
+    const check = document.createElement('div');
+    check.style.cssText='width:22px;height:22px;border-radius:50%;border:2px solid '+(done?'var(--gr)':'var(--ln)')+';background:'+(done?'var(--gr)':'transparent')+';display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;flex-shrink:0';
+    check.textContent = done ? '✓' : '';
+    const info = document.createElement('div');
+    info.style.flex='1';
+    info.innerHTML='<div style="font-size:13px;font-weight:600;color:var(--t1)'+(done?';opacity:.5':'')+'">'
+      +task.ic+' '+task.title+'</div>'
+      +'<div style="font-size:11px;color:var(--t3)">'+task.sub+'</div>';
+    row.appendChild(check); row.appendChild(info);
+    if(!done){const a=document.createElement('span');a.style.cssText='color:var(--t3);font-size:14px';a.textContent='→';row.appendChild(a);}
+    wrap.appendChild(row);
+  });
+
+  // Placement prompt
+  if(!DB.get('placement_done',false)){
+    const pl=document.createElement('div');
+    pl.style.cssText='margin-top:16px;background:var(--s2);border:1px solid var(--vi);border-radius:12px;padding:14px;cursor:pointer';
+    pl.onclick=()=>typeof startPlacementQuiz==='function'&&startPlacementQuiz();
+    pl.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--vi)">🎯 Placement Test</div>'
+      +'<div style="font-size:11px;color:var(--t3);margin-top:4px">Βρες το επίπεδό σου — 5 λεπτά</div>';
+    wrap.appendChild(pl);
+  }
+}
+
+function _statCell(ic,val,lbl){
+  return '<div style="background:var(--s2);border:1px solid var(--ln);border-radius:10px;padding:12px 8px;text-align:center">'
+    +'<div style="font-size:18px;margin-bottom:4px">'+ic+'</div>'
+    +'<div style="font-size:18px;font-weight:800;color:var(--t1)">'+val+'</div>'
+    +'<div style="font-size:10px;color:var(--t3)">'+lbl+'</div></div>';
+}
+
+/* ── LEARN panel ── */
+function rLearn2(){
+  const el = document.getElementById('learn');
+  if(!el) return;
+  el.innerHTML='';
+  const wrap = document.createElement('div');
+  wrap.style.cssText='max-width:840px;margin:0 auto;padding:16px;width:100%';
+  el.appendChild(wrap);
+
+  // Sub-tabs
+  const tabs=[{id:'vocab',lb:'📖 Vocab'},{id:'tenses',lb:'⏱ Tenses'},{id:'grammar',lb:'📝 Grammar'},{id:'reading',lb:'📚 Reading'}];
+  const bar=document.createElement('div');
+  bar.style.cssText='display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none';
+  tabs.forEach(t=>{
+    const btn=document.createElement('button');
+    btn.style.cssText='flex-shrink:0;padding:9px 16px;background:none;border:none;border-bottom:2px solid '+(LEARN_TAB===t.id?'var(--bl)':'transparent')+';cursor:pointer;font-size:12px;font-weight:600;color:'+(LEARN_TAB===t.id?'var(--bl)':'var(--t3)')+';white-space:nowrap;transition:all .15s';
+    btn.textContent=t.lb;
+    btn.onclick=()=>{LEARN_TAB=t.id;rLearn2();};
+    bar.appendChild(btn);
+  });
+  wrap.appendChild(bar);
+
+  // Content — render into a temp container then copy
+  const vm=document.createElement('div');
+  vm.style.minHeight='400px';
+  wrap.appendChild(vm);
+
+  _renderInto(vm, LEARN_TAB, {vocab:rVocab, tenses:rTenses, grammar:rGrammar, reading:rReading});
+}
+
+/* ── PRACTICE panel ── */
+function rPractice2(){
+  const el=document.getElementById('practice');
+  if(!el) return;
+  el.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.style.cssText='max-width:640px;margin:0 auto;padding:16px;width:100%';
+  el.appendChild(wrap);
+
+  const tabs=[
+    {id:'aiconv',   lb:'🤖 AI Chat'},
+    {id:'roleplay', lb:'🎭 Roleplay'},
+    {id:'shadowing',lb:'📖 Shadow'},
+    {id:'thinking', lb:'🧠 Think'},
+    {id:'listening',lb:'🎧 Listen'},
+    {id:'phrases',  lb:'💬 Phrases'},
+  ];
+  const bar=document.createElement('div');
+  bar.style.cssText='display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none';
+  tabs.forEach(t=>{
+    const btn=document.createElement('button');
+    btn.style.cssText='flex-shrink:0;padding:9px 16px;background:none;border:none;border-bottom:2px solid '+(PRACTICE_TAB===t.id?'var(--gr)':'transparent')+';cursor:pointer;font-size:12px;font-weight:600;color:'+(PRACTICE_TAB===t.id?'var(--gr)':'var(--t3)')+';white-space:nowrap';
+    btn.textContent=t.lb;
+    btn.onclick=()=>{PRACTICE_TAB=t.id; SPST.tab=t.id; rPractice2();};
+    bar.appendChild(btn);
+  });
+  wrap.appendChild(bar);
+
+  // API key warning
+  if(!hasAPIKey() && ['aiconv','roleplay'].includes(PRACTICE_TAB)){
+    const banner=document.createElement('div');
+    banner.style.cssText='background:rgba(240,56,112,.1);border:1px solid rgba(240,56,112,.3);border-radius:10px;padding:14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px';
+    banner.innerHTML='<div><div style="font-size:13px;font-weight:700;color:var(--ro)">⚠ Χρειάζεσαι API Key</div>'
+      +'<div style="font-size:11px;color:var(--t3)">Δωρεάν από console.anthropic.com</div></div>';
+    const addBtn=document.createElement('button');
+    addBtn.className='btn bp bsm'; addBtn.textContent='➕ Προσθήκη';
+    addBtn.onclick=()=>showAPIKeyModal();
+    banner.appendChild(addBtn);
+    wrap.appendChild(banner);
+  }
+
+  const vm=document.createElement('div');
+  vm.id='practice-vm';
+  vm.style.minHeight='400px';
+  wrap.appendChild(vm);
+
+  // Route speaking to vm
+  SPST.tab = PRACTICE_TAB;
+  _renderSpeakingTab(vm, PRACTICE_TAB);
+}
+
+function _renderSpeakingTab(vm, tab){
+  // Use the existing speaking panel as a rendering target
+  // then move content to vm
+  const sp=document.getElementById('speaking');
+  if(sp){ sp.innerHTML=''; }
+
+  try {
+    if(tab==='aiconv'){
+      if(!CONVST.scenario) _renderConvGrid(vm);
+      else _renderConvChat(vm);
+    } else if(tab==='roleplay'){
+      // Render roleplay into vm directly using rRoleplay logic
+      _renderRoleplay(vm);
+    } else if(tab==='shadowing'){
+      if(sp){ renderShadowing(); if(sp.innerHTML){vm.innerHTML=sp.innerHTML;sp.innerHTML='';} }
+    } else if(tab==='thinking'){
+      if(!TEST||!TEST.questions||!TEST.questions.length) startThinkingMode();
+      if(sp){ renderThinking(); if(sp.innerHTML){vm.innerHTML=sp.innerHTML;sp.innerHTML='';} }
+    } else if(tab==='listening'){
+      rListeningEx(vm);
+    } else if(tab==='phrases'){
+      if(sp){ SPST.tab='conversations'; 
+        const el2=document.getElementById('speaking'); el2.style.display='block';
+        rSpeaking(); 
+        if(sp.innerHTML){vm.innerHTML=sp.innerHTML;sp.innerHTML='';}
+        el2.style.display='none';
+      }
+    }
+  } catch(e){
+    vm.innerHTML='<div style="color:var(--ro);padding:20px;text-align:center">⚠ '+e.message+'</div>';
+    console.error('Practice tab error:', tab, e);
+  }
+}
+
+function _renderRoleplay(vm){
+  if(!vm) return;
+  if(!RPST.scenario){
+    vm.innerHTML='<div style="font-size:16px;font-weight:700;margin-bottom:16px">🎭 Roleplay</div>';
+    const roles=[
+      {id:'r1',title:'Customer & Shop Assistant',ic:'🛒',desc:'Αγορές, επιστροφή, ερωτήσεις'},
+      {id:'r2',title:'Doctor & Patient',ic:'🏥',desc:'Συμπτώματα, συνταγές, ραντεβού'},
+      {id:'r3',title:'Job Interview',ic:'💼',desc:'Εργασιακή συνέντευξη'},
+      {id:'r4',title:'Tourist & Local',ic:'🗺',desc:'Οδηγίες, τοποθεσίες'},
+      {id:'r5',title:'Phone Call',ic:'📞',desc:'Τηλεφωνική επικοινωνία'},
+      {id:'r6',title:'Restaurant',ic:'🍽',desc:'Παραγγελία, παράπονα'},
+    ];
+    roles.forEach(r=>{
+      const card=document.createElement('div');
+      card.style.cssText='background:var(--s2);border:1px solid var(--ln);border-radius:12px;padding:14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s';
+      card.onmouseover=()=>card.style.borderColor='var(--gr)';
+      card.onmouseout=()=>card.style.borderColor='var(--ln)';
+      card.onclick=()=>startRoleplay(r.id,r.title);
+      card.innerHTML='<div style="display:flex;align-items:center;gap:10px">'
+        +'<span style="font-size:24px">'+r.ic+'</span>'
+        +'<div><div style="font-size:13px;font-weight:700">'+r.title+'</div>'
+        +'<div style="font-size:11px;color:var(--t3)">'+r.desc+'</div></div></div>';
+      vm.appendChild(card);
+    });
+  } else {
+    // Show roleplay chat
+    const back=document.createElement('button');
+    back.style.cssText='font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer;margin-bottom:12px';
+    back.textContent='← Πίσω';
+    back.onclick=()=>{RPST.scenario=null;RPST.history=[];RPST.loading=false;vm.innerHTML='';_renderRoleplay(vm);};
+    vm.appendChild(back);
+    const ttl=document.createElement('div');
+    ttl.style.cssText='font-size:14px;font-weight:700;margin-bottom:12px';
+    ttl.textContent=RPST.scenario; vm.appendChild(ttl);
+
+    const chat=document.createElement('div');
+    chat.style.cssText='background:var(--s2);border-radius:12px;padding:12px;min-height:150px;max-height:350px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:12px';
+    if(RPST.loading&&!RPST.history.length){const l=document.createElement('div');l.style.cssText='font-size:12px;color:var(--t3);text-align:center;padding:20px';l.textContent='⏳...';chat.appendChild(l);}
+    RPST.history.forEach(msg=>{
+      const b=document.createElement('div');
+      const u=msg.role==='user';
+      b.style.cssText='max-width:85%;padding:9px 12px;border-radius:14px;font-size:13px;line-height:1.6;'+(u?'align-self:flex-end;background:var(--bl);color:#fff':'align-self:flex-start;background:var(--s1);border:1px solid var(--ln)');
+      b.textContent=msg.content; chat.appendChild(b);
+    });
+    if(RPST.loading&&RPST.history.length){const t=document.createElement('div');t.style.cssText='align-self:flex-start;background:var(--s1);border:1px solid var(--ln);border-radius:12px;padding:9px 12px;font-size:13px;color:var(--t3)';t.textContent='...';chat.appendChild(t);}
+    chat.scrollTop=chat.scrollHeight; vm.appendChild(chat);
+
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;gap:8px';
+    const inp=document.createElement('input');
+    inp.id='rp-input';inp.type='text';inp.placeholder='Απάντησε...';
+    inp.style.cssText='flex:1;padding:10px 14px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;color:var(--t1);font-size:13px';
+    inp.onkeydown=e=>{if(e.key==='Enter'&&!RPST.loading)rpSend();};
+    row.appendChild(inp);
+    const sb=document.createElement('button');
+    sb.className='btn bp';sb.style.cssText+=';padding:10px 16px;flex-shrink:0';
+    sb.textContent='→';sb.onclick=()=>rpSend();if(RPST.loading)sb.disabled=true;
+    row.appendChild(sb);
+    vm.appendChild(row);
+  }
+}
+
+// Override rAIConversation to also refresh practice panel
+const _orig_rAIC2 = typeof rAIConversation==='function' ? rAIConversation : null;
+function rAIConversation(){
+  const vm=document.getElementById('practice-vm');
+  const inPractice = document.getElementById('practice')?.style.display!=='none';
+  if(inPractice && vm && PRACTICE_TAB==='aiconv'){
+    vm.innerHTML='';
+    if(!CONVST.scenario) _renderConvGrid(vm);
+    else _renderConvChat(vm);
+    return;
+  }
+  if(_orig_rAIC2) _orig_rAIC2();
+  else {
+    const sp=document.getElementById('speaking');
+    if(sp){ if(!CONVST.scenario)_renderConvGrid(sp); else _renderConvChat(sp); }
+  }
+}
+
+/* ── WRITE panel ── */
+function rWrite2(){
+  const el=document.getElementById('write');
+  if(!el) return;
+  el.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.style.cssText='max-width:640px;margin:0 auto;padding:16px;width:100%';
+  el.appendChild(wrap);
+
+  const tabs=[{id:'freewrite',lb:'✍️ Free Write'},{id:'email',lb:'📧 Email'},{id:'cloze',lb:'📝 Cloze'}];
+  const bar=document.createElement('div');
+  bar.style.cssText='display:flex;overflow-x:auto;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none';
+  tabs.forEach(t=>{
+    const btn=document.createElement('button');
+    btn.style.cssText='flex-shrink:0;padding:9px 16px;background:none;border:none;border-bottom:2px solid '+(WRITE_TAB===t.id?'var(--vi)':'transparent')+';cursor:pointer;font-size:12px;font-weight:600;color:'+(WRITE_TAB===t.id?'var(--vi)':'var(--t3)')+';white-space:nowrap';
+    btn.textContent=t.lb;
+    btn.onclick=()=>{WRITE_TAB=t.id;rWrite2();};
+    bar.appendChild(btn);
+  });
+  wrap.appendChild(bar);
+
+  const vm=document.createElement('div');
+  vm.style.minHeight='400px';
+  wrap.appendChild(vm);
+
+  if(WRITE_TAB==='freewrite') _buildFreeWrite2(vm);
+  else if(WRITE_TAB==='email') _buildEmail2(vm);
+  else if(WRITE_TAB==='cloze'){
+    _renderInto(vm,'cloze',{cloze:()=>{if(typeof rClozeTest==='function') rClozeTest(vm);}});
+  }
+}
+
+function _buildFreeWrite2(vm){
+  vm.innerHTML='<div style="font-size:15px;font-weight:700;margin-bottom:6px">✍️ Free Writing</div>'
+    +'<p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.6">Γράψε ελεύθερα στα Αγγλικά. Το AI θα σε διορθώσει και θα σου δώσει feedback.</p>'
+    +'<textarea id="wptx" placeholder="Write anything in English..." style="width:100%;min-height:160px;padding:12px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;color:var(--t1);font-size:13px;line-height:1.7;resize:vertical;font-family:inherit;margin-bottom:10px"></textarea>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
+    +'<button id="wf-btn" onclick="getAIWritingFeedback()" class="btn bp bsm">🤖 AI Feedback</button>'
+    +'<button onclick="clearFreeWrite()" class="btn bgh bsm">🗑 Καθαρισμός</button>'
+    +'</div>'
+    +'<div id="wf-result" style="display:none"></div>';
+}
+
+function _buildEmail2(vm){
+  vm.innerHTML='<div style="font-size:15px;font-weight:700;margin-bottom:6px">📧 Email Improver</div>'
+    +'<p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.6">Γράψε ένα email — το AI θα το κάνει πιο επαγγελματικό.</p>'
+    +'<textarea id="email-input" placeholder="Dear Sir/Madam..." style="width:100%;min-height:140px;padding:12px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;color:var(--t1);font-size:13px;line-height:1.7;resize:vertical;font-family:inherit;margin-bottom:10px"></textarea>'
+    +'<button onclick="improveEmail()" class="btn bp bsm" style="margin-bottom:12px">✨ Βελτίωσε</button>'
+    +'<div id="email-output"></div>';
+}
+
+/* ── MORE panel ── */
+function rMore2(){
+  const el=document.getElementById('more');
+  if(!el) return;
+  el.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.style.cssText='max-width:640px;margin:0 auto;padding:16px;width:100%';
+  el.appendChild(wrap);
+
+  const tabs=[{id:'stats',lb:'📊 Stats'},{id:'settings',lb:'⚙️ Settings'},{id:'lessons',lb:'📖 Lessons'}];
+  const bar=document.createElement('div');
+  bar.style.cssText='display:flex;overflow-x:auto;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none';
+  tabs.forEach(t=>{
+    const btn=document.createElement('button');
+    btn.style.cssText='flex-shrink:0;padding:9px 16px;background:none;border:none;border-bottom:2px solid '+(MORE_TAB===t.id?'var(--t1)':'transparent')+';cursor:pointer;font-size:12px;font-weight:600;color:'+(MORE_TAB===t.id?'var(--t1)':'var(--t3)')+';white-space:nowrap';
+    btn.textContent=t.lb;
+    btn.onclick=()=>{MORE_TAB=t.id;rMore2();};
+    bar.appendChild(btn);
+  });
+  wrap.appendChild(bar);
+
+  const vm=document.createElement('div');
+  vm.style.minHeight='400px';
+  wrap.appendChild(vm);
+
+  _renderInto(vm, MORE_TAB, {stats:rStats, settings:rSettings, lessons:rLessons});
+}
+
+/* ── Helper: render legacy panel into a container ── */
+function _renderInto(vm, key, fnMap){
+  if(!vm) return;
+  if(fnMap[key]){
+    // Try to render legacy panel into a hidden div, then copy to vm
+    const legacyPanelMap={vocab:'vocab',tenses:'tenses',grammar:'grammar',reading:'reading',
+                          stats:'stats',settings:'settings',lessons:'lessons'};
+    const legacyId = legacyPanelMap[key];
+    const legacyEl = legacyId ? document.getElementById(legacyId) : null;
+    
+    if(legacyEl){
+      legacyEl.style.display='block';
+      try { fnMap[key](); } catch(e){ console.error(key, e); vm.innerHTML='<p style="color:var(--ro)">⚠ '+e.message+'</p>'; return; }
+      if(legacyEl.innerHTML){
+        vm.innerHTML=legacyEl.innerHTML;
+        legacyEl.innerHTML='';
+      }
+      legacyEl.style.display='none';
+    } else {
+      try { fnMap[key](); } catch(e){ vm.innerHTML='<p style="color:var(--ro)">⚠ '+e.message+'</p>'; }
+    }
+  }
+}
+
+/* ── Override rpSend to refresh practice panel ── */
+const _orig_rpSend2 = typeof rpSend==='function' ? rpSend : null;
+async function rpSend(){
+  if(!hasAPIKey()){ toast('⚙ API Key στα Settings.','var(--am)'); return; }
+  if(RPST.loading) return;
+  const inp=document.getElementById('rp-input');
+  if(!inp||!inp.value.trim()) return;
+  const txt=inp.value.trim(); inp.value='';
+  RPST.loading=true;
+  RPST.history.push({role:'user',content:txt});
+  // Refresh display
+  const vm=document.getElementById('practice-vm');
+  if(vm && PRACTICE_TAB==='roleplay') _renderRoleplay(vm);
+  const sys='You are playing: '+RPST.scenario+'. Student level: '+DB.get('placement_lv','B1')+'. Keep replies SHORT (1-2 sentences).';
+  try{
+    const r=await callAI(txt,sys,RPST.history.slice(0,-1));
+    RPST.history.push({role:'assistant',content:r});
+    RPST.loading=false;
+    if(vm && PRACTICE_TAB==='roleplay') _renderRoleplay(vm);
+    speak(r,'en-GB');
+  }catch(e){
+    RPST.loading=false; if(RPST.history.length) RPST.history.pop();
+    if(e.message!=='NO_KEY') toast('⚠ '+e.message,'var(--am)');
+    if(vm && PRACTICE_TAB==='roleplay') _renderRoleplay(vm);
+  }
+}
+
+/* ── Fix startConvScenario to refresh practice panel ── */
+const _origSCS=typeof startConvScenario==='function'?startConvScenario:null;
+function startConvScenario(id,title){
+  if(!hasAPIKey()){ showAPIKeyModal(); return; }
+  CONVST.scenario=id; CONVST.history=[]; CONVST.turn=0;
+  CONVST.done=false; CONVST.review=null; CONVST.loading=true;
+  rAIConversation();
+  const level=DB.get('placement_lv','B1');
+  const sys='You are starting a conversation practice. Scenario: '+(title||id)+'. Student level: '+level+'. Start with a short natural greeting.';
+  callAI('Hello!',sys,[])
+    .then(reply=>{
+      CONVST.history=[{role:'assistant',content:reply}];
+      CONVST.loading=false; rAIConversation(); speak(reply,'en-GB');
+    })
+    .catch(e=>{ CONVST.loading=false; if(e.message!=='NO_KEY')toast('⚠ '+e.message,'var(--am)'); rAIConversation(); });
+}
+
+/* ── Update go() to also handle old panel names ── */
+function go(id){
+  const map={
+    home:'home',
+    vocab:'learn',tenses:'learn',grammar:'learn',reading:'learn',falsefriends:'learn',
+    speaking:'practice',
+    writing:'write',
+    stats:'more',settings:'more',lessons:'more',tracker:'more',builder:'more',
+  };
+  const tabMap={
+    vocab:'vocab',tenses:'tenses',grammar:'grammar',reading:'reading',
+    speaking:'aiconv',
+    writing:'freewrite',
+    stats:'stats',settings:'settings',lessons:'lessons',tracker:'stats',
+  };
+  if(map[id]){
+    if(tabMap[id]){
+      const target=map[id];
+      if(target==='learn')    LEARN_TAB=tabMap[id];
+      if(target==='practice') PRACTICE_TAB=tabMap[id];
+      if(target==='write')    WRITE_TAB=tabMap[id];
+      if(target==='more')     MORE_TAB=tabMap[id];
+    }
+    goMain(map[id]);
+    return;
+  }
+  // Unknown panel — direct show
+  document.querySelectorAll('.pnl,.fpnl').forEach(p=>p.style.display='none');
+  const p=document.getElementById(id);
+  if(p){ p.style.display='flex'; }
+}
+
+/* ── Update initApp ── */
+function initApp(){
+  if(DB.get('light_mode',false)) document.documentElement.setAttribute('data-theme','light');
+  typeof updXP==='function' && updXP();
+  goMain('home');
+  if(!DB.get('onboarded',false)) setTimeout(()=>typeof showOnboarding==='function'&&showOnboarding(),500);
+}
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',initApp);
+} else { initApp(); }
+window.addEventListener('load',function(){
+  const h=document.getElementById('home');
+  if(h&&(h.style.display==='none'||!h.innerHTML.trim())) initApp();
+});
+
+function clearFreeWrite(){
+  const t=document.getElementById('wptx');
+  if(t) t.value='';
+}
+
 </script>
 </body>
 </html>
