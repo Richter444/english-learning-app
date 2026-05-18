@@ -6920,29 +6920,17 @@ function rSettings(){
     </div></div>
 
     <div class="sl mb10 c3">AI FEATURES — API KEY</div>
-    <div class="card mb16" style="border-color:${hasAPIKey()?'var(--gr)33':'var(--am)33'}">
-      <div class="fx ac jb mb10">
-        <div>
-          <div class="f12 b mb2">Anthropic API Key</div>
-          <div class="f11 c3">${hasAPIKey()?'✓ Key αποθηκευμένο':'⚠ Απαιτείται για AI features'}</div>
-        </div>
-
-      <div style="margin-top:12px">
-        <div class="f11 c3 mb6">API Key:</div>
-        <div class="fx g8 mb8" style="align-items:center">
-          <input id="settings-api-input" type="password" placeholder="sk-ant-api03-..." value="${DB.get('anthropic_key','')}" style="flex:1;padding:9px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:12px;font-family:monospace;min-width:0">
-          <button onclick="saveAPIKeyFromSettings()" class="btn bp bsm" style="white-space:nowrap;flex-shrink:0">💾 Αποθήκευση</button>
-          <button onclick="testAPIKey()" class="btn bgh bsm" style="white-space:nowrap;flex-shrink:0" title="Δοκιμή σύνδεσης">🔌 Test</button>
-        </div>
-        ${hasAPIKey()
-          ?'<div class="fx ac jb"><span class="f10 c3">✓ sk-ant-...'+DB.get('anthropic_key','').slice(-4)+'</span><button onclick="DB.set(\'anthropic_key\',\'\');rSettings()" style="color:var(--ro);background:none;border:none;cursor:pointer;font-size:10px">Διαγραφή</button></div>'
-          :'<div class="f10 c3">Χωρίς key τα AI features δεν λειτουργούν.</div>'}
-        <div class="f10 c3 mt6"><a href="https://console.anthropic.com" target="_blank" style="color:var(--bl)">Δωρεάν key → console.anthropic.com</a></div>
+    <div class="card mb16">
+      <div class="f12 b mb6">Anthropic API Key</div>
+      ${hasAPIKey()
+        ?'<div class="fx ac jb mb8"><span class="f12" style="color:var(--gr)">✅ Key αποθηκευμένο (sk-ant-...'+DB.get('anthropic_key','').slice(-4)+')</span><button onclick="DB.delete(\'anthropic_key\');rSettings()" style="color:var(--ro);background:none;border:none;cursor:pointer;font-size:11px">Διαγραφή</button></div>'
+        :'<div class="f11 c3 mb8">Χρειάζεσαι key για τα AI features. Δωρεάν από <a href=\"https://console.anthropic.com\" target=\"_blank\" style=\"color:var(--bl)\">console.anthropic.com</a></div>'}
+      <div class="fx g8 mb8" style="align-items:center">
+        <input id="settings-api-input" type="password" placeholder="sk-ant-api03-..." style="flex:1;padding:9px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px;font-family:monospace;min-width:0">
+        <button onclick="saveAPIKeyFromSettings()" class="btn bp bsm" style="white-space:nowrap">💾 Αποθήκευση</button>
+        <button onclick="testAPIKey()" class="btn bgh bsm" style="white-space:nowrap">🔌 Test</button>
       </div>
     </div>
-
-    <div class="sl mb10 c3">ΕΜΦΑΝΙΣΗ</div>
-
 
     <div class="sl mb10 c3">ΕΠΙΚΙΝΔΥΝΗ ΖΩΝΗ</div>
     <div class="card c-err">
