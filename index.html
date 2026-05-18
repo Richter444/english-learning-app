@@ -762,6 +762,10 @@ async function testAPIKey(){
 
 /* ── Start a scenario ── */
 function startConvScenario(id, title){
+  if(!hasAPIKey()){
+    showAPIKeyModal();
+    return;
+  }
   CONVST.scenario  = id;
   CONVST.history   = [];
   CONVST.turn      = 0;
@@ -874,6 +878,17 @@ function _renderConvGrid(el){
   el.appendChild(wrap);
   _mkEl(wrap, 'div', 'sl mb4', null, {style:'color:var(--gr)',text:'SPEAKING'});
   _mkEl(wrap, 'div', 'fp f16 b mb16', null, {text:'AI Conversation Partner'});
+  if(!hasAPIKey()){
+    const banner = _mkDiv(null,'background:rgba(240,56,112,.1);border:1px solid rgba(240,56,112,.3);border-radius:10px;padding:14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px');
+    const btxt = _mkDiv(null,'flex:1');
+    _mkEl(btxt,'div','fp f13 b mb4',null,{style:'color:var(--ro)',text:'⚠ Χρειάζεσαι API Key'});
+    _mkEl(btxt,'div','f11 c3',null,{text:'Δωρεάν από το console.anthropic.com — 1 λεπτό εγκατάσταση'});
+    const addBtn = document.createElement('button');
+    addBtn.className='btn bp bsm'; addBtn.textContent='➕ Προσθήκη Key';
+    addBtn.onclick=()=>showAPIKeyModal();
+    banner.appendChild(btxt); banner.appendChild(addBtn);
+    wrap.appendChild(banner);
+  }
   _mkEl(wrap, 'p', 'f12 c2 mb16', null, {style:'line-height:1.6', text:'Επέλεξε σενάριο και εξασκήσου. Το AI θα σε διορθώνει και θα σε βοηθά να βελτιωθείς.'});
 
   const grid = _mkDiv('g3 mb16');
@@ -1085,6 +1100,7 @@ function rRoleplay(){
 }
 
 function startRoleplay(id, title){
+  if(!hasAPIKey()){ showAPIKeyModal(); return; }
   RPST.scenario = title; RPST.history=[]; RPST.loading=true;
   rRoleplay();
   const level = DB.get('placement_lv','B1');
