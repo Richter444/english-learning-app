@@ -62,7 +62,7 @@
 .light-mode .rcard{background:#fff;border-color:#e2e8f0}
 .light-mode .gch{background:#fff;border-color:#e2e8f0}
 
-html,body{height:100%;background:var(--bg);color:var(--t1);font-family:var(--f);overflow:hidden;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+html,body{height:100%;background:var(--bg);color:var(--t1);font-family:var(--f);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
 button{cursor:pointer;font-family:var(--f);border:none;background:none;color:inherit;transition:all .18s ease}
 button:active{transform:scale(.96)}
 input,textarea,select{font-family:var(--f);outline:none;color:var(--t1);transition:border-color .15s}
@@ -676,127 +676,49 @@ input:focus, textarea:focus {
   /* Desktop: hide bottom nav */
   #mobile-nav { display: none !important; }
   /* Desktop: top nav shows */
-  #nav { display: flex !important; }
-}
-
-
-/* ═══════════════════════════════════════════════════════
-   CLEAN LAYOUT OVERRIDE — placed last to win specificity
-   ═══════════════════════════════════════════════════════ */
-
-/* Base: full viewport */
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-/* Desktop: body can scroll normally */
-body {
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-/* Main app container */
-#app {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-/* All panels hidden by default */
-.pnl, .fpnl {
-  display: none;
-}
-
-/* When panel is shown (go() sets display:flex) */
-.pnl[style*="display:flex"],
-.fpnl[style*="display:flex"] {
-  flex-direction: column;
-  min-height: 100vh;
-  padding-bottom: 80px;
-  overflow-x: hidden;
-}
-
-/* Content container */
-#cnt {
-  flex: 1;
-  position: relative;
-}
-
-/* ── MOBILE (≤700px) ── */
+  #nav { display: flex !important;
+/* ══ MOBILE LAYOUT ══ */
 @media (max-width: 700px) {
-  /* Body MUST be able to scroll */
-  body {
-    overflow-y: scroll !important;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch;
-  }
+  /* Show bottom nav, hide desktop nav */
+  #mobile-nav { display: grid !important; grid-template-columns: repeat(5,1fr); }
+  #nav        { display: none  !important; }
 
-  /* Each active panel scrolls */
-  .pnl[style*="display:flex"],
-  .fpnl[style*="display:flex"] {
-    min-height: calc(100vh - 60px);
-    padding-bottom: 80px !important;
-    overflow-y: visible !important;
-  }
-
-  /* cnt must not clip content */
-  #cnt {
-    overflow: visible !important;
-    height: auto !important;
-  }
-
-  /* Desktop top nav: hidden */
-  #nav { display: none !important; }
-
-  /* Bottom nav: always show on mobile */
+  /* Bottom nav styling */
   #mobile-nav {
-    display: grid !important;
-    grid-template-columns: repeat(5, 1fr);
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    height: 60px;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 58px;
     background: var(--s1);
     border-top: 1px solid var(--ln);
     z-index: 9000;
     padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 0 -2px 10px rgba(0,0,0,.12);
   }
-
-  /* Bottom nav buttons */
   .mnb {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    padding: 6px 2px;
-    background: none;
-    border: none;
-    color: var(--t3);
-    font-size: 9px;
-    font-weight: 600;
-    cursor: pointer;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 2px; padding: 4px 2px;
+    background: none; border: none; cursor: pointer;
+    color: var(--t3); font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .3px;
     -webkit-tap-highlight-color: transparent;
-    letter-spacing: .2px;
-    text-transform: uppercase;
   }
-  .mnb .mn-ic { font-size: 20px; line-height: 1; }
+  .mnb .mn-ic { font-size: 22px; line-height: 1.1; }
   .mnb.on { color: var(--bl); }
 
+  /* Panels: padding so content clears bottom nav */
+  .pnl, .fpnl { padding-bottom: 70px !important; }
+
   /* Prevent iOS input zoom */
-  input, textarea, select {
-    font-size: 16px !important;
-  }
+  input, textarea, select { font-size: 16px !important; }
 }
 
-/* ── DESKTOP (>700px) ── */
 @media (min-width: 701px) {
   #mobile-nav { display: none !important; }
-  #nav { display: flex !important; }
+  #nav        { display: flex !important; }
 }
 
 </style>
+
 
 </head>
 <body>
@@ -1252,6 +1174,11 @@ function rRoleplay(){
   _mkEl(wrap,'div','fp f16 b mb16',null,{text:'🎭 Roleplay'});
 
   if(!RPST.scenario){
+    const rpListBack = document.createElement('button');
+    rpListBack.style.cssText = 'font-size:13px;font-weight:700;color:var(--bl);background:none;border:none;cursor:pointer;margin-bottom:14px;display:flex;align-items:center;gap:4px;padding:0';
+    rpListBack.innerHTML = '← Πίσω';
+    rpListBack.onclick = () => { SPST.tab='conversations'; rSpeaking(); };
+    wrap.appendChild(rpListBack);
     _mkEl(wrap,'p','f12 c2 mb16',null,{style:'line-height:1.6',text:'Επέλεξε ρόλο και εξασκήσου σε πραγματικές καταστάσεις.'});
     const roles = [
       {id:'r1',title:'Customer & Shop Assistant',ic:'🛒'},
@@ -1272,8 +1199,8 @@ function rRoleplay(){
 
   // Chat UI same as conversation
   const backBtn = document.createElement('button');
-  backBtn.style.cssText = 'font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer;margin-bottom:12px';
-  backBtn.textContent = '← Πίσω';
+  backBtn.style.cssText = 'font-size:13px;font-weight:700;color:var(--bl);background:none;border:none;cursor:pointer;margin-bottom:14px;display:flex;align-items:center;gap:4px;padding:0';
+  backBtn.innerHTML = '← Πίσω';
   backBtn.onclick = () => { RPST.scenario=null; RPST.history=[]; RPST.loading=false; rRoleplay(); };
   wrap.appendChild(backBtn);
   _mkEl(wrap,'div','fp f14 b mb12',null,{text: RPST.scenario});
@@ -8317,9 +8244,10 @@ function renderSlang(){
     // Card
     const card=document.createElement('div');
     card.style.cssText='background:linear-gradient(135deg,rgba(124,92,245,.12),rgba(79,142,247,.08));border:1px solid rgba(124,92,245,.3);border-radius:14px;padding:24px;text-align:center;margin-bottom:12px';
-    card.innerHTML='<div style="font-size:30px;font-weight:800;color:var(--vi);margin-bottom:6px">'+item.s+'</div>'
-      +'<div style="font-size:13px;color:var(--t3);margin-bottom:12px">= '+item.f+'</div>'
-      +'<div style="font-size:14px;font-style:italic;color:var(--t1);margin-bottom:10px">"'+item.e+'"</div>';
+    card.innerHTML='<div style="font-size:28px;font-weight:800;color:var(--vi);margin-bottom:8px">'+item.s+'</div>'
+      +'<div style="font-size:14px;color:var(--t1);font-weight:600;margin-bottom:6px">= '+item.m+'</div>'
+      +'<div style="font-size:12px;color:var(--t3);margin-bottom:12px;font-style:italic">"'+item.e+'"</div>'
+      +'<div style="font-size:10px;color:var(--t3);background:var(--s3);border-radius:10px;padding:2px 8px;display:inline-block">'+item.f+'</div>';
     const speakBtn=document.createElement('button');
     speakBtn.style.cssText='font-size:11px;background:none;border:1px solid var(--ln);border-radius:6px;padding:3px 10px;cursor:pointer;color:var(--t3)';
     speakBtn.textContent='🔊 Άκουσε';
@@ -8329,7 +8257,7 @@ function renderSlang(){
     // Note
     const note=document.createElement('div');
     note.style.cssText='background:var(--s2);border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px;color:var(--t3)';
-    note.textContent='💡 '+item.n;
+    note.textContent='💡 '+item.m;
     wrap.appendChild(note);
     // Next button
     const nextBtn=document.createElement('button');
@@ -9478,9 +9406,26 @@ function renderJournal(){
   wrap.appendChild(micBtn);
 
   const hint=document.createElement('div');
-  hint.style.cssText='text-align:center;font-size:11px;color:var(--t3);margin-bottom:16px';
+  hint.style.cssText='text-align:center;font-size:11px;color:var(--t3);margin-bottom:12px';
   hint.textContent=S.recording?'🔴 Ηχογράφηση... Πάτα για να σταματήσεις':'Πάτα για να ξεκινήσεις';
   wrap.appendChild(hint);
+
+  // Text fallback (for non-HTTPS or unsupported browsers)
+  if(!window.SpeechRecognition&&!window.webkitSpeechRecognition){
+    const textDiv=document.createElement('div');
+    textDiv.style.cssText='margin-bottom:16px';
+    textDiv.innerHTML='<div style="font-size:11px;color:var(--t3);margin-bottom:6px">📝 Ή γράψε αντί να μιλήσεις:</div>';
+    const ta=document.createElement('textarea');
+    ta.id='journal-text-input';
+    ta.placeholder='Write your answer in English...';
+    ta.style.cssText='width:100%;min-height:80px;padding:10px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;color:var(--t1);font-size:14px;font-family:inherit;resize:none;box-sizing:border-box';
+    const saveBtn=document.createElement('button');
+    saveBtn.className='btn bp bsm';saveBtn.style.marginTop='8px';
+    saveBtn.textContent='✓ Αποθήκευση';
+    saveBtn.onclick=()=>{S.transcript=ta.value.trim();renderJournal();};
+    textDiv.appendChild(ta);textDiv.appendChild(saveBtn);
+    wrap.appendChild(textDiv);
+  }
 
   if(S.transcript){
     const tr=document.createElement('div');
@@ -9547,7 +9492,14 @@ function journalRecord(btn){
     toast('🔒 Χρειάζεται HTTPS','var(--am)');return;
   }
   const SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SpeechRec){toast('Browser δεν υποστηρίζει speech recognition','var(--am)');return;}
+  if(!SpeechRec){
+    // Fallback: manual text input
+    const S=VJST_STATE;
+    const inp=document.getElementById('journal-text-input');
+    if(inp){ S.transcript=inp.value||''; renderJournal(); return; }
+    toast('Το browser δεν υποστηρίζει μικρόφωνο. Χρησιμοποίησε το πεδίο κειμένου.','var(--am)');
+    return;
+  }
   const rec=new SpeechRec();
   rec.lang='en-US';rec.continuous=true;rec.interimResults=false;
   let text='';
