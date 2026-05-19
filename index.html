@@ -691,9 +691,15 @@ input:focus, textarea:focus {
 html { height: 100%; }
 body {
   height: 100%;
+  background: var(--bg);
+  color: var(--t1);
+  font-family: var(--f);
+  font-size: 14px;
+  line-height: 1.5;
   overflow-y: scroll;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* App wrapper — natural height */
