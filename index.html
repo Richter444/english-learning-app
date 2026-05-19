@@ -679,6 +679,123 @@ input:focus, textarea:focus {
   #nav { display: flex !important; }
 }
 
+
+/* ═══════════════════════════════════════════════════════
+   CLEAN LAYOUT OVERRIDE — placed last to win specificity
+   ═══════════════════════════════════════════════════════ */
+
+/* Base: full viewport */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Desktop: body can scroll normally */
+body {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Main app container */
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* All panels hidden by default */
+.pnl, .fpnl {
+  display: none;
+}
+
+/* When panel is shown (go() sets display:flex) */
+.pnl[style*="display:flex"],
+.fpnl[style*="display:flex"] {
+  flex-direction: column;
+  min-height: 100vh;
+  padding-bottom: 80px;
+  overflow-x: hidden;
+}
+
+/* Content container */
+#cnt {
+  flex: 1;
+  position: relative;
+}
+
+/* ── MOBILE (≤700px) ── */
+@media (max-width: 700px) {
+  /* Body MUST be able to scroll */
+  body {
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Each active panel scrolls */
+  .pnl[style*="display:flex"],
+  .fpnl[style*="display:flex"] {
+    min-height: calc(100vh - 60px);
+    padding-bottom: 80px !important;
+    overflow-y: visible !important;
+  }
+
+  /* cnt must not clip content */
+  #cnt {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Desktop top nav: hidden */
+  #nav { display: none !important; }
+
+  /* Bottom nav: always show on mobile */
+  #mobile-nav {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr);
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: var(--s1);
+    border-top: 1px solid var(--ln);
+    z-index: 9000;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Bottom nav buttons */
+  .mnb {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 6px 2px;
+    background: none;
+    border: none;
+    color: var(--t3);
+    font-size: 9px;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    letter-spacing: .2px;
+    text-transform: uppercase;
+  }
+  .mnb .mn-ic { font-size: 20px; line-height: 1; }
+  .mnb.on { color: var(--bl); }
+
+  /* Prevent iOS input zoom */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
+/* ── DESKTOP (>700px) ── */
+@media (min-width: 701px) {
+  #mobile-nav { display: none !important; }
+  #nav { display: flex !important; }
+}
+
 </style>
 
 </head>
@@ -970,8 +1087,13 @@ function _renderConvGrid(el){
   el.innerHTML = '';
   const wrap = _mkDiv('sec fu', 'max-width:840px');
   el.appendChild(wrap);
-  _mkEl(wrap, 'div', 'sl mb4', null, {style:'color:var(--gr)',text:'SPEAKING'});
-  _mkEl(wrap, 'div', 'fp f16 b mb16', null, {text:'AI Conversation Partner'});
+  // Back button to Speaking tabs
+  const gridBack = document.createElement('button');
+  gridBack.style.cssText = 'display:flex;align-items:center;gap:4px;font-size:12px;color:var(--bl);background:none;border:none;cursor:pointer;margin-bottom:14px;padding:4px 0;font-weight:600';
+  gridBack.innerHTML = '← Πίσω';
+  gridBack.onclick = () => { SPST.tab='conversations'; rSpeaking(); };
+  wrap.appendChild(gridBack);
+  _mkEl(wrap, 'div', 'fp f16 b mb16', null, {text:'🤖 AI Conversation Partner'});
   if(!hasAPIKey()){
     const banner = _mkDiv(null,'background:rgba(240,56,112,.1);border:1px solid rgba(240,56,112,.3);border-radius:10px;padding:14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px');
     const btxt = _mkDiv(null,'flex:1');
@@ -1029,8 +1151,8 @@ function _renderConvChat(el){
   const hdrRight = _mkDiv(null,'display:flex;gap:8px;align-items:center');
   _mkEl(hdrRight,'span',null,null,{style:'font-size:11px;color:var(--t3)',text:'Turn '+CONVST.turn+'/6'});
   const backBtn = document.createElement('button');
-  backBtn.style.cssText = 'font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer';
-  backBtn.textContent = '← Αλλαγή';
+  backBtn.style.cssText = 'font-size:12px;color:var(--bl);background:none;border:1px solid var(--bl);border-radius:8px;cursor:pointer;padding:4px 10px;font-weight:600';
+  backBtn.textContent = '← Πίσω';
   backBtn.onclick = () => { CONVST.scenario=null; CONVST.history=[]; CONVST.turn=0; CONVST.done=false; CONVST.review=null; CONVST.loading=false; rAIConversation(); };
   hdrRight.appendChild(backBtn);
   hdr.appendChild(hdrRight);
@@ -5352,10 +5474,10 @@ function rListeningEx(el){
           <div class="fx ac g6">
             <span class="tag f9" style="background:var(--tl)1a;border:1px solid var(--tl)33;color:var(--tl)">${ex.level}</span>
             <span class="tag f9" style="background:var(--s2);border:1px solid var(--ln2);color:var(--t3)">⏱ ${ex.duration}</span>
-            <span class="tag f9" style="background:var(--s2);border:1px solid var(--ln2);color:var(--t3)">❓ ${ex.questions.length}Q</span>
+            <span class="tag f9" style="background:var(--s2);border:1px solid var(--ln2);color:var(--t3)">❓ ${(ex.questions||[]).length}Q</span>
           </div>
         </div>
-        <div class="fx fw g6 mt6">${ex.vocab.map(v=>'<span class="tag f9" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr)">'+v+'</span>').join('')}</div>
+        <div class="fx fw g6 mt6">${(ex.vocab||[]).map(v=>'<span class="tag f9" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr)">'+v+'</span>').join('')}</div>
       </div>`).join('')}`;
   } else {
     const ex=LISTENING_EX.find(x=>x.id===LEST.art);
@@ -7653,18 +7775,7 @@ if('serviceWorker' in navigator){
 
 
 // Initialize when DOM is ready
-if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded', initApp);
-} else {
-  initApp();
-}
-// Android WebView fallback
-window.addEventListener('load', function(){
-  const home = document.getElementById('home');
-  if(home && (home.style.display==='none' || home.innerHTML.trim()==='')) {
-    initApp();
-  }
-});
+// initApp called at end of script
 
 /* ══ AI WRITING FEEDBACK ══ */
 
@@ -8721,19 +8832,18 @@ async function rpSend(){
   RPST.loading=true;
   RPST.history.push({role:'user',content:txt});
   // Refresh display
-  const vm=document.getElementById('practice-vm');
-  if(vm && PRACTICE_TAB==='roleplay') _renderRoleplay(vm);
+  rRoleplay();
   const sys='You are playing: '+RPST.scenario+'. Student level: '+DB.get('placement_lv','B1')+'. Keep replies SHORT (1-2 sentences).';
   try{
     const r=await callAI(txt,sys,RPST.history.slice(0,-1));
     RPST.history.push({role:'assistant',content:r});
     RPST.loading=false;
-    if(vm && PRACTICE_TAB==='roleplay') _renderRoleplay(vm);
+    rRoleplay();
     speak(r,'en-GB');
   }catch(e){
     RPST.loading=false; if(RPST.history.length) RPST.history.pop();
     if(e.message!=='NO_KEY') toast('⚠ '+e.message,'var(--am)');
-    if(vm && PRACTICE_TAB==='roleplay') _renderRoleplay(vm);
+    rRoleplay();
   }
 }
 
@@ -9379,12 +9489,45 @@ function renderJournal(){
       +'<div style="font-size:13px;line-height:1.6">'+S.transcript+'</div>';
     wrap.appendChild(tr);
 
+    // Action buttons row
+    const actRow=document.createElement('div');
+    actRow.style.cssText='display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px';
+
+    // Listen button
+    const listenBtn=document.createElement('button');
+    listenBtn.className='btn bgh bsm';
+    listenBtn.textContent='🔊 Άκουσε';
+    listenBtn.onclick=()=>speak(S.transcript,'en-GB');
+    actRow.appendChild(listenBtn);
+
+    // Copy button
+    const copyBtn=document.createElement('button');
+    copyBtn.className='btn bgh bsm';
+    copyBtn.textContent='📋 Αντιγραφή';
+    copyBtn.onclick=()=>{
+      if(navigator.clipboard){
+        navigator.clipboard.writeText(S.transcript)
+          .then(()=>toast('📋 Αντιγράφηκε!','var(--gr)'));
+      } else {
+        const ta=document.createElement('textarea');
+        ta.value=S.transcript;
+        document.body.appendChild(ta);ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        toast('📋 Αντιγράφηκε!','var(--gr)');
+      }
+    };
+    actRow.appendChild(copyBtn);
+
+    // AI Feedback button
     if(hasAPIKey()&&!S.feedback){
       const aiBtn=document.createElement('button');
       aiBtn.className='btn bp bsm';aiBtn.textContent='🤖 AI Feedback';
       aiBtn.onclick=()=>getJournalFeedback();
-      wrap.appendChild(aiBtn);
+      actRow.appendChild(aiBtn);
     }
+
+    wrap.appendChild(actRow);
   }
 
   if(S.feedback){
@@ -9462,7 +9605,7 @@ function rClozeTest(){
   if(!el) el=document.getElementById('reading');
   if(!el)return;
   
-  const S=CLST_STATE;
+  const S=CLST;
   el.innerHTML='';
   const wrap=document.createElement('div');
   wrap.style.cssText='padding:16px;max-width:640px;margin:0 auto;width:100%';
@@ -9471,7 +9614,7 @@ function rClozeTest(){
   const backBtn=document.createElement('button');
   backBtn.style.cssText='font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer;margin-bottom:16px;display:block';
   backBtn.textContent='← Πίσω';
-  backBtn.onclick=()=>{CLST_STATE={art:null,answers:{},checked:false};
+  backBtn.onclick=()=>{CLST={art:null,answers:{},checked:false};
     if(activePanel) go(activePanel); else go('reading');};
   wrap.appendChild(backBtn);
 
@@ -9487,7 +9630,7 @@ function rClozeTest(){
       card.style.cssText='background:var(--s2);border:1px solid var(--ln);border-radius:12px;padding:14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s';
       card.onmouseover=()=>card.style.borderColor='var(--bl)';
       card.onmouseout=()=>card.style.borderColor='var(--ln)';
-      card.onclick=()=>{CLST_STATE.art=art.id;CLST_STATE.answers={};CLST_STATE.checked=false;rClozeTest();};
+      card.onclick=()=>{CLST.art=art.id;CLST.answers={};CLST.checked=false;rClozeTest();};
       card.innerHTML='<div style="font-size:13px;font-weight:600">'+art.t+'</div>'
         +'<div style="font-size:11px;color:var(--t3);margin-top:4px">'+art.lv+' · '+art.time+'</div>';
       wrap.appendChild(card);
@@ -9577,16 +9720,50 @@ function rClozeTest(){
   } else {
     const redoBtn=document.createElement('button');
     redoBtn.className='btn bgh';redoBtn.style.cssText='margin-top:12px;width:100%';redoBtn.textContent='🔄 Ξανά';
-    redoBtn.onclick=()=>{CLST_STATE.answers={};CLST_STATE.checked=false;rClozeTest();};
+    redoBtn.onclick=()=>{CLST.answers={};CLST.checked=false;rClozeTest();};
     wrap.appendChild(redoBtn);
     const backBtn2=document.createElement('button');
     backBtn2.className='btn';backBtn2.style.cssText='margin-top:8px;width:100%;background:var(--s2);border:1px solid var(--ln)';
     backBtn2.textContent='← Άλλο κείμενο';
-    backBtn2.onclick=()=>{CLST_STATE={art:null,answers:{},checked:false};rClozeTest();};
+    backBtn2.onclick=()=>{CLST={art:null,answers:{},checked:false};rClozeTest();};
     wrap.appendChild(backBtn2);
   }
 }
 
+let SLANGST={idx:0,mode:'learn',score:0,total:0,cards:[]};
+
+const SLANG_DATA = [
+  {s:"piece of cake",m:"κάτι πολύ εύκολο",e:"Don't worry, the exam was a piece of cake!",f:"informal"},
+  {s:"break a leg",m:"καλή τύχη",e:"Break a leg in your presentation today!",f:"informal"},
+  {s:"hit the sack",m:"πάω για ύπνο",e:"I'm exhausted, I'm going to hit the sack.",f:"informal"},
+  {s:"spill the beans",m:"αποκαλύπτω μυστικό",e:"Come on, spill the beans! What happened?",f:"informal"},
+  {s:"bite the bullet",m:"αντιμετωπίζω κάτι δύσκολο",e:"I'll just bite the bullet and do the exam.",f:"informal"},
+  {s:"under the weather",m:"αισθάνομαι άρρωστος",e:"I'm feeling under the weather today.",f:"informal"},
+  {s:"cost an arm and a leg",m:"κοστίζει πάρα πολύ",e:"That new phone costs an arm and a leg!",f:"informal"},
+  {s:"hang in there",m:"μην τα παρατάς",e:"Hang in there, you're almost done!",f:"informal"},
+  {s:"on the fence",m:"αναποφάσιστος",e:"I'm still on the fence about changing jobs.",f:"informal"},
+  {s:"pull someone's leg",m:"πειράζω κάποιον",e:"Relax, I was just pulling your leg!",f:"informal"},
+  {s:"hit the nail on the head",m:"το έπιασα σωστά",e:"You hit the nail on the head with that comment.",f:"informal"},
+  {s:"let the cat out of the bag",m:"αποκαλύπτω κατά λάθος",e:"She let the cat out of the bag about the party.",f:"informal"},
+  {s:"bite off more than you can chew",m:"αναλαμβάνω περισσότερα απ' όσα μπορώ",e:"Don't bite off more than you can chew at work.",f:"informal"},
+  {s:"once in a blue moon",m:"πολύ σπάνια",e:"He visits us once in a blue moon.",f:"informal"},
+  {s:"the ball is in your court",m:"εσύ αποφασίζεις τώρα",e:"I've made my offer — the ball is in your court.",f:"informal"},
+  {s:"get out of hand",m:"ξεφεύγει από τον έλεγχο",e:"The situation got out of hand quickly.",f:"informal"},
+  {s:"give the benefit of the doubt",m:"δίνω πίστη χωρίς αποδείξεις",e:"Let's give him the benefit of the doubt.",f:"informal"},
+  {s:"hit the books",m:"διαβάζω σκληρά",e:"Time to hit the books before the exams.",f:"informal"},
+  {s:"no pain no gain",m:"χωρίς κόπο δεν υπάρχει αποτέλεσμα",e:"Keep practising! No pain no gain.",f:"informal"},
+  {s:"ring a bell",m:"μου θυμίζει κάτι",e:"That name rings a bell — do I know her?",f:"informal"},
+  {s:"scratch the surface",m:"μόλις αρχίζω να καταλαβαίνω",e:"We've only scratched the surface of this topic.",f:"informal"},
+  {s:"kill two birds with one stone",m:"κάνω δύο δουλειές ταυτόχρονα",e:"I'll kill two birds with one stone on this trip.",f:"informal"},
+  {s:"it takes two to tango",m:"χρειάζονται και οι δύο πλευρές",e:"Stop blaming him — it takes two to tango.",f:"informal"},
+  {s:"throw in the towel",m:"τα παρατάω",e:"Don't throw in the towel — you're so close!",f:"informal"},
+  {s:"the tip of the iceberg",m:"μόνο το εμφανές μέρος",e:"What you see is just the tip of the iceberg.",f:"informal"},
+  {s:"beat around the bush",m:"δεν πηγαίνω κατευθείαν στο θέμα",e:"Stop beating around the bush and tell me!",f:"informal"},
+  {s:"go back to the drawing board",m:"ξεκινάω από την αρχή",e:"The plan failed — we need to go back to the drawing board.",f:"informal"},
+  {s:"cut corners",m:"κάνω κάτι πρόχειρα για να γλιτώσω χρόνο",e:"Don't cut corners — do the job properly.",f:"informal"},
+  {s:"on the same page",m:"συμφωνούμε / καταλαβαίνουμε το ίδιο",e:"Let's make sure we're all on the same page.",f:"informal"},
+  {s:"take it with a grain of salt",m:"δεν το πιστεύω 100%",e:"Take what he says with a grain of salt.",f:"informal"},
+];
 function initApp(){
   if(DB.get('light_mode',false)) document.documentElement.setAttribute('data-theme','light');
   typeof updXP==='function' && updXP();
