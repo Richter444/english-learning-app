@@ -17,6 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   /* High-contrast dark palette — clearly distinct levels */
@@ -46,7 +47,7 @@
 .light-mode .card{background:#fff;border-color:#e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .light-mode .card2{background:#f8fafc;border-color:#e2e8f0}
 .light-mode .qopt{background:#f8fafc;border-color:#e2e8f0}
-.light-mode #nav{background:rgba(255,255,255,.95);border-color:#e2e8f0}
+.light-mode [data-theme="light"] #nav{background:rgba(255,255,255,.95);border-color:#e2e8f0}
 .light-mode .tab:hover{background:#f1f5f9}
 .light-mode .btn.bgh{background:#f1f5f9;border-color:#e2e8f0;color:#475569}
 .light-mode .btn.bgh:hover{background:#e2e8f0}
@@ -514,234 +515,37 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
 input:focus, textarea:focus {
   scroll-margin-bottom: 80px;
 }
-/* ══ MOBILE IMPROVEMENTS ══ */
-@media (max-width: 600px) {
-  .sec { padding: 12px !important; }
-  .fp.f16 { font-size: 15px !important; }
-  .card { padding: 12px !important; }
-  .g2, .g3 { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
-  .g4 { grid-template-columns: 1fr 1fr !important; }
-  button.btn { min-height: 40px; padding: 8px 14px !important; }
-  .scard { padding: 12px !important; }
-  textarea { font-size: 16px !important; } /* prevent zoom on iOS */
-  input[type=text], input[type=password], input[type=email] {
-    font-size: 16px !important; /* prevent zoom on iOS */
-  }
-  .sec.fu { padding-left: 12px !important; padding-right: 12px !important; }
-  /* Speaking tabs horizontal scroll */
-  .vm { padding: 0 !important; }
-}
-/* Ensure panels fill properly on mobile */
-
-/* Bottom nav safe area */
-#mobile-nav {
-  padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
-}
-/* Tab bar overflow scroll */
-[style*="overflow-x:auto"] {
-  -webkit-overflow-scrolling: touch;
-  scroll-snap-type: x mandatory;
-}
-
-/* ═══════════════════════════════════
-   MOBILE LAYOUT (≤700px)
-   ═══════════════════════════════════ */
-@media (max-width: 700px) {
-
-  /* Hide desktop top nav entirely */
-  #nav { display: none !important; }
-
-  /* App fills full screen */
-  
-
-  /* Content area: full height minus bottom nav */
-  
-
-  /* Each panel fills the container */
-  .pnl, 
-
-  /* Bottom nav */
-  #mobile-nav {
-    display: flex !important;
-    position: fixed;
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    height: 60px;
-    background: var(--s1);
-    border-top: 1px solid var(--ln);
-    z-index: 1000;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    box-shadow: 0 -2px 12px rgba(0,0,0,.15);
-  }
-
-  .mnb {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    padding: 6px 4px;
-    background: none;
-    border: none;
-    color: var(--t3);
-    font-size: 9px;
-    font-weight: 600;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    letter-spacing: .3px;
-    text-transform: uppercase;
-    transition: color .15s;
-  }
-  .mnb .mn-ic { font-size: 22px; line-height: 1; display: block; }
-  .mnb.on { color: var(--bl); }
-
-  /* Typography */
-  .fp.f16, .fp.f18 { font-size: 15px !important; }
-  .fp.f14 { font-size: 13px !important; }
-  .f12 { font-size: 11px !important; }
-  .sl { font-size: 9px !important; }
-
-  /* Cards */
-  .card { padding: 12px !important; border-radius: 10px !important; }
-  .scard { padding: 11px !important; }
-
-  /* Grids: force 2 columns max */
-  .g3, .g4 { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
-
-  /* Sections */
-  .sec { padding: 12px 14px !important; }
-  .sec.fu { padding: 12px 14px !important; max-width: 100% !important; }
-
-  /* Inputs: prevent zoom on iOS */
-  input, textarea, select {
-    font-size: 16px !important;
-    border-radius: 10px;
-  }
-
-  /* Buttons */
-  .btn { min-height: 38px; padding: 8px 14px !important; }
-
-  /* Tab bars inside panels */
-  .subtab-bar, div[style*="overflow-x:auto"] {
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Speaking panel tabs */
-  .ttab { font-size: 11px !important; padding: 7px 11px !important; }
-
-  /* Home panel */
-  #home > div { padding: 14px !important; }
-
-  /* Vocab flashcard */
-  .vcard { min-height: 160px !important; }
-}
-
-@media (min-width: 701px) {
-  /* Desktop: hide bottom nav */
-  #mobile-nav { display: none !important; }
-  /* Desktop: top nav shows */
-  #nav { display: flex !important;
-/* ══ MOBILE LAYOUT ══ */
-@media (max-width: 700px) {
-  /* Show bottom nav, hide desktop nav */
-  #mobile-nav { display: grid !important; grid-template-columns: repeat(5,1fr); }
-  #nav        { display: none  !important; }
-
-  /* Bottom nav styling */
-  #mobile-nav {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    height: 58px;
-    background: var(--s1);
-    border-top: 1px solid var(--ln);
-    z-index: 9000;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    box-shadow: 0 -2px 10px rgba(0,0,0,.12);
-  }
-  .mnb {
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 2px; padding: 4px 2px;
-    background: none; border: none; cursor: pointer;
-    color: var(--t3); font-size: 9px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: .3px;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .mnb .mn-ic { font-size: 22px; line-height: 1.1; }
-  .mnb.on { color: var(--bl); }
-
-  /* Panels: padding so content clears bottom nav */
-  .pnl, 
-
-  /* Prevent iOS input zoom */
-  input, textarea, select { font-size: 16px !important; }
-}
-
-@media (min-width: 701px) {
-  #mobile-nav { display: none !important; }
-  #nav        { display: flex !important; }
-}
-
-
 /* ══════════════════════════════════════════════
-   DEFINITIVE LAYOUT — single source of truth
+   LAYOUT — single clean block
    ══════════════════════════════════════════════ */
 
-/* Full page — allow scrolling */
-html { height: 100%; }
-body {
-  height: 100%;
+/* Scrolling */
+html, body {
+  margin: 0; padding: 0;
   background: var(--bg);
   color: var(--t1);
-  font-family: var(--f);
-  font-size: 14px;
-  line-height: 1.5;
-  overflow-y: scroll;
+}
+body {
+  overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
 }
 
-/* App wrapper — natural height */
-#app {
-  display: flex;
-  flex-direction: column;
-  min-height: 100%;
-  background: var(--bg);
-}
-
-/* Content container */
-#cnt {
-  background: var(--bg);
-}
-
-/* Content container — natural flow */
-#cnt {
-  flex: 1;
-  position: relative;
-}
-
-/* All panels — natural height, allow scroll via body */
+/* Panels */
 .pnl, .fpnl {
   display: none;
-  min-height: 100vh;
-  padding-bottom: 80px;
-  overflow: visible;
   background: var(--bg);
   color: var(--t1);
+  min-height: 100vh;
+  padding-bottom: 80px;
 }
 
-/* Active panel shown by go() */
-.pnl[style*="block"],
-.fpnl[style*="block"] {
-  overflow: visible;
-}
-
-/* ── MOBILE ── */
+/* Mobile: bottom nav fixed */
 @media (max-width: 700px) {
-  #nav        { display: none  !important; }
+  #nav        { display: none   !important; }
   #mobile-nav {
-    display: grid !important;
+    display: grid              !important;
     grid-template-columns: repeat(5, 1fr);
     position: fixed;
     bottom: 0; left: 0; right: 0;
@@ -750,7 +554,6 @@ body {
     border-top: 1px solid var(--ln);
     z-index: 9000;
     padding-bottom: env(safe-area-inset-bottom, 0px);
-    box-shadow: 0 -2px 12px rgba(0,0,0,.15);
   }
   .mnb {
     display: flex; flex-direction: column;
@@ -759,16 +562,14 @@ body {
     background: none; border: none;
     color: var(--t3); font-size: 9px; font-weight: 700;
     text-transform: uppercase; letter-spacing: .3px;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
   }
   .mnb .mn-ic { font-size: 22px; line-height: 1.1; }
   .mnb.on { color: var(--bl); }
-  /* Prevent iOS input zoom */
   input, textarea, select { font-size: 16px !important; }
 }
 
-/* ── DESKTOP ── */
+/* Desktop: hide bottom nav */
 @media (min-width: 701px) {
   #mobile-nav { display: none !important; }
   #nav        { display: flex !important; }
