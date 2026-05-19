@@ -92,7 +92,7 @@ a{text-decoration:none;color:inherit}
 .xpf{height:100%;background:linear-gradient(90deg,var(--am),var(--or));border-radius:2px;transition:width .4s}
 #pwab{display:none;padding:4px 11px;background:var(--bl);border-radius:6px;color:#fff;font-size:10px;font-weight:600}
 
-#cnt{flex:1;overflow:hidden}
+#cnt{flex:1;overflow-y:auto}
 .pnl{display:none;height:100%;overflow-y:auto}
 .fpnl{display:none;height:100%}
 
@@ -776,7 +776,7 @@ input:focus, textarea:focus {
 
 /* ── Key helpers ── */
 function getAPIKey(){
-  return DB.get('anthropic_key','') || '';
+  return DB.get('anthropic_key','') || DB.get('api_key','') || '';
 }
 function hasAPIKey(){
   return getAPIKey().length > 20;
@@ -5458,9 +5458,9 @@ function spkRoute(vm, tab){
   if(tab === 'aiconv')           { rAIConversation();    return; }
   if(tab === 'roleplay')         { rRoleplay();          return; }
   if(tab === 'shadowing')        { renderShadowing();    return; }
-  if(tab === 'thinking')         { renderThinking();     return; }
-  if(tab === 'instant')          { renderInstant();      return; }
-  if(tab === 'journal')          { renderJournal();      return; }
+  if(tab === 'thinking')         { if(!TEST.questions||!TEST.questions.length)startThinkingMode();else renderThinking(); return; }
+  if(tab === 'instant')          { if(!IRST_STATE||!IRST_STATE.questions.length)startInstantTraining();else renderInstant(); return; }
+  if(tab === 'journal')          { if(!VJST_STATE||!VJST_STATE.prompt)startVoiceJournal();else renderJournal(); return; }
   if(tab === 'slang')            { spkSlang(vm);         return; }
   if(tab === 'listening')        { rListeningEx(vm);     return; }
   if(tab === 'pronunciation')    { spkPronunciation(vm); return; }
@@ -9013,6 +9013,580 @@ function _renderEmailWriter(){
   wrap.appendChild(out);
   el.appendChild(wrap);
 }
+
+/* ═══ SPEAKING FUNCTIONS ═══ */
+let SHST_STATE={idx:0,transcript:'',feedback:'',recording:false};
+let IRST_STATE={questions:[],idx:0,score:0,sel:-1};
+let VJST_STATE={recording:false,transcript:'',feedback:'',prompt:''};
+
+/* ═══════════════════════════════════════════════════════════════
+   MISSING SPEAKING & CLOZE FUNCTIONS
+   Written from scratch based on existing state objects & data
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── State objects (if not defined) ── */
+
+const SHADOW_SENTENCES_DATA=[
+  {t:"The weather today is absolutely beautiful.",tip:"Πρόσεξε: ab-so-LUTE-ly"},
+  {t:"I would like to make a reservation for two people.",tip:"make a reservation = κάνω κράτηση"},
+  {t:"Could you please speak more slowly?",tip:"Πολιτεύεσαι: Could you please..."},
+  {t:"I have been working here for three years.",tip:"Present Perfect Continuous"},
+  {t:"It depends on what you mean by that.",tip:"it depends on = εξαρτάται από"},
+  {t:"I'm not sure I understand what you're saying.",tip:"Φυσικός τρόπος διαφωνίας"},
+  {t:"That's a very interesting point of view.",tip:"point of view = άποψη"},
+  {t:"I'll have to think about it and get back to you.",tip:"get back to you = επιστρέφω με απάντηση"},
+  {t:"The meeting has been postponed until next week.",tip:"has been postponed = έχει αναβληθεί"},
+  {t:"I'm afraid I can't make it to the meeting.",tip:"I'm afraid = λυπάμαι (επίσημο)"},
+  {t:"Would you mind if I opened the window?",tip:"Would you mind if + Past = ευγενική ερώτηση"},
+  {t:"She suggested going to the cinema instead.",tip:"suggest + -ing"},
+  {t:"The project was completed ahead of schedule.",tip:"ahead of schedule = πριν το χρονοδιάγραμμα"},
+  {t:"I'd rather stay at home tonight if you don't mind.",tip:"I'd rather = προτιμώ"},
+  {t:"We need to take this into consideration.",tip:"take into consideration = λαμβάνω υπόψη"},
+  {t:"By the time he arrived, she had already left.",tip:"Past Perfect: had + past participle"},
+  {t:"I'm looking forward to hearing from you.",tip:"look forward to + -ing"},
+  {t:"The report needs to be submitted by Friday.",tip:"needs to be + past participle = παθητική φωνή"},
+  {t:"It's worth taking the time to do it properly.",tip:"it's worth + -ing"},
+  {t:"She's been feeling under the weather lately.",tip:"under the weather = αδιάθετος"},
+];
+
+/* ── SHADOW ── */
+function SHST_get(){ return SHST_STATE; }
+
+function renderShadowing(){
+  const el=document.getElementById('speaking');
+  if(!el)return;
+  const vm=el.querySelector('.vm')||el;
+  const S=SHST_STATE;
+  const sentences=typeof SHADOW_SENTS!=='undefined'&&SHADOW_SENTS.length?SHADOW_SENTS:SHADOW_SENTENCES_DATA;
+  const item=sentences[S.idx]||sentences[0];
+  if(!item){vm.innerHTML='<p class="f12 c3 tc">Δεν υπάρχουν προτάσεις.</p>';return;}
+
+  vm.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.style.cssText='padding:16px;max-width:560px;margin:0 auto;width:100%';
+  vm.appendChild(wrap);
+
+  // Progress
+  const prog=document.createElement('div');
+  prog.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:16px';
+  prog.innerHTML='<span style="font-size:12px;color:var(--t3)">📖 Shadowing</span>'
+    +'<span style="font-size:12px;color:var(--t3)">'+(S.idx+1)+'/'+sentences.length+'</span>';
+  wrap.appendChild(prog);
+
+  // Sentence card
+  const card=document.createElement('div');
+  card.style.cssText='background:var(--s2);border:2px solid var(--bl);border-radius:14px;padding:24px;text-align:center;margin-bottom:16px';
+  card.innerHTML='<div style="font-size:18px;font-weight:700;color:var(--t1);line-height:1.6;margin-bottom:12px">"'+item.t+'"</div>'
+    +(item.tip?'<div style="font-size:11px;color:var(--bl);background:rgba(79,142,247,.1);border-radius:8px;padding:6px 12px">💡 '+item.tip+'</div>':'');
+  wrap.appendChild(card);
+
+  // Buttons
+  const btns=document.createElement('div');
+  btns.style.cssText='display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:16px';
+  
+  const listenBtn=document.createElement('button');
+  listenBtn.className='btn bp';
+  listenBtn.textContent='🔊 Άκουσε';
+  listenBtn.onclick=()=>speak(item.t,'en-GB');
+  btns.appendChild(listenBtn);
+
+  const micBtn=document.createElement('button');
+  micBtn.className='btn';
+  micBtn.style.cssText='background:var(--ro);color:#fff;border-radius:10px;padding:10px 18px;border:none;cursor:pointer;font-size:13px;font-weight:600';
+  micBtn.textContent=S.recording?'⏹ Stop':'🎤 Μίλα';
+  micBtn.onclick=()=>shadowRecord(micBtn);
+  btns.appendChild(micBtn);
+
+  if(S.idx<sentences.length-1){
+    const nextBtn=document.createElement('button');
+    nextBtn.className='btn bgh';
+    nextBtn.textContent='Next →';
+    nextBtn.onclick=()=>{SHST_STATE.idx++;SHST_STATE.transcript='';SHST_STATE.feedback='';renderShadowing();};
+    btns.appendChild(nextBtn);
+  }
+  wrap.appendChild(btns);
+
+  // Transcript
+  if(S.transcript){
+    const tr=document.createElement('div');
+    tr.style.cssText='background:var(--s2);border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px';
+    tr.innerHTML='<div style="font-size:10px;color:var(--t3);margin-bottom:4px">ΤΙ ΕΙΠΕΣ:</div>'
+      +'<div>'+S.transcript+'</div>';
+    wrap.appendChild(tr);
+
+    if(hasAPIKey()&&!S.feedback){
+      const aiBtn=document.createElement('button');
+      aiBtn.id='shadow-ai-btn';aiBtn.className='btn bp bsm';
+      aiBtn.textContent='🤖 AI Check';
+      aiBtn.onclick=()=>checkShadowPronunciation();
+      wrap.appendChild(aiBtn);
+    }
+  }
+
+  // AI Feedback
+  if(S.feedback){
+    const fb=document.createElement('div');
+    fb.style.cssText='background:var(--s2);border:1px solid var(--gr);border-radius:10px;padding:12px;font-size:12px;line-height:1.8;white-space:pre-line';
+    fb.innerHTML='<div style="font-size:10px;color:var(--gr);margin-bottom:6px">🤖 AI FEEDBACK</div>'
+      +S.feedback;
+    wrap.appendChild(fb);
+  }
+}
+
+function shadowRecord(btn){
+  const S=SHST_STATE;
+  if(S.recording){
+    S.recording=false;
+    if(typeof recognition!=='undefined'&&recognition){recognition.stop();}
+    renderShadowing();return;
+  }
+  if(location.protocol!=='https:'&&!window.AndroidTTS){
+    toast('🔒 Το μικρόφωνο χρειάζεται HTTPS','var(--am)');return;
+  }
+  const SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SpeechRec){toast('Το browser δεν υποστηρίζει μικρόφωνο','var(--am)');return;}
+  const rec=new SpeechRec();
+  rec.lang='en-US';rec.continuous=false;rec.interimResults=false;
+  rec.onresult=e=>{S.transcript=e.results[0][0].transcript;S.recording=false;renderShadowing();};
+  rec.onerror=e=>{S.recording=false;toast('Σφάλμα μικροφώνου: '+e.error,'var(--ro)');renderShadowing();};
+  rec.onend=()=>{if(S.recording){S.recording=false;renderShadowing();}};
+  S.recording=true;
+  try{rec.start();}catch(e){S.recording=false;toast('Δεν ξεκίνησε: '+e.message,'var(--ro)');renderShadowing();}
+  renderShadowing();
+}
+
+/* ── THINKING ── */
+function startThinkingMode(){
+  const shuffled=[...THINKING_QS].sort(()=>Math.random()-.5).slice(0,10);
+  TEST.questions=shuffled;TEST.idx=0;TEST.score=0;TEST.history=[];
+  renderThinking();
+}
+
+function renderThinking(){
+  const el=document.getElementById('speaking');
+  if(!el)return;
+  const vm=el.querySelector('.vm')||el;
+  
+  if(!TEST.questions||!TEST.questions.length){startThinkingMode();return;}
+  
+  const done=TEST.idx>=TEST.questions.length;
+  vm.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.style.cssText='padding:16px;max-width:560px;margin:0 auto;width:100%';
+  vm.appendChild(wrap);
+
+  if(done){
+    wrap.innerHTML='<div style="text-align:center;padding:24px">'
+      +'<div style="font-size:40px;margin-bottom:12px">🧠</div>'
+      +'<div style="font-size:18px;font-weight:700;margin-bottom:8px">Ολοκληρώθηκε!</div>'
+      +'<div style="font-size:13px;color:var(--t3);margin-bottom:20px">Απάντησες '+TEST.questions.length+' ερωτήσεις</div>'
+      +'<button class="btn bp" onclick="startThinkingMode()">🔄 Νέες ερωτήσεις</button>'
+      +'</div>';
+    return;
+  }
+
+  const q=TEST.questions[TEST.idx];
+  const prog=document.createElement('div');
+  prog.style.cssText='display:flex;justify-content:space-between;margin-bottom:16px';
+  prog.innerHTML='<span style="font-size:12px;color:var(--t3)">🧠 Think in English</span>'
+    +'<span style="font-size:12px;color:var(--t3)">'+(TEST.idx+1)+'/'+TEST.questions.length+'</span>';
+  wrap.appendChild(prog);
+
+  const qcard=document.createElement('div');
+  qcard.style.cssText='background:var(--s2);border:2px solid var(--vi);border-radius:14px;padding:24px;text-align:center;margin-bottom:20px';
+  qcard.innerHTML='<div style="font-size:11px;color:var(--vi);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Μίλα για 30 δευτερόλεπτα:</div>'
+    +'<div style="font-size:17px;font-weight:700;color:var(--t1);line-height:1.5">'+q+'</div>';
+  wrap.appendChild(qcard);
+
+  const btns=document.createElement('div');
+  btns.style.cssText='display:flex;gap:8px;justify-content:center;flex-wrap:wrap';
+  const speakBtn=document.createElement('button');
+  speakBtn.className='btn bp';speakBtn.textContent='🎤 Άρχισε';
+  speakBtn.onclick=()=>thinkRecord(speakBtn);
+  const nextBtn=document.createElement('button');
+  nextBtn.className='btn bgh';nextBtn.textContent='Παράλειψη →';
+  nextBtn.onclick=()=>{TEST.idx++;renderThinking();};
+  btns.appendChild(speakBtn);btns.appendChild(nextBtn);
+  wrap.appendChild(btns);
+}
+
+function thinkRecord(btn){
+  if(location.protocol!=='https:'&&!window.AndroidTTS){
+    toast('🔒 Χρειάζεται HTTPS για μικρόφωνο','var(--am)');return;
+  }
+  const SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SpeechRec){
+    // Fallback: just advance
+    TEST.idx++;renderThinking();return;
+  }
+  const rec=new SpeechRec();
+  rec.lang='en-US';rec.continuous=true;rec.interimResults=false;
+  let transcript='';
+  btn.textContent='⏹ Stop';btn.style.background='var(--ro)';
+  const stop=()=>{rec.stop();TEST.idx++;
+    if(transcript.split(' ').length>3)addXP(5);
+    renderThinking();};
+  rec.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++)transcript+=e.results[i][0].transcript+' ';};
+  rec.onerror=()=>stop();
+  rec.onend=()=>stop();
+  rec.start();
+  btn.onclick=()=>rec.stop();
+  setTimeout(()=>rec.stop(),30000);
+}
+
+/* ── INSTANT ── */
+const INSTANT_QUESTIONS=[
+  {q:"How do you say 'Γεια σας' in English?",a:"Hello / Good day",opts:["Hello","Goodbye","Thank you","Sorry"]},
+  {q:"Complete: 'I ___ to the shop yesterday'",a:"went",opts:["go","went","gone","going"]},
+  {q:"Which is correct?",a:"She doesn't like coffee",opts:["She don't like coffee","She doesn't like coffee","She not like coffee","She isn't like coffee"]},
+  {q:"Translate: 'Πήγα σπίτι'",a:"I went home",opts:["I go home","I gone home","I went home","I was going home"]},
+  {q:"'More beautiful' or 'beautifuller'?",a:"More beautiful",opts:["More beautiful","Beautifuller","Most beautiful","Beautifully"]},
+  {q:"Complete: 'If I ___ rich, I would travel'",a:"were",opts:["am","was","were","be"]},
+  {q:"Translate: 'Πόσο κάνει;'",a:"How much is it?",opts:["How much is it?","What is the price of it?","How many does it cost?","What much it is?"]},
+  {q:"'I have been waiting' is which tense?",a:"Present Perfect Continuous",opts:["Present Perfect","Past Simple","Present Perfect Continuous","Past Continuous"]},
+  {q:"Complete: 'She suggested ___ to the cinema'",a:"going",opts:["go","to go","going","went"]},
+  {q:"Translate: 'Συγγνώμη, δεν καταλαβαίνω'",a:"I'm sorry, I don't understand",opts:["I'm sorry, I don't understand","Excuse, I not understand","Sorry, I can't understand","I apologise, I'm not understanding"]},
+];
+
+
+function startInstantTraining(){
+  const shuffled=[...INSTANT_QUESTIONS].sort(()=>Math.random()-.5).slice(0,8);
+  IRST_STATE={questions:shuffled,idx:0,score:0,sel:-1};
+  renderInstant();
+}
+
+function renderInstant(){
+  const el=document.getElementById('speaking');
+  if(!el)return;
+  const vm=el.querySelector('.vm')||el;
+  const S=IRST_STATE;
+  
+  if(!S.questions||!S.questions.length){startInstantTraining();return;}
+  
+  vm.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.style.cssText='padding:16px;max-width:560px;margin:0 auto;width:100%';
+  vm.appendChild(wrap);
+
+  if(S.idx>=S.questions.length){
+    const pct=Math.round(S.score/S.questions.length*100);
+    addXP(S.score*10);
+    wrap.innerHTML='<div style="text-align:center;padding:24px">'
+      +'<div style="font-size:48px;margin-bottom:12px">'+(pct>=80?'🎉':pct>=60?'👍':'💪')+'</div>'
+      +'<div style="font-size:20px;font-weight:800;margin-bottom:8px">'+S.score+'/'+S.questions.length+' σωστές</div>'
+      +'<div style="font-size:13px;color:var(--t3);margin-bottom:20px">'+pct+'% — '+(pct>=80?'Εξαιρετικά!':pct>=60?'Καλά!':'Συνέχισε!')+'</div>'
+      +'<button class="btn bp" onclick="startInstantTraining()">🔄 Νέο Quiz</button></div>';
+    return;
+  }
+
+  const q=S.questions[S.idx];
+  // Progress bar
+  const pbar=document.createElement('div');
+  pbar.style.cssText='height:4px;background:var(--s3);border-radius:4px;margin-bottom:16px;overflow:hidden';
+  const pfill=document.createElement('div');
+  pfill.style.cssText='height:100%;background:var(--bl);border-radius:4px;transition:width .3s;width:'+Math.round(S.idx/S.questions.length*100)+'%';
+  pbar.appendChild(pfill);wrap.appendChild(pbar);
+
+  const qcard=document.createElement('div');
+  qcard.style.cssText='background:var(--s2);border-radius:14px;padding:20px;margin-bottom:16px;text-align:center';
+  qcard.innerHTML='<div style="font-size:11px;color:var(--t3);margin-bottom:8px">⚡ INSTANT — '+(S.idx+1)+'/'+S.questions.length+'</div>'
+    +'<div style="font-size:16px;font-weight:700;line-height:1.5">'+q.q+'</div>';
+  wrap.appendChild(qcard);
+
+  const opts=document.createElement('div');
+  opts.style.cssText='display:flex;flex-direction:column;gap:8px';
+  q.opts.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    let bg='var(--s2)';let bc='var(--ln)';let col='var(--t1)';
+    if(S.sel>=0){
+      if(opt===q.a){bg='rgba(76,175,80,.2)';bc='var(--gr)';col='var(--gr)';}
+      else if(i===S.sel&&opt!==q.a){bg='rgba(244,67,54,.2)';bc='var(--ro)';col='var(--ro)';}
+    }
+    btn.style.cssText='width:100%;padding:12px 16px;background:'+bg+';border:1.5px solid '+bc+';border-radius:10px;color:'+col+';font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .15s';
+    btn.textContent=(S.sel<0?'ABCD'[i]+'. ':'')+opt;
+    if(S.sel<0){
+      btn.onclick=()=>{
+        S.sel=i;
+        if(opt===q.a)S.score++;
+        renderInstant();
+        setTimeout(()=>{S.idx++;S.sel=-1;renderInstant();},1200);
+      };
+    }
+    opts.appendChild(btn);
+  });
+  wrap.appendChild(opts);
+}
+
+/* ── JOURNAL ── */
+const JOURNAL_PROMPTS_DATA=[
+  "Describe your day in 5 sentences.",
+  "What is one thing you learned today?",
+  "Describe a place you love.",
+  "Talk about your favourite food.",
+  "What are your plans for tomorrow?",
+  "Describe someone important in your life.",
+  "What makes you happy?",
+  "Talk about a recent challenge.",
+];
+
+
+function startVoiceJournal(){
+  const idx=Math.floor(Math.random()*JOURNAL_PROMPTS_DATA.length);
+  VJST_STATE={recording:false,transcript:'',feedback:'',prompt:JOURNAL_PROMPTS_DATA[idx]};
+  renderJournal();
+}
+
+function renderJournal(){
+  const el=document.getElementById('speaking');
+  if(!el)return;
+  const vm=el.querySelector('.vm')||el;
+  const S=VJST_STATE;
+  
+  if(!S.prompt)startVoiceJournal();
+  
+  vm.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.style.cssText='padding:16px;max-width:560px;margin:0 auto;width:100%';
+  vm.appendChild(wrap);
+
+  const hdr=document.createElement('div');
+  hdr.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:16px';
+  hdr.innerHTML='<span style="font-size:14px;font-weight:700">📔 Voice Journal</span>'
+    +'<button onclick="startVoiceJournal()" style="font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer">Νέο prompt</button>';
+  wrap.appendChild(hdr);
+
+  const prompt=document.createElement('div');
+  prompt.style.cssText='background:linear-gradient(135deg,rgba(79,142,247,.1),rgba(124,92,245,.1));border:1px solid rgba(79,142,247,.3);border-radius:14px;padding:20px;text-align:center;margin-bottom:20px';
+  prompt.innerHTML='<div style="font-size:11px;color:var(--bl);margin-bottom:8px;text-transform:uppercase">Μίλα για:</div>'
+    +'<div style="font-size:17px;font-weight:700">'+S.prompt+'</div>';
+  wrap.appendChild(prompt);
+
+  const micBtn=document.createElement('button');
+  micBtn.style.cssText='width:80px;height:80px;border-radius:50%;border:none;cursor:pointer;font-size:32px;display:block;margin:0 auto 16px;transition:all .2s;background:'+(S.recording?'var(--ro)':'var(--bl)');
+  micBtn.textContent=S.recording?'⏹':'🎤';
+  micBtn.onclick=()=>journalRecord(micBtn);
+  wrap.appendChild(micBtn);
+
+  const hint=document.createElement('div');
+  hint.style.cssText='text-align:center;font-size:11px;color:var(--t3);margin-bottom:16px';
+  hint.textContent=S.recording?'🔴 Ηχογράφηση... Πάτα για να σταματήσεις':'Πάτα για να ξεκινήσεις';
+  wrap.appendChild(hint);
+
+  if(S.transcript){
+    const tr=document.createElement('div');
+    tr.style.cssText='background:var(--s2);border-radius:10px;padding:14px;margin-bottom:12px';
+    tr.innerHTML='<div style="font-size:10px;color:var(--t3);margin-bottom:6px">ΤΙ ΕΙΠΕΣ:</div>'
+      +'<div style="font-size:13px;line-height:1.6">'+S.transcript+'</div>';
+    wrap.appendChild(tr);
+
+    if(hasAPIKey()&&!S.feedback){
+      const aiBtn=document.createElement('button');
+      aiBtn.className='btn bp bsm';aiBtn.textContent='🤖 AI Feedback';
+      aiBtn.onclick=()=>getJournalFeedback();
+      wrap.appendChild(aiBtn);
+    }
+  }
+
+  if(S.feedback){
+    const fb=document.createElement('div');
+    fb.style.cssText='background:var(--s2);border:1px solid var(--gr);border-radius:10px;padding:14px;font-size:12px;line-height:1.8;white-space:pre-line';
+    fb.innerHTML='<div style="font-size:10px;color:var(--gr);margin-bottom:6px">🤖 FEEDBACK</div>'+S.feedback;
+    wrap.appendChild(fb);
+  }
+}
+
+function journalRecord(btn){
+  const S=VJST_STATE;
+  if(S.recording){
+    S.recording=false;renderJournal();return;
+  }
+  if(location.protocol!=='https:'&&!window.AndroidTTS){
+    toast('🔒 Χρειάζεται HTTPS','var(--am)');return;
+  }
+  const SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SpeechRec){toast('Browser δεν υποστηρίζει speech recognition','var(--am)');return;}
+  const rec=new SpeechRec();
+  rec.lang='en-US';rec.continuous=true;rec.interimResults=false;
+  let text='';
+  S.recording=true;renderJournal();
+  rec.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++)text+=e.results[i][0].transcript+' ';};
+  rec.onerror=()=>{S.recording=false;renderJournal();};
+  rec.onend=()=>{S.transcript=text.trim()||S.transcript;S.recording=false;renderJournal();};
+  rec.start();
+  btn.onclick=()=>rec.stop();
+}
+
+/* Fix getJournalFeedback to use new state */
+const _origJF=typeof getJournalFeedback==='function'?getJournalFeedback:null;
+async function getJournalFeedback(){
+  if(!hasAPIKey()){toast('⚙ API Key στα Settings','var(--am)');return;}
+  const text=VJST_STATE.transcript||'';
+  if(text.length<5){toast('Μίλα πρώτα!','var(--am)');return;}
+  const sys='You are an English speaking coach. Give brief feedback in Greek (max 80 words). Format:\n'
+    +'🟢 Καλό: [one positive]\n🟡 Βελτίωση: [one suggestion]\n⭐ Score: X/10\n[one encouraging sentence]';
+  try{
+    const fb=await callAI('Student said: '+text,sys);
+    VJST_STATE.feedback=fb;renderJournal();
+  }catch(e){toast('❌ '+e.message,'var(--ro)');}
+}
+
+/* Fix checkShadowPronunciation to use new state */
+async function checkShadowPronunciation(){
+  if(!hasAPIKey()){toast('⚙ API Key στα Settings','var(--am)');return;}
+  const S=SHST_STATE;
+  const sentences=typeof SHADOW_SENTS!=='undefined'&&SHADOW_SENTS.length?SHADOW_SENTS:SHADOW_SENTENCES_DATA;
+  const item=sentences[S.idx];
+  if(!item||!S.transcript){toast('Μίλα πρώτα!','var(--am)');return;}
+  const btn=document.getElementById('shadow-ai-btn');
+  if(btn){btn.disabled=true;btn.textContent='⏳...';}
+  const sys='English pronunciation coach. Compare student vs original. Respond in Greek max 50 words:\n🔴 Διαφορές: [missing/wrong words]\n🟡 Ρυθμός: [natural?]\n🟢 Score: X/10';
+  try{
+    const fb=await callAI('Original: "'+item.t+'" — Student said: "'+S.transcript+'"',sys);
+    S.feedback=fb;renderShadowing();
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='🤖 AI Check';}
+    toast('❌ '+e.message,'var(--ro)');
+  }
+}
+
+/* ── CLOZE TEST ── */
+
+function rClozeTest(){
+  // Find the panel: could be in reading or writing
+  let el=document.getElementById('reading')||document.getElementById('writing');
+  const activePanel=['reading','writing','vocab'].find(id=>{
+    const p=document.getElementById(id);
+    return p&&p.style.display!=='none';
+  });
+  if(activePanel) el=document.getElementById(activePanel);
+  if(!el) el=document.getElementById('reading');
+  if(!el)return;
+  
+  const S=CLST_STATE;
+  el.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.style.cssText='padding:16px;max-width:640px;margin:0 auto;width:100%';
+  el.appendChild(wrap);
+  
+  const backBtn=document.createElement('button');
+  backBtn.style.cssText='font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer;margin-bottom:16px;display:block';
+  backBtn.textContent='← Πίσω';
+  backBtn.onclick=()=>{CLST_STATE={art:null,answers:{},checked:false};
+    if(activePanel) go(activePanel); else go('reading');};
+  wrap.appendChild(backBtn);
+
+  if(!S.art){
+    // Article list
+    const hdr=document.createElement('div');
+    hdr.innerHTML='<div style="font-size:16px;font-weight:700;margin-bottom:6px">📝 Cloze Tests</div>'
+      +'<p style="font-size:12px;color:var(--t3);margin-bottom:16px;line-height:1.6">Συμπλήρωσε τα κενά με τις σωστές λέξεις.</p>';
+    wrap.appendChild(hdr);
+    
+    (READINGS||[]).forEach(art=>{
+      const card=document.createElement('div');
+      card.style.cssText='background:var(--s2);border:1px solid var(--ln);border-radius:12px;padding:14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s';
+      card.onmouseover=()=>card.style.borderColor='var(--bl)';
+      card.onmouseout=()=>card.style.borderColor='var(--ln)';
+      card.onclick=()=>{CLST_STATE.art=art.id;CLST_STATE.answers={};CLST_STATE.checked=false;rClozeTest();};
+      card.innerHTML='<div style="font-size:13px;font-weight:600">'+art.t+'</div>'
+        +'<div style="font-size:11px;color:var(--t3);margin-top:4px">'+art.lv+' · '+art.time+'</div>';
+      wrap.appendChild(card);
+    });
+    return;
+  }
+
+  // Build cloze from article
+  const art=(READINGS||[]).find(x=>x.id===S.art);
+  if(!art){S.art=null;rClozeTest();return;}
+  
+  // Extract words and create blanks (every 7th content word)
+  const rawText=art.text.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+  const words=rawText.split(' ').filter(w=>w.length>0);
+  
+  // Pick ~6 words to blank (4+ letters, skip common words)
+  const skip=new Set(['the','a','an','and','or','but','in','on','at','to','of','is','are','was','were','it','I','he','she','they','we','you','that','this','have','has','been','be','for','with','by','as','from','not','do','did','does','can','will','would','should','could','may','might','must','shall']);
+  const eligible=words.map((w,i)=>({w:w.replace(/[^a-zA-Z]/g,''),i,orig:w}))
+    .filter(x=>x.w.length>=4&&!skip.has(x.w.toLowerCase()));
+  
+  const blanks=eligible.sort(()=>Math.random()-.5).slice(0,6).sort((a,b)=>a.i-b.i);
+  const blankSet=new Set(blanks.map(b=>b.i));
+  
+  const titleDiv=document.createElement('div');
+  titleDiv.style.cssText='font-size:16px;font-weight:700;margin-bottom:4px';
+  titleDiv.textContent=art.t;
+  wrap.appendChild(titleDiv);
+  const lvDiv=document.createElement('div');
+  lvDiv.style.cssText='font-size:11px;color:var(--t3);margin-bottom:16px';
+  lvDiv.textContent=art.lv;
+  wrap.appendChild(lvDiv);
+
+  // Render text with blanks
+  const textDiv=document.createElement('div');
+  textDiv.style.cssText='background:var(--s2);border-radius:12px;padding:16px;font-size:14px;line-height:2.2;margin-bottom:16px';
+  
+  words.forEach((word,i)=>{
+    if(blankSet.has(i)){
+      const blank=blanks.find(b=>b.i===i);
+      const inp=document.createElement('input');
+      inp.dataset.idx=String(i);
+      inp.dataset.answer=blank.w;
+      inp.placeholder='_____';
+      inp.style.cssText='width:'+(blank.w.length*12+20)+'px;padding:2px 8px;border:2px solid var(--bl);'
+        +'border-radius:6px;background:var(--s1);color:var(--t1);font-size:14px;text-align:center';
+      if(S.checked){
+        const ans=(S.answers[i]||'').toLowerCase().trim();
+        const correct=blank.w.toLowerCase();
+        inp.style.borderColor=ans===correct?'var(--gr)':'var(--ro)';
+        inp.style.background=ans===correct?'rgba(76,175,80,.1)':'rgba(244,67,54,.1)';
+        inp.value=S.answers[i]||'';
+        if(ans!==correct){
+          const hint=document.createElement('span');
+          hint.style.cssText='font-size:11px;color:var(--gr);margin-left:2px';
+          hint.textContent='('+blank.w+')';
+          textDiv.appendChild(inp);textDiv.appendChild(hint);
+          textDiv.appendChild(document.createTextNode(' '));
+          return;
+        }
+      } else {
+        inp.onchange=e=>{S.answers[i]=e.target.value;};
+        inp.onkeyup=e=>{S.answers[i]=e.target.value;};
+      }
+      textDiv.appendChild(inp);
+    } else {
+      textDiv.appendChild(document.createTextNode(word+' '));
+    }
+  });
+  wrap.appendChild(textDiv);
+
+  if(!S.checked){
+    const checkBtn=document.createElement('button');
+    checkBtn.className='btn bp';checkBtn.style.width='100%';checkBtn.textContent='✓ Έλεγξε';
+    checkBtn.onclick=()=>{
+      // Save all current answers
+      textDiv.querySelectorAll('input').forEach(inp=>{
+        S.answers[parseInt(inp.dataset.idx)]=inp.value;
+      });
+      S.checked=true;
+      const correct=blanks.filter(b=>(S.answers[b.i]||'').toLowerCase().trim()===b.w.toLowerCase()).length;
+      addXP(correct*5);
+      rClozeTest();
+      const score=Math.round(correct/blanks.length*100);
+      toast('Score: '+correct+'/'+blanks.length+' ('+score+'%)','var(--gr)');
+    };
+    wrap.appendChild(checkBtn);
+  } else {
+    const redoBtn=document.createElement('button');
+    redoBtn.className='btn bgh';redoBtn.style.cssText='margin-top:12px;width:100%';redoBtn.textContent='🔄 Ξανά';
+    redoBtn.onclick=()=>{CLST_STATE.answers={};CLST_STATE.checked=false;rClozeTest();};
+    wrap.appendChild(redoBtn);
+    const backBtn2=document.createElement('button');
+    backBtn2.className='btn';backBtn2.style.cssText='margin-top:8px;width:100%;background:var(--s2);border:1px solid var(--ln)';
+    backBtn2.textContent='← Άλλο κείμενο';
+    backBtn2.onclick=()=>{CLST_STATE={art:null,answers:{},checked:false};rClozeTest();};
+    wrap.appendChild(backBtn2);
+  }
+}
+
 function initApp(){
   if(DB.get('light_mode',false)) document.documentElement.setAttribute('data-theme','light');
   typeof updXP==='function' && updXP();
