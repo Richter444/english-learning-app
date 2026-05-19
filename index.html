@@ -735,10 +735,10 @@ async function callAI(userMsg, systemMsg, historyArr){
     try {
       const j = await res.json();
       if(res.status === 401){
-        DB.delete('anthropic_key');
-        toast('❌ Λάθος API Key. Βάλε νέο στα Settings.','var(--ro)');
-        setTimeout(()=>go('settings'),500);
-        throw new Error('NO_KEY');  // NO_KEY is filtered by callers
+        // DON'T delete the key — user might have a typo, let them correct it
+        toast('❌ 401: Λάθος API Key. Πήγαινε Settings → API Key για να το διορθώσεις.','var(--ro)');
+        setTimeout(()=>go('settings'),1000);
+        throw new Error('BAD_KEY');
       }
       if(res.status === 429) throw new Error('⏳ Πολλά requests. Δοκίμασε σε λίγο.');
       errMsg = j.error?.message || j.type || errMsg;
@@ -760,28 +760,53 @@ function saveAPIKeyFromSettings(){
   const inp = document.getElementById('settings-api-input');
   if(!inp) return;
   const key = inp.value.trim();
-  if(key.length < 20){
-    toast('Το key φαίνεται λανθασμένο.','var(--ro)');
-    return;
+  if(!key){ toast('Εισήγαγε το API Key.','var(--am)'); return; }
+  if(!key.startsWith('sk-ant')){
+    toast('Το key πρεπει να ξεκινά με sk-ant-...','var(--am)'); return;
+  }
+  if(key.length < 40){
+    toast('Το key φαίνεται πολύ μικρό','var(--am)'); return;
   }
   DB.set('anthropic_key', key);
-  toast('✅ API Key αποθηκεύτηκε!','var(--gr)');
+  DB.set('api_key', key);
+  toast('✅ API Key αποθηκεύτηκε! Πάτα Test για επιβεβαίωση.','var(--gr)');
   rSettings();
 }
 
 /* ── Test API key ── */
 async function testAPIKey(){
-  if(!hasAPIKey()){ toast('Πρώτα αποθήκευσε ένα API Key.','var(--am)'); return; }
+  const key = getAPIKey();
+  if(!key){ toast('Πρωτα αποθηκευσε ενα API Key.','var(--am)'); return; }
   const btn = document.querySelector('[onclick="testAPIKey()"]');
-  if(btn){ btn.disabled = true; btn.textContent = '⏳...'; }
-  const restore = () => { if(btn){ btn.disabled=false; btn.textContent='🔌 Test'; } };
-  try {
-    const r = await callAI('Reply with exactly one word: OK', 'Reply with exactly: OK');
+  if(btn){ btn.disabled=true; btn.textContent='⏳...'; }
+  const restore=()=>{ if(btn){ btn.disabled=false; btn.textContent='🔌 Test'; } };
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':key,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:20,
+        messages:[{role:'user',content:'Say OK'}]
+      })
+    });
     restore();
-    toast('✅ API Key λειτουργεί! (' + r.trim().substring(0,20) + ')','var(--gr)');
-  } catch(e) {
+    if(res.ok){
+      const d=await res.json();
+      toast('✅ Key λειτουργει! '+( d.content?.[0]?.text||'OK').slice(0,15),'var(--gr)');
+    } else if(res.status===401){
+      toast('❌ 401: Λαθος API Key — invalid key','var(--ro)');
+    } else {
+      toast('❌ Error '+res.status,'var(--ro)');
+    }
+  }catch(e){
     restore();
-    toast('❌ ' + e.message,'var(--ro)');
+    toast('❌ Network error: '+e.message,'var(--ro)');
   }
 }
 
@@ -1461,6 +1486,7 @@ function saveAPIKey(){
     return;
   }
   DB.set('anthropic_key',key);
+  DB.set('api_key',key); // compatibility
   document.getElementById('apikey-modal')?.remove();
   toast('✓ API Key αποθηκεύτηκε!','var(--gr)');
   // Re-render current panel so AI features activate immediately
@@ -9062,73 +9088,207 @@ function renderThinking(){
   const el=document.getElementById('speaking');
   if(!el)return;
   const vm=el.querySelector('.vm')||el;
-  
-  if(!TEST.questions||!TEST.questions.length){startThinkingMode();return;}
-  
-  const done=TEST.idx>=TEST.questions.length;
+
+  if(!TEST.questions||!TEST.questions.length){ startThinkingMode(); return; }
+
+  const done = TEST.idx >= TEST.questions.length;
   vm.innerHTML='';
   const wrap=document.createElement('div');
   wrap.style.cssText='padding:16px;max-width:560px;margin:0 auto;width:100%';
   vm.appendChild(wrap);
 
+  // DONE screen
   if(done){
-    wrap.innerHTML='<div style="text-align:center;padding:24px">'
-      +'<div style="font-size:40px;margin-bottom:12px">🧠</div>'
-      +'<div style="font-size:18px;font-weight:700;margin-bottom:8px">Ολοκληρώθηκε!</div>'
-      +'<div style="font-size:13px;color:var(--t3);margin-bottom:20px">Απάντησες '+TEST.questions.length+' ερωτήσεις</div>'
-      +'<button class="btn bp" onclick="startThinkingMode()">🔄 Νέες ερωτήσεις</button>'
-      +'</div>';
+    const doneDiv=document.createElement('div');
+    doneDiv.style.cssText='text-align:center;padding:24px 16px';
+    doneDiv.innerHTML='<div style="font-size:40px;margin-bottom:12px">🧠</div>'
+      +'<div style="font-size:18px;font-weight:700;margin-bottom:8px">Τελείωσε! '+TEST.questions.length+' ερωτήσεις</div>'
+      +'<div style="font-size:13px;color:var(--t3);margin-bottom:20px">Δες τις απαντήσεις σου παρακάτω</div>';
+    wrap.appendChild(doneDiv);
+
+    // History list with AI check
+    if(TEST.history&&TEST.history.length){
+      TEST.history.forEach((entry,i)=>{
+        const card=document.createElement('div');
+        card.style.cssText='background:var(--s2);border-radius:12px;padding:14px;margin-bottom:12px';
+        card.innerHTML='<div style="font-size:11px;color:var(--bl);margin-bottom:6px;font-weight:700">Q'+(i+1)+': '+entry.q+'</div>'
+          +'<div id="think-answer-'+i+'" style="font-size:13px;line-height:1.7;color:var(--t1);margin-bottom:8px">'+entry.t+'</div>';
+
+        // Listen btn
+        const listenBtn=document.createElement('button');
+        listenBtn.className='btn bgh bsm'; listenBtn.textContent='🔊';
+        listenBtn.onclick=()=>speak(entry.t,'en-GB');
+        card.appendChild(listenBtn);
+
+        // AI Check btn (per answer)
+        if(hasAPIKey()&&!entry.feedback){
+          const aiBtn=document.createElement('button');
+          aiBtn.className='btn bp bsm'; aiBtn.style.marginLeft='6px';
+          aiBtn.textContent='🤖 AI Check';
+          aiBtn.onclick=async()=>{
+            aiBtn.disabled=true; aiBtn.textContent='⏳...';
+            const level=DB.get('placement_lv','B1');
+            const sys='You are an English grammar teacher. Analyse this spoken answer in Greek. Format EXACTLY:\n'
+              +'❓ Ερώτηση: '+entry.q+'\n'
+              +'🔴 ΛΑΘΗ: [list grammar errors or "Δεν υπάρχουν!"]\n'
+              +'⏱ ΧΡΟΝΟΙ που χρησιμοποιήθηκαν: [e.g. Past Simple, Present Perfect...]\n'
+              +'🟡 ΒΕΛΤΙΩΣΗ: [more natural phrasing]\n'
+              +'⭐ ΣΚΟΡ: X/10\n'
+              +'[one tip in Greek]';
+            try{
+              const fb=await callAI('Student answered: "'+entry.t+'"', sys);
+              entry.feedback=fb;
+              // Show feedback
+              const fbDiv=document.createElement('div');
+              fbDiv.style.cssText='margin-top:10px;padding:10px;background:var(--s3);border-radius:8px;font-size:12px;line-height:1.8;white-space:pre-line;color:var(--t2)';
+              fbDiv.textContent=fb;
+              card.appendChild(fbDiv);
+              aiBtn.textContent='✓ Done'; addXP(5);
+            }catch(e){
+              if(e.message!=='NO_KEY') toast('❌ '+e.message,'var(--ro)');
+              aiBtn.disabled=false; aiBtn.textContent='🤖 AI Check';
+            }
+          };
+          card.appendChild(aiBtn);
+        } else if(entry.feedback){
+          const fbDiv=document.createElement('div');
+          fbDiv.style.cssText='margin-top:10px;padding:10px;background:var(--s3);border-radius:8px;font-size:12px;line-height:1.8;white-space:pre-line;color:var(--t2)';
+          fbDiv.textContent=entry.feedback;
+          card.appendChild(fbDiv);
+        }
+        wrap.appendChild(card);
+      });
+    }
+
+    // New session button
+    const newBtn=document.createElement('button');
+    newBtn.className='btn bp'; newBtn.style.cssText='width:100%;justify-content:center;margin-top:8px';
+    newBtn.textContent='🔄 Νέες ερωτήσεις';
+    newBtn.onclick=()=>startThinkingMode();
+    wrap.appendChild(newBtn);
     return;
   }
 
+  // ACTIVE question
   const q=TEST.questions[TEST.idx];
-  const prog=document.createElement('div');
-  prog.style.cssText='display:flex;justify-content:space-between;margin-bottom:16px';
-  prog.innerHTML='<span style="font-size:12px;color:var(--t3)">🧠 Think in English</span>'
-    +'<span style="font-size:12px;color:var(--t3)">'+(TEST.idx+1)+'/'+TEST.questions.length+'</span>';
-  wrap.appendChild(prog);
+  // Progress bar
+  const pbar=document.createElement('div');
+  pbar.style.cssText='height:4px;background:var(--s3);border-radius:4px;margin-bottom:16px;overflow:hidden';
+  const pf=document.createElement('div');
+  pf.style.cssText='height:100%;background:var(--vi);border-radius:4px;width:'+Math.round(TEST.idx/TEST.questions.length*100)+'%';
+  pbar.appendChild(pf); wrap.appendChild(pbar);
 
+  // Question card
   const qcard=document.createElement('div');
-  qcard.style.cssText='background:var(--s2);border:2px solid var(--vi);border-radius:14px;padding:24px;text-align:center;margin-bottom:20px';
-  qcard.innerHTML='<div style="font-size:11px;color:var(--vi);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Μίλα για 30 δευτερόλεπτα:</div>'
-    +'<div style="font-size:17px;font-weight:700;color:var(--t1);line-height:1.5">'+q+'</div>';
+  qcard.style.cssText='background:linear-gradient(135deg,rgba(124,92,245,.12),rgba(79,142,247,.08));border:2px solid rgba(124,92,245,.3);border-radius:14px;padding:20px;text-align:center;margin-bottom:16px';
+  qcard.innerHTML='<div style="font-size:10px;color:var(--vi);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🧠 Think in English — '+(TEST.idx+1)+'/'+TEST.questions.length+'</div>'
+    +'<div style="font-size:17px;font-weight:700;color:var(--t1);line-height:1.5">'+q+'</div>'
+    +'<div style="font-size:11px;color:var(--t3);margin-top:8px">Μίλα ελεύθερα για 30-45 δευτερόλεπτα</div>';
   wrap.appendChild(qcard);
 
+  // Live transcript box (always visible)
+  const liveBox=document.createElement('div');
+  liveBox.id='think-live';
+  liveBox.style.cssText='min-height:50px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;line-height:1.7;color:var(--t1)';
+  liveBox.innerHTML='<span style="color:var(--t3);font-style:italic">Θα εμφανίζεται εδώ αυτό που λες...</span>';
+  wrap.appendChild(liveBox);
+
+  // Buttons
   const btns=document.createElement('div');
   btns.style.cssText='display:flex;gap:8px;justify-content:center;flex-wrap:wrap';
-  const speakBtn=document.createElement('button');
-  speakBtn.className='btn bp';speakBtn.textContent='🎤 Άρχισε';
-  speakBtn.onclick=()=>thinkRecord(speakBtn);
-  const nextBtn=document.createElement('button');
-  nextBtn.className='btn bgh';nextBtn.textContent='Παράλειψη →';
-  nextBtn.onclick=()=>{TEST.idx++;renderThinking();};
-  btns.appendChild(speakBtn);btns.appendChild(nextBtn);
+
+  const micBtn=document.createElement('button');
+  micBtn.className='btn bp'; micBtn.style.cssText='min-width:140px;justify-content:center';
+  micBtn.textContent='🎤 Άρχισε';
+  micBtn.onclick=()=>thinkRecord(micBtn);
+  btns.appendChild(micBtn);
+
+  const skipBtn=document.createElement('button');
+  skipBtn.className='btn bgh bsm'; skipBtn.textContent='Παράλειψη →';
+  skipBtn.onclick=()=>{ TEST.idx++; renderThinking(); };
+  btns.appendChild(skipBtn);
+
   wrap.appendChild(btns);
+
+  // Previous answers summary (below)
+  if(TEST.history&&TEST.history.length>0){
+    const prevHdr=document.createElement('div');
+    prevHdr.style.cssText='font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-top:20px;margin-bottom:8px';
+    prevHdr.textContent='Προηγούμενες Απαντήσεις';
+    wrap.appendChild(prevHdr);
+    TEST.history.slice(-3).forEach((entry,i)=>{
+      const prev=document.createElement('div');
+      prev.style.cssText='background:var(--s2);border-radius:8px;padding:10px;margin-bottom:6px';
+      prev.innerHTML='<div style="font-size:10px;color:var(--t3);margin-bottom:3px">'+entry.q.substring(0,50)+'...</div>'
+        +'<div style="font-size:12px;color:var(--t2)">'+entry.t.substring(0,80)+(entry.t.length>80?'...':'')+'</div>';
+      wrap.appendChild(prev);
+    });
+  }
 }
+
 
 function thinkRecord(btn){
   if(location.protocol!=='https:'&&!window.AndroidTTS){
-    toast('🔒 Χρειάζεται HTTPS για μικρόφωνο','var(--am)');return;
+    toast('🔒 Χρειάζεται HTTPS','var(--am)');return;
   }
   const SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SpeechRec){
-    // Fallback: just advance
-    TEST.idx++;renderThinking();return;
+    // No mic: show text input fallback
+    const q=TEST.questions[TEST.idx];
+    const ta=document.createElement('textarea');
+    ta.placeholder='Type your answer here...';
+    ta.style.cssText='width:100%;min-height:80px;padding:10px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;color:var(--t1);font-size:14px;font-family:inherit;resize:none;box-sizing:border-box;margin-top:12px';
+    const el=document.getElementById('speaking');
+    const vm=el&&(el.querySelector('.vm')||el);
+    if(vm){vm.appendChild(ta);ta.focus();}
+    btn.textContent='✓ Submit';
+    btn.onclick=()=>{
+      if(ta.value.trim()){
+        if(!TEST.history) TEST.history=[];
+        TEST.history.push({q:q,t:ta.value.trim()});
+        TEST.idx++;
+        renderThinking();
+      }
+    };
+    return;
   }
   const rec=new SpeechRec();
-  rec.lang='en-US';rec.continuous=true;rec.interimResults=false;
-  let transcript='';
-  btn.textContent='⏹ Stop';btn.style.background='var(--ro)';
-  const stop=()=>{rec.stop();TEST.idx++;
-    if(transcript.split(' ').length>3)addXP(5);
-    renderThinking();};
-  rec.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++)transcript+=e.results[i][0].transcript+' ';};
-  rec.onerror=()=>stop();
-  rec.onend=()=>stop();
-  rec.start();
-  btn.onclick=()=>rec.stop();
-  setTimeout(()=>rec.stop(),30000);
+  rec.lang='en-US'; rec.continuous=true; rec.interimResults=true;
+  let finalText=''; let isRecording=true;
+  btn.textContent='⏹ Stop'; btn.style.background='var(--ro)';
+  btn.style.color='#fff';
+
+  rec.onresult=e=>{
+    let fin=''; let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal) fin+=e.results[i][0].transcript+' ';
+      else interim+=e.results[i][0].transcript;
+    }
+    if(fin) finalText+=fin;
+    const liveEl=document.getElementById('think-live');
+    if(liveEl) liveEl.innerHTML=finalText+'<span style="color:var(--t3);font-style:italic">'+interim+'</span>';
+  };
+
+  const stop=()=>{
+    if(!isRecording) return;
+    isRecording=false;
+    rec.stop();
+    const q=TEST.questions[TEST.idx];
+    const transcript=finalText.trim();
+    if(!TEST.history) TEST.history=[];
+    if(transcript) TEST.history.push({q:q, t:transcript});
+    TEST.idx++;
+    if(transcript.split(' ').length>3) addXP(5);
+    renderThinking();
+  };
+
+  rec.onerror=()=>{ isRecording=false; stop(); };
+  rec.onend=()=>{ if(isRecording) stop(); };
+  btn.onclick=()=>stop();
+  setTimeout(()=>{ if(isRecording) stop(); }, 45000);
+  try{ rec.start(); }catch(e){ toast('Σφάλμα: '+e.message,'var(--ro)'); }
 }
+
 
 /* ── INSTANT ── */
 const INSTANT_QUESTIONS=[
@@ -9372,15 +9532,32 @@ function journalRecord(btn){
 /* Fix getJournalFeedback to use new state */
 const _origJF=typeof getJournalFeedback==='function'?getJournalFeedback:null;
 async function getJournalFeedback(){
-  if(!hasAPIKey()){toast('⚙ API Key στα Settings','var(--am)');return;}
-  const text=VJST_STATE.transcript||'';
-  if(text.length<5){toast('Μίλα πρώτα!','var(--am)');return;}
-  const sys='You are an English speaking coach. Give brief feedback in Greek (max 80 words). Format:\n'
-    +'🟢 Καλό: [one positive]\n🟡 Βελτίωση: [one suggestion]\n⭐ Score: X/10\n[one encouraging sentence]';
+  if(!hasAPIKey()){ toast('⚙ Χρειάζεσαι API Key στα Settings.','var(--am)'); return; }
+  const text = (VJST_STATE&&VJST_STATE.transcript) || (VJST&&VJST.transcript) || '';
+  if(text.length < 5){ toast('Μίλα ή γράψε πρώτα!','var(--am)'); return; }
+  const btn = document.getElementById('journal-ai-btn');
+  if(btn){ btn.disabled=true; btn.textContent='⏳...'; }
+  const lvl = DB.get('placement_lv','B1');
+  const sys = "You are an expert English teacher analysing a student's spoken journal entry. Student level: "+lvl+". Respond ONLY in Greek. Format EXACTLY:\n"
+    + "📝 ΑΥΤΟ ΠΟΥ ΕΙΠΕΣ: [restate corrected]\n"
+    + "🔴 ΓΡΑΜΜΑΤΙΚΑ ΛΑΘΗ:\n[bullet each error with correction, or \"✅ Δεν υπάρχουν λάθη!\"]\n"
+    + "⏱ ΧΡΟΝΟΙ: [tenses used with brief note]\n"
+    + "🟡 ΒΕΛΤΙΩΣΕΙΣ: [more natural phrasing with examples]\n"
+    + "🟢 ΘΕΤΙΚΑ: [what was good]\n"
+    + "⭐ ΣΚΟΡ: X/10\n"
+    + "💡 ΤΙΠ: [one actionable tip]";
   try{
-    const fb=await callAI('Student said: '+text,sys);
-    VJST_STATE.feedback=fb;renderJournal();
-  }catch(e){toast('❌ '+e.message,'var(--ro)');}
+    const fb = await callAI('Student said: '+text, sys);
+    if(btn){ btn.disabled=false; btn.textContent='🤖 AI Check'; }
+    // Save to both state objects
+    if(VJST_STATE) VJST_STATE.feedback = fb;
+    if(VJST) VJST.feedback = fb;
+    addXP(10);
+    renderJournal();
+  } catch(e){
+    if(btn){ btn.disabled=false; btn.textContent='🤖 AI Check'; }
+    if(e.message!=='NO_KEY') toast('❌ '+e.message,'var(--ro)');
+  }
 }
 
 /* Fix checkShadowPronunciation to use new state */
@@ -9574,6 +9751,154 @@ const SLANG_DATA = [
   {s:"on the same page",m:"συμφωνούμε / καταλαβαίνουμε το ίδιο",e:"Let's make sure we're all on the same page.",f:"informal"},
   {s:"take it with a grain of salt",m:"δεν το πιστεύω 100%",e:"Take what he says with a grain of salt.",f:"informal"},
 ];
+
+/* ══ API KEY MANAGER ══ */
+function renderAPIKeySection(container){
+  const hasKey = hasAPIKey();
+  const currentKey = getAPIKey();
+  const masked = hasKey ? currentKey.slice(0,10)+'...'+currentKey.slice(-4) : '';
+
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'background:var(--s2);border:1px solid var(--ln);border-radius:12px;padding:16px;margin-bottom:16px';
+
+  // Header
+  const hdr = document.createElement('div');
+  hdr.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:12px';
+  hdr.innerHTML = '<span style="font-size:20px">🤖</span>'
+    + '<div><div style="font-size:14px;font-weight:700">Anthropic API Key</div>'
+    + '<div style="font-size:11px;color:var(--t3)">Για AI Chat, Journal, Shadowing feedback</div></div>';
+  wrap.appendChild(hdr);
+
+  // Status
+  const status = document.createElement('div');
+  status.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;margin-bottom:12px;font-size:12px;font-weight:600;'
+    + (hasKey ? 'background:rgba(76,175,80,.15);border:1px solid rgba(76,175,80,.3);color:var(--gr)'
+               : 'background:rgba(240,56,112,.1);border:1px solid rgba(240,56,112,.25);color:var(--ro)');
+  status.innerHTML = hasKey
+    ? '✅ Key αποθηκευμένο: <span style="font-family:monospace;font-size:11px;color:var(--t2)">'+masked+'</span>'
+    : '⚠️ Δεν έχεις βάλει API Key';
+  wrap.appendChild(status);
+
+  // Input
+  const inputRow = document.createElement('div');
+  inputRow.style.cssText = 'display:flex;gap:8px;margin-bottom:10px';
+  const inp = document.createElement('input');
+  inp.id = 'settings-api-input';
+  inp.type = 'password';
+  inp.placeholder = 'sk-ant-api03-...';
+  inp.autocomplete = 'off';
+  inp.style.cssText = 'flex:1;padding:10px 12px;background:var(--s1);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px;font-family:monospace;min-width:0';
+  if(hasKey) inp.value = currentKey;
+  inputRow.appendChild(inp);
+
+  // Show/hide toggle
+  const toggle = document.createElement('button');
+  toggle.style.cssText = 'padding:10px 12px;background:var(--s3);border:none;border-radius:8px;cursor:pointer;font-size:14px;flex-shrink:0';
+  toggle.textContent = '👁';
+  toggle.onclick = () => {
+    inp.type = inp.type==='password' ? 'text' : 'password';
+    toggle.textContent = inp.type==='password' ? '👁' : '🙈';
+  };
+  inputRow.appendChild(toggle);
+  wrap.appendChild(inputRow);
+
+  // Buttons row
+  const btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap';
+
+  // Save button
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'btn bp';
+  saveBtn.style.flex = '1';
+  saveBtn.textContent = '💾 Αποθήκευση';
+  saveBtn.onclick = () => {
+    const key = inp.value.trim();
+    if(!key){ toast('Εισήγαγε το API Key','var(--am)'); return; }
+    if(!key.startsWith('sk-ant')){
+      toast('⚠ Το key πρέπει να ξεκινά με sk-ant-...','var(--am)'); return;
+    }
+    if(key.length < 40){
+      toast('⚠ Το key φαίνεται πολύ μικρό','var(--am)'); return;
+    }
+    DB.set('anthropic_key', key);
+    DB.set('api_key', key); // also save to old key for compatibility
+    toast('✅ API Key αποθηκεύτηκε!','var(--gr)');
+    rSettings();
+  };
+  btnRow.appendChild(saveBtn);
+
+  // Test button
+  const testBtn = document.createElement('button');
+  testBtn.className = 'btn bgh';
+  testBtn.textContent = '🔌 Test';
+  testBtn.onclick = async () => {
+    const key = inp.value.trim() || getAPIKey();
+    if(!key){ toast('Βάλε πρώτα το key','var(--am)'); return; }
+    testBtn.disabled = true; testBtn.textContent = '⏳...';
+    try{
+      // Test with direct fetch to avoid auto-delete on 401
+      const res = await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key': key,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body:JSON.stringify({
+          model:'claude-haiku-4-5-20251001',
+          max_tokens:10,
+          messages:[{role:'user',content:'Say OK'}]
+        })
+      });
+      if(res.ok){
+        const d = await res.json();
+        toast('✅ Key λειτουργεί! '+d.content[0].text,'var(--gr)');
+        // Auto-save if different from stored
+        if(key !== getAPIKey()){
+          DB.set('anthropic_key', key);
+          DB.set('api_key', key);
+          rSettings();
+        }
+      } else if(res.status===401){
+        toast('❌ 401 Λάθος Key — το key είναι invalid','var(--ro)');
+      } else {
+        toast('❌ '+res.status+' — '+await res.text().catch(()=>''),'var(--ro)');
+      }
+    }catch(e){
+      toast('❌ '+e.message,'var(--ro)');
+    }
+    testBtn.disabled = false; testBtn.textContent = '🔌 Test';
+  };
+  btnRow.appendChild(testBtn);
+
+  // Clear button (only if key exists)
+  if(hasKey){
+    const clearBtn = document.createElement('button');
+    clearBtn.style.cssText = 'padding:8px 12px;background:none;border:1px solid var(--ro);border-radius:8px;color:var(--ro);font-size:12px;cursor:pointer';
+    clearBtn.textContent = '🗑 Διαγραφή';
+    clearBtn.onclick = () => {
+      if(confirm('Διαγραφή API Key;')){
+        DB.delete('anthropic_key');
+        DB.delete('api_key');
+        toast('Key διαγράφηκε','var(--am)');
+        rSettings();
+      }
+    };
+    btnRow.appendChild(clearBtn);
+  }
+  wrap.appendChild(btnRow);
+
+  // Help text
+  const help = document.createElement('div');
+  help.style.cssText = 'font-size:11px;color:var(--t3);margin-top:10px;line-height:1.6';
+  help.innerHTML = '📖 Πήγαινε στο <a href="https://console.anthropic.com/keys" target="_blank" style="color:var(--bl)">console.anthropic.com/keys</a> για να πάρεις key.'
+    + '<br>Το key αρχίζει με <code style="background:var(--s3);padding:1px 4px;border-radius:4px">sk-ant-api03-...</code>';
+  wrap.appendChild(help);
+
+  container.appendChild(wrap);
+}
+
 function initApp(){
   if(DB.get('light_mode',false)) document.documentElement.setAttribute('data-theme','light');
   typeof updXP==='function' && updXP();
