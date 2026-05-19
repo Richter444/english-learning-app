@@ -2212,7 +2212,6 @@ function sortedW(cat='all'){
 let VS={mode:'all',cat:'all',search:'',sbOpen:true,q:{mode:'mixed',sess:[],idx:0,res:[],fl:false,opts:[],sel:-1,fill:'',fd:false}};
 function rVocab(){
   const el=document.getElementById('vocab');
-  _injectLearnTabs(el, 'vocab');
   const lc=learnedW().length,due=dueW().length,all=getAllW().length;
   el.innerHTML=`
   ${!VS.sbOpen?`<button onclick="VS.sbOpen=true;rVocab()" style="width:36px;flex-shrink:0;background:var(--s2);border:none;border-right:1px solid var(--ln);color:var(--t2);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;writing-mode:vertical-lr;letter-spacing:1px;padding:10px 4px">Μενού</button>`:''}
@@ -2245,6 +2244,8 @@ function rVocab(){
   else if(VS.mode==='collocations')rCollocations();
   else if(VS.mode==='learned')rVLearned(vm);
   else if(VS.mode==='add')rVAdd(vm);
+  _injectLearnTabs(el, 'vocab');
+
 }
 
 
@@ -3771,7 +3772,6 @@ let TST={idx:0,tab:'theory',qa:{},qs:false,qsc:null,ta:{},tc:{},te:{},ts:{},tips
 
 function rTenses(){
   const el=document.getElementById('tenses');
-  _injectLearnTabs(el, 'tenses');
   const isOpen=DB.get('tsb_open',true);
   el.innerHTML=`
     ${!isOpen?`<button onclick="DB.set('tsb_open',true);rTenses()" style="width:36px;flex-shrink:0;background:var(--s2);border:none;border-right:1px solid var(--ln);color:var(--t2);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;writing-mode:vertical-lr;letter-spacing:1px;padding:10px 4px">Μενού</button>`:''}
@@ -3780,6 +3780,8 @@ function rTenses(){
   `;
   if(isOpen) buildTSB();
   rTM();
+  _injectLearnTabs(el, 'tenses');
+
 }
 
 function buildTSB(){
@@ -4448,7 +4450,6 @@ let GST={topic:null,ea:{},es:false,esc:null};
 function rGrammar(){
   unlockAch('gr1');{const gd=DB.get('gramDone',[]);const gt=GST.topic;if(gt&&!gd.includes(gt)){gd.push(gt);DB.set('gramDone',gd);}if(gd.length>=5)unlockAch('gr5');}
   const el=document.getElementById('grammar');
-  _injectLearnTabs(el, 'grammar');
   if(!GST.topic){
     el.innerHTML=`<div class="sec fu">
       <div class="sl mb4 cgr">GRAMMAR</div>
@@ -4494,6 +4495,8 @@ function rGrammar(){
       </div>
     </div>`;
   } else rGTopic();
+  _injectLearnTabs(el, 'grammar');
+
 }
 
 function rGTopic(){
@@ -4592,6 +4595,7 @@ const EMAIL_TEMPLATES=[
 
 function rWriting(){unlockAch('wr1');
   const el=document.getElementById('writing');
+  if(!WST.topic) _injectWriteTabs(el, WRITE_TAB||'topics');
   if(!WST.topic){
     el.innerHTML=`<div class="sec fu">
       <div class="sl mb4 cpk">WRITING</div>
@@ -6382,7 +6386,6 @@ const MILESTONES=[
 function rReading(){
   unlockAch('rd1');{const rd2=DB.get('rdDone',[]);if(rd2.length>=5)unlockAch('rd5');}
   const el=document.getElementById('reading');
-  _injectLearnTabs(el, 'reading');
   if(!RST.art){
     el.innerHTML=`<div class="sec fu">
       <div class="sl mb4 cam">READING COMPREHENSION</div>
@@ -6442,6 +6445,8 @@ function rReading(){
            </div><button onclick="RST.ra={};RST.rs=false;RST.rsc=null;rReading()" style="padding:9px 16px;border:1px solid ${a.col};border-radius:7px;color:${a.col};background:transparent;cursor:pointer;font-size:10px;font-weight:700">ΞΑΝΑ</button></div>`}
     </div>`;
   }
+  _injectLearnTabs(el, 'reading');
+
 }
 
 
@@ -8913,6 +8918,100 @@ function _injectLearnTabs(el, activeTab){
 
   // Insert at the very top of the panel
   el.insertBefore(bar, el.firstChild);
+}
+
+/* ══ WRITE SUB-TAB BAR ══ */
+function _injectWriteTabs(el, activeTab){
+  const existing = el.querySelector('#write-subtab-bar');
+  if(existing) existing.remove();
+
+  const bar = document.createElement('div');
+  bar.id = 'write-subtab-bar';
+  bar.style.cssText = 'display:flex;overflow-x:auto;border-bottom:1px solid var(--ln);'
+    + 'margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:var(--s1);'
+    + 'position:sticky;top:0;z-index:10;flex-shrink:0';
+
+  const tabs = [
+    {id:'topics',  ic:'📝', lb:'Topics'},
+    {id:'freewrite',ic:'✍️', lb:'Free Write'},
+    {id:'email',   ic:'📧', lb:'Email'},
+  ];
+
+  tabs.forEach(t => {
+    const btn = document.createElement('button');
+    const isActive = activeTab === t.id;
+    btn.style.cssText = 'flex-shrink:0;padding:10px 16px;background:none;border:none;'
+      + 'border-bottom:2px solid ' + (isActive ? 'var(--vi)' : 'transparent') + ';'
+      + 'cursor:pointer;font-size:12px;font-weight:700;'
+      + 'color:' + (isActive ? 'var(--vi)' : 'var(--t3)') + ';'
+      + 'white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:5px';
+    btn.innerHTML = '<span>' + t.ic + '</span><span>' + t.lb + '</span>';
+    btn.onclick = () => {
+      WRITE_TAB = t.id;
+      if(t.id === 'topics')    { WST.topic=null; rWriting(); }
+      else if(t.id === 'freewrite') { _renderFreeWrite(); }
+      else if(t.id === 'email')     { _renderEmailWriter(); }
+    };
+    bar.appendChild(btn);
+  });
+
+  el.insertBefore(bar, el.firstChild);
+}
+
+function _renderFreeWrite(){
+  WRITE_TAB = 'freewrite';
+  const el = document.getElementById('writing');
+  if(!el) return;
+  el.innerHTML = '';
+  _injectWriteTabs(el, 'freewrite');
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'padding:16px;max-width:640px;margin:0 auto;width:100%';
+  wrap.innerHTML = '<div style="font-size:16px;font-weight:700;margin-bottom:6px">✍️ Free Writing</div>'
+    + '<p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.6">Γράψε ελεύθερα — το AI θα σε διορθώσει και θα σου δώσει feedback.</p>';
+  const ta = document.createElement('textarea');
+  ta.id = 'wptx';
+  ta.placeholder = 'Write anything in English...';
+  ta.style.cssText = 'width:100%;min-height:160px;padding:12px;background:var(--s2);border:1px solid var(--ln);'
+    + 'border-radius:10px;color:var(--t1);font-size:16px;line-height:1.7;resize:vertical;font-family:inherit;margin-bottom:10px;box-sizing:border-box';
+  wrap.appendChild(ta);
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px';
+  const fb = document.createElement('button');
+  fb.id = 'wf-btn'; fb.className = 'btn bp bsm'; fb.textContent = '🤖 AI Feedback';
+  fb.onclick = () => getAIWritingFeedback();
+  row.appendChild(fb);
+  wrap.appendChild(row);
+  const res = document.createElement('div');
+  res.id = 'wf-result'; res.style.display = 'none';
+  wrap.appendChild(res);
+  el.appendChild(wrap);
+}
+
+function _renderEmailWriter(){
+  WRITE_TAB = 'email';
+  const el = document.getElementById('writing');
+  if(!el) return;
+  el.innerHTML = '';
+  _injectWriteTabs(el, 'email');
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'padding:16px;max-width:640px;margin:0 auto;width:100%';
+  wrap.innerHTML = '<div style="font-size:16px;font-weight:700;margin-bottom:6px">📧 Email Improver</div>'
+    + '<p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.6">Γράψε ένα email — το AI θα το κάνει πιο επαγγελματικό.</p>';
+  const ta = document.createElement('textarea');
+  ta.id = 'email-input';
+  ta.placeholder = 'Dear Sir/Madam...';
+  ta.style.cssText = 'width:100%;min-height:140px;padding:12px;background:var(--s2);border:1px solid var(--ln);'
+    + 'border-radius:10px;color:var(--t1);font-size:16px;line-height:1.7;resize:vertical;font-family:inherit;margin-bottom:10px;box-sizing:border-box';
+  wrap.appendChild(ta);
+  const btn = document.createElement('button');
+  btn.className = 'btn bp bsm'; btn.textContent = '✨ Βελτίωσε';
+  btn.onclick = () => improveEmail();
+  btn.style.marginBottom = '12px';
+  wrap.appendChild(btn);
+  const out = document.createElement('div');
+  out.id = 'email-output';
+  wrap.appendChild(out);
+  el.appendChild(wrap);
 }
 function initApp(){
   if(DB.get('light_mode',false)) document.documentElement.setAttribute('data-theme','light');
