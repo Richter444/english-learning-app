@@ -528,7 +528,40 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
 /* Android keyboard fix */
 input:focus, textarea:focus {
   scroll-margin-bottom: 80px;
-}</style>
+}
+/* ══ MOBILE IMPROVEMENTS ══ */
+@media (max-width: 600px) {
+  .sec { padding: 12px !important; }
+  .fp.f16 { font-size: 15px !important; }
+  .card { padding: 12px !important; }
+  .g2, .g3 { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+  .g4 { grid-template-columns: 1fr 1fr !important; }
+  button.btn { min-height: 40px; padding: 8px 14px !important; }
+  .scard { padding: 12px !important; }
+  textarea { font-size: 16px !important; } /* prevent zoom on iOS */
+  input[type=text], input[type=password], input[type=email] {
+    font-size: 16px !important; /* prevent zoom on iOS */
+  }
+  .sec.fu { padding-left: 12px !important; padding-right: 12px !important; }
+  /* Speaking tabs horizontal scroll */
+  .vm { padding: 0 !important; }
+}
+/* Ensure panels fill properly on mobile */
+.pnl { 
+  overflow-x: hidden !important;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+/* Bottom nav safe area */
+#mobile-nav {
+  padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+}
+/* Tab bar overflow scroll */
+[style*="overflow-x:auto"] {
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+</style>
 </head>
 <body>
 <div id="app">
@@ -6269,7 +6302,7 @@ function rReading(){
       <div class="fp f16 b mb4" style="color:${a.col}">${a.t}</div>
       ${a.vocab.length?`<div class="card c-ok mb12 fx ac g8 fw"><span class="f10 c2">💡 Κλικ για αποθήκευση στο Vocabular:</span>${a.vocab.map(v=>`<button onclick="saveFromR('${v}')" style="padding:3px 9px;border-radius:20px;border:1px solid var(--gr)44;background:var(--gr)1a;color:var(--gr);font-size:10px;font-weight:600;cursor:pointer">+ ${v}</button>`).join('')}</div>`:''}
       <div class="fx ac g8 mb8">
-        <button onclick="speak(a.t+'. '+a.text.replace(/<[^>]+>/g,''),'en-GB')" style="padding:4px 12px;background:none;border:1px solid var(--tl)44;border-radius:20px;color:var(--tl);font-size:11px;cursor:pointer">🔊 Άκουσε το κείμενο</button>
+        <button onclick="speakReading(RST.art)" style="padding:4px 12px;background:none;border:1px solid var(--tl)44;border-radius:20px;color:var(--tl);font-size:11px;cursor:pointer">🔊 Άκουσε το κείμενο</button>
         <button onclick="saveSentence(a.text.replace(/<[^>]+>/g,'').substring(0,200),'Reading '+a.t,'');toast('📌 Αποθηκεύτηκε στο Sentence Mining!','var(--gr)')" style="padding:4px 12px;background:none;border:1px solid var(--vi)44;border-radius:20px;color:var(--vi);font-size:11px;cursor:pointer">📌 Αποθήκευσε</button>
       </div>
       <div class="card mb20 rbody">${a.text}</div>
@@ -7977,368 +8010,27 @@ function startConvVoice(inputEl, micBtn){
 
 /* THINKING IN ENGLISH MODE */
 let TEST={questions:[],idx:0,score:0,history:[],timer:null,secs:0};
-const THINKING_QS=["What did you do this morning?","Describe your bedroom in 3 sentences.","What is your favourite food and why?","What would you do with one million euros?","Describe a person you admire.","What do you do when you feel stressed?","What is the best trip you have ever taken?","Describe your daily routine.","What is something you want to learn?","What makes a good friend?","Describe your city in 3 words.","What did you eat yesterday?","What is your favourite season and why?","What would you change about your job?","Describe a movie you love.","What are you afraid of?","What do you do on weekends?","Describe your perfect day.","What skill do you wish you had?","What is something you are proud of?","If you could live anywhere, where would you go?","What is the last book you read?","Describe someone in your family.","What is your morning routine?","What would you do differently in life?"];
-
-function startThinkingMode(){
-  const shuffled=[...THINKING_QS].sort(()=>Math.random()-.5);
-  TEST={questions:shuffled,idx:0,score:0,history:[],timer:null,secs:0};
-  renderThinking();
-}
-
-function renderThinking(){
-  const el=document.getElementById('speaking');
-  if(!el)return;
-  const vm=el.querySelector('.vm');
-  const target=vm||el;
-  target.innerHTML='';
-
-  if(TEST.idx>=10){
-    addXP(TEST.score*5);
-    const _spk=DB.get('spk_stats',{t:0,i:0,s:0,j:0,ai:0});_spk.t++;DB.set('spk_stats',_spk);
-    const rows=TEST.history.map((h,i)=>'<div style="padding:8px 0;border-bottom:1px solid var(--ln)"><div style="font-size:11px;color:var(--t3)">Q'+(i+1)+': '+h.q+'</div><div style="font-size:12px;color:var(--t1);margin-top:2px">'+h.a+'</div><div style="font-size:11px;color:'+(h.time<=8?'var(--gr)':'var(--am)')+'">'+h.time+'s</div></div>').join('');
-    target.innerHTML='<div style="max-width:520px;margin:0 auto"><div style="text-align:center;margin-bottom:20px"><div style="font-size:36px;margin-bottom:8px">🧠</div><div style="font-size:16px;font-weight:700;margin-bottom:4px">Thinking in English!</div><div style="font-size:12px;color:var(--t3)">'+TEST.score+'/10 fast answers · +'+(TEST.score*5)+' XP</div></div><div style="background:var(--s2);border-radius:10px;padding:12px;margin-bottom:16px;max-height:300px;overflow-y:auto">'+rows+'</div><button onclick="startThinkingMode()" class="btn bp" style="width:100%;justify-content:center">Ξανά</button></div>';
-    return;
-  }
-
-  const q=TEST.questions[TEST.idx];
-  const totalTime=12;
-  TEST.secs=totalTime;
-  if(TEST.timer)clearInterval(TEST.timer);
-
-  target.innerHTML='<div style="max-width:480px;margin:0 auto"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><div style="font-size:12px;color:var(--t3)">🧠 THINKING IN ENGLISH</div><div style="font-size:12px;color:var(--t3)">Q'+(TEST.idx+1)+'/10</div></div><div style="height:4px;background:var(--s3);border-radius:4px;margin-bottom:20px"><div id="think-bar" style="height:100%;width:100%;background:var(--gr);border-radius:4px;transition:width 1s linear"></div></div><div style="font-size:22px;font-weight:700;text-align:center;margin-bottom:8px;line-height:1.4;color:var(--t1)">'+q+'</div><div id="think-timer" style="text-align:center;font-size:40px;font-weight:700;margin-bottom:20px;color:var(--gr)">'+totalTime+'</div><textarea id="think-input" placeholder="Answer immediately in English..." style="width:100%;height:90px;padding:12px;background:var(--s2);border:2px solid var(--bl);border-radius:10px;color:var(--t1);font-size:14px;resize:none;font-family:var(--font)"></textarea><div style="display:flex;gap:8px;margin-top:10px"><button onclick="submitThinkingAnswer()" class="btn bp" style="flex:1;justify-content:center">Next question</button></div></div>';
-  setTimeout(()=>document.getElementById('think-input')?.focus(),50);
-
-  TEST.timer=setInterval(()=>{
-    // Stop timer if user navigated away
-    if(!document.getElementById('think-timer')){clearInterval(TEST.timer);TEST.timer=null;return;}
-    TEST.secs--;
-    const timerEl=document.getElementById('think-timer');
-    const barEl=document.getElementById('think-bar');
-    if(timerEl){timerEl.textContent=Math.max(0,TEST.secs);timerEl.style.color=TEST.secs>6?'var(--gr)':TEST.secs>3?'var(--am)':'var(--ro)';}
-    if(barEl)barEl.style.width=(Math.max(0,TEST.secs)/totalTime*100)+'%';
-    if(TEST.secs<=0){clearInterval(TEST.timer);TEST.timer=null;submitThinkingAnswer();}
-  },1000);
-}
-
-function submitThinkingAnswer(){
-  if(TEST.timer)clearInterval(TEST.timer);
-  const inp=document.getElementById('think-input');
-  const answer=(inp&&inp.value.trim())||'(no answer)';
-  const timeTaken=12-Math.max(0,TEST.secs);
-  TEST.history.push({q:TEST.questions[TEST.idx],a:answer,time:timeTaken});
-  if(answer!=='(no answer)')TEST.score++;
-  TEST.idx++;
-  renderThinking();
-}
-
-/* INSTANT RESPONSE TRAINING */
-let IRST={questions:[],idx:0,score:0,history:[]};
-const INSTANT_QS=[{q:"What is your name?",h:"My name is..."},{q:"Where are you from?",h:"I am from..."},{q:"What do you do for work?",h:"I work as..."},{q:"How are you feeling today?",h:"I am feeling..."},{q:"What did you have for breakfast?",h:"I had..."},{q:"What is the weather like?",h:"It is..."},{q:"What time did you wake up?",h:"I woke up at..."},{q:"What are you doing tonight?",h:"I am planning to..."},{q:"Do you prefer coffee or tea?",h:"I prefer..."},{q:"What is your favourite sport?",h:"I love..."},{q:"How do you get to work?",h:"I take the..."},{q:"What is stressing you out lately?",h:"I have been stressed about..."},{q:"Name three things you can see right now.",h:"I can see..."},{q:"What would you do on a rainy Sunday?",h:"I would probably..."},{q:"Recommend a TV show.",h:"You should watch..."},{q:"What are you good at?",h:"I am quite good at..."},{q:"What is the last thing you bought?",h:"The last thing I bought was..."},{q:"If you could travel tomorrow, where?",h:"I would go to..."},{q:"Describe your phone in one sentence.",h:"My phone is..."},{q:"One word to describe your week?",h:"My week has been..."}];
-
-function startInstantTraining(){
-  const shuffled=[...INSTANT_QS].sort(()=>Math.random()-.5).slice(0,10);
-  IRST={questions:shuffled,idx:0,score:0,history:[]};
-  renderInstant();
-}
-
-function renderInstant(){
-  const el=document.getElementById('speaking');
-  if(!el)return;
-  const vm=el.querySelector('.vm');
-  const target=vm||el;
-  target.innerHTML='';
-  if(IRST.idx>=IRST.questions.length){
-    addXP(IRST.score*4);
-    const _spk2=DB.get('spk_stats',{t:0,i:0,s:0,j:0,ai:0});_spk2.i++;DB.set('spk_stats',_spk2);
-    const rows=IRST.history.map((h,i)=>'<div style="padding:8px 0;border-bottom:1px solid var(--ln)"><div style="font-size:11px;color:var(--t3)">'+h.q+'</div><div style="font-size:12px;color:var(--t1);margin-top:2px">'+h.a+'</div></div>').join('');
-    target.innerHTML='<div style="max-width:480px;margin:0 auto"><div style="text-align:center;margin-bottom:20px"><div style="font-size:36px;margin-bottom:8px">⚡</div><div style="font-size:16px;font-weight:700;margin-bottom:4px">Instant Response!</div><div style="font-size:12px;color:var(--t3)">'+IRST.score+'/10 · +'+(IRST.score*4)+' XP</div></div><div style="background:var(--s2);border-radius:10px;padding:12px;max-height:280px;overflow-y:auto;margin-bottom:16px">'+rows+'</div><button onclick="startInstantTraining()" class="btn bp" style="width:100%;justify-content:center">Ξανά</button></div>';
-    return;
-  }
-  const item=IRST.questions[IRST.idx];
-  target.innerHTML='<div style="max-width:440px;margin:0 auto"><div style="display:flex;justify-content:space-between;margin-bottom:16px"><div style="font-size:12px;color:var(--t3)">⚡ INSTANT RESPONSE</div><div style="font-size:12px;color:var(--t3)">'+(IRST.idx+1)+'/'+IRST.questions.length+'</div></div><div style="font-size:24px;font-weight:700;text-align:center;margin-bottom:8px;line-height:1.4">'+item.q+'</div><div style="font-size:12px;color:var(--t3);text-align:center;margin-bottom:20px">'+item.h+'</div><textarea id="instant-input" placeholder="Answer now..." style="width:100%;height:80px;padding:12px;background:var(--s2);border:2px solid var(--vi);border-radius:10px;color:var(--t1);font-size:14px;resize:none;font-family:var(--font)"></textarea><button onclick="submitInstant()" class="btn" style="margin-top:10px;width:100%;justify-content:center;background:var(--vi);color:#fff;border:none">Next</button></div>';
-  setTimeout(()=>document.getElementById('instant-input')?.focus(),50);
-}
-
-function submitInstant(){
-  const inp=document.getElementById('instant-input');
-  const answer=(inp&&inp.value.trim())||'(skipped)';
-  IRST.history.push({q:IRST.questions[IRST.idx].q,a:answer});
-  if(answer!=='(skipped)')IRST.score++;
-  IRST.idx++;
-  renderInstant();
-}
-
-/* VOICE JOURNALING */
-let VJST={recording:false,transcript:'',feedback:'',rec:null,loading:false};
-const JOURNAL_PROMPTS=["Talk about your day so far.","Describe something that made you smile recently.","What are you looking forward to this week?","Talk about a challenge you are facing.","Describe your ideal weekend.","What is something new you learned recently?","Talk about a person who inspires you.","What would you change about your daily routine?","Describe a place that makes you feel calm.","What are your goals for the next month?","Talk about your favourite hobby.","Describe a memorable meal.","What has been on your mind lately?","Talk about something you are grateful for."];
-
-function startVoiceJournal(){
-  VJST={recording:false,transcript:'',feedback:'',rec:null,loading:false};
-  renderJournal();
-}
-
-function renderJournal(){
-  const el=document.getElementById('speaking');
-  if(!el)return;
-  const vm=el.querySelector('.vm');
-  const target=vm||el;
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  const hasVoice=!!SR&&(location.protocol==='https:'||!!window.AndroidTTS);
-  const prompt=JOURNAL_PROMPTS[new Date().getDay()%JOURNAL_PROMPTS.length];
-  target.innerHTML='<div style="max-width:520px;margin:0 auto"><div style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:1px;margin-bottom:16px">📔 VOICE JOURNAL</div><div style="background:linear-gradient(135deg,rgba(79,142,247,.1),rgba(124,92,245,.06));border:1px solid rgba(79,142,247,.3);border-radius:12px;padding:16px;margin-bottom:16px"><div style="font-size:12px;font-weight:600;margin-bottom:4px">Σημερινό prompt:</div><div style="font-size:15px;font-weight:700;color:var(--bl)">'+prompt+'</div></div>'+(hasVoice?'<div style="text-align:center;margin-bottom:16px"><button id="vj-mic" onclick="toggleJournalRec()" style="width:68px;height:68px;border-radius:50%;background:'+(VJST.recording?'var(--ro)':'var(--bl)')+';border:none;cursor:pointer;font-size:26px;color:#fff;box-shadow:0 4px 16px rgba(79,142,247,.4)">'+(VJST.recording?'⏹':'🎤')+'</button><div style="font-size:11px;color:var(--t3);margin-top:6px">'+(VJST.recording?'Μιλάς... (⏹ stop)':'Πάτα για εγγραφή')+'</div></div>':'<div style="font-size:11px;color:var(--am);margin-bottom:12px">Το μικρόφωνο χρειάζεται Chrome/HTTPS. Γράψε παρακάτω.</div>')+'<textarea id="vj-text" placeholder="...ή γράψε εδώ στα αγγλικά" style="width:100%;height:100px;padding:12px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;color:var(--t1);font-size:13px;resize:none;font-family:var(--font);margin-bottom:12px">'+VJST.transcript+'</textarea>'+(VJST.loading?'<div style="text-align:center;font-size:12px;color:var(--t3);margin-bottom:12px">⏳ Αναλύω...</div>':VJST.feedback?'<div style="background:var(--s2);border-radius:10px;padding:14px;margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:var(--bl);margin-bottom:8px">🤖 AI Feedback</div><div style="font-size:12px;color:var(--t2);line-height:1.9;white-space:pre-line">'+VJST.feedback+'</div></div>':'')+'<div style="display:flex;gap:8px">'+(hasAPIKey()?'<button onclick="getJournalFeedback()" class="btn bp" style="flex:1;justify-content:center">🤖 AI Feedback</button>':'<button onclick="go(\'settings\')" class="btn" style="flex:1;justify-content:center;background:var(--s2);border:1px solid var(--ln);color:var(--t2)">⚙ API Key</button>')+'<button onclick="startVoiceJournal()" style="padding:10px 14px;background:var(--s3);border:1px solid var(--ln);border-radius:8px;cursor:pointer;font-size:12px;color:var(--t2)">🔄 Νέο</button></div></div>';
-}
-
-function toggleJournalRec(){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){toast('Το μικρόφωνο χρειάζεται Chrome ή Android app','var(--am)');return;}
-  if(location.protocol!=='https:'&&!window.AndroidTTS){
-    toast('🔒 Το μικρόφωνο λειτουργεί στο Android app ή στο richter444.github.io','var(--am)');return;
-  }
-  if(VJST.recording&&VJST.rec){VJST.rec.stop();return;}
-  const rec=new SR();
-  VJST.rec=rec;VJST.recording=true;
-  rec.lang='en-US';rec.continuous=true;rec.interimResults=true;
-  rec.onresult=(e)=>{VJST.transcript=Array.from(e.results).map(r=>r[0].transcript).join(' ');const ta=document.getElementById('vj-text');if(ta)ta.value=VJST.transcript;};
-  rec.onend=()=>{VJST.recording=false;VJST.rec=null;renderJournal();};
-  rec.onerror=(e)=>{VJST.recording=false;if(e.error!=='aborted')toast('Σφάλμα: '+e.error,'var(--am)');renderJournal();};
-  rec.start();renderJournal();
-}
-
-/* SHADOWING MODE */
-let SHST={idx:0,transcript:'',feedback:'',recording:false,rec:null};
-const SHADOW_SENTS=[{t:"I have been working on this project for about three weeks now.",tip:"been + -ing = ongoing action"},
-{t:"Could you possibly send me the report by end of day?",tip:"Could you possibly = very polite request"},
-{t:"I am not sure I follow — could you elaborate on that?",tip:"I do not follow = I do not understand"},
-{t:"That makes a lot of sense, actually.",tip:"actually = να δείξεις συμφωνία"},
-{t:"I am running a bit late — I will be there in ten minutes.",tip:"running late = αργώ"},
-{t:"Let me get back to you on that.",tip:"να πεις ότι θα απαντήσεις αργότερα"},
-{t:"It has been a really long week, to be honest.",tip:"to be honest = για να είμαι ειλικρινής"},
-{t:"I was wondering if you would be free for a quick call.",tip:"I was wondering = διστακτική ερώτηση"},
-{t:"That is completely understandable.",tip:"να δείξεις ενσυναίσθηση"},
-{t:"I will look into it and let you know.",tip:"look into = ερευνώ"},
-{t:"We seem to be on the same page.",tip:"on the same page = συμφωνούμε"},
-{t:"It is worth giving it a shot.",tip:"give it a shot = δοκίμασε το"},
-{t:"That went better than expected.",tip:"better than expected = καλύτερα από ό,τι περίμενα"},
-{t:"I appreciate you taking the time.",tip:"ευχαριστώ επαγγελματικά"},
-{t:"Could we push the meeting to Thursday?",tip:"push = μετάθεση ραντεβού"},
-{t:"I am totally swamped at the moment.",tip:"swamped = overwhelmed, informal"},
-{t:"Let us touch base tomorrow morning.",tip:"touch base = επικοινωνούμε σύντομα"},
-{t:"I had a feeling that might happen.",tip:"I had a feeling = το είχα προβλέψει"},
-{t:"Do not worry, I have got it covered.",tip:"I have got it covered = το έχω υπό έλεγχο"},
-{t:"That is not something I can commit to right now.",tip:"commit to = δεσμεύομαι"}];
-
-function startShadowing(){
-  SHST={idx:0,transcript:'',recording:false,rec:null};
-  renderShadowing();
-}
-
-function renderShadowing(){
-  const el=document.getElementById('speaking');
-  if(!el)return;
-  const vm=el.querySelector('.vm');
-  const target=vm||el;
-  target.innerHTML='';
-
-  if(SHST.idx>=SHADOW_SENTS.length){
-    addXP(30);
-    const _spk3=DB.get('spk_stats',{t:0,i:0,s:0,j:0,ai:0});_spk3.s++;DB.set('spk_stats',_spk3);
-    target.innerHTML='<div style="max-width:480px;margin:0 auto;text-align:center;padding:40px 0"><div style="font-size:40px;margin-bottom:12px">🎯</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">Shadowing Complete!</div><div style="font-size:12px;color:var(--t3);margin-bottom:20px">'+SHADOW_SENTS.length+' sentences · +30 XP</div><button onclick="startShadowing()" class="btn bp" style="justify-content:center">Ξανά</button></div>';
-    return;
-  }
-
-  const item=SHADOW_SENTS[SHST.idx];
-  const pct=Math.round(SHST.idx/SHADOW_SENTS.length*100);
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  const hasVoice=!!SR&&(location.protocol==='https:'||!!window.AndroidTTS);
-
-  const wrap=document.createElement('div');
-  wrap.style.cssText='max-width:520px;margin:0 auto';
-
-  const progress_html='<div style="display:flex;justify-content:space-between;margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:var(--t3)">📖 SHADOWING</div><div style="font-size:12px;color:var(--t3)">'+(SHST.idx+1)+'/'+SHADOW_SENTS.length+'</div></div><div style="height:3px;background:var(--s3);border-radius:3px;margin-bottom:20px"><div style="height:100%;width:'+pct+'%;background:var(--bl);border-radius:3px"></div></div>';
-
-  const card_html='<div style="background:var(--s2);border-radius:12px;padding:24px;text-align:center;margin-bottom:12px"><div style="font-size:19px;font-weight:600;line-height:1.6;color:var(--t1)">'+item.t+'</div></div>';
-
-  const tip_html='<div style="font-size:12px;color:var(--t3);margin-bottom:16px;padding:8px 12px;background:var(--s2);border-radius:8px">💡 '+item.tip+'</div>';
-
-  const transcript_html=SHST.transcript
-    ?'<div style="font-size:12px;color:var(--t3);margin-bottom:12px;padding:8px 12px;background:var(--s2);border-radius:8px;border-left:3px solid var(--gr)">Είπες: <span style="color:var(--t1)">'+escHTML(SHST.transcript)+'</span></div>'
-    :'';
-
-  wrap.innerHTML=progress_html+card_html+tip_html+transcript_html;
-
-  // Buttons row
-  const btnRow=document.createElement('div');
-  btnRow.style.cssText='display:flex;gap:8px';
-
-  const listenBtn=document.createElement('button');
-  listenBtn.style.cssText='flex:1;padding:10px;background:var(--bl);border-radius:8px;color:#fff;border:none;cursor:pointer;font-size:13px';
-  listenBtn.textContent='🔊 Άκουσε';
-  listenBtn.onclick=()=>speak(SHADOW_SENTS[SHST.idx].t,'en-GB');
-  btnRow.appendChild(listenBtn);
-
-  if(hasVoice){
-    const micBtn=document.createElement('button');
-    micBtn.id='shadow-mic';
-    micBtn.style.cssText='flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:13px;border:1px solid var(--ln);background:'+(SHST.recording?'var(--ro)':'var(--s2)')+';color:'+(SHST.recording?'#fff':'var(--t1)');
-    micBtn.textContent=SHST.recording?'⏹ Stop':'🎤 Επανέλαβε';
-    micBtn.onclick=shadowRecord;
-    btnRow.appendChild(micBtn);
-  }
-
-  const nextBtn=document.createElement('button');
-  nextBtn.style.cssText='flex:1;padding:10px;background:var(--gr);border-radius:8px;color:#fff;border:none;cursor:pointer;font-size:13px';
-  nextBtn.textContent='→ Επόμενο';
-  nextBtn.onclick=shadowNext;
-  btnRow.appendChild(nextBtn);
-
-  wrap.appendChild(btnRow);
-  target.appendChild(wrap);
-}
-
-function shadowRecord(){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){toast('Το μικρόφωνο χρειάζεται Chrome ή Android app','var(--am)');return;}
-  // On Android WebView (file://) SR works via native permission grant
-  // Only block on non-Android non-HTTPS
-  if(location.protocol!=='https:'&&!window.AndroidTTS){
-    toast('🔒 Το μικρόφωνο λειτουργεί στο Android app ή στο richter444.github.io','var(--am)');return;
-  }
-  if(SHST.recording&&SHST.rec){SHST.rec.stop();return;}
-  const rec=new SR();
-  SHST.rec=rec;SHST.recording=true;
-  rec.lang='en-US';rec.continuous=false;rec.interimResults=false;
-  rec.onresult=(e)=>{SHST.transcript=e.results[0][0].transcript;};
-  rec.onend=()=>{SHST.recording=false;SHST.rec=null;renderShadowing();};
-  rec.onerror=(e)=>{SHST.recording=false;if(e.error!=='aborted')toast('Σφάλμα: '+e.error,'var(--am)');renderShadowing();};
-  rec.start();renderShadowing();
-}
-
-function shadowNext(){
-  if(SHST.rec)SHST.rec.stop();
-  SHST.idx++;SHST.transcript='';SHST.recording=false;
-  renderShadowing();
-}
-
-/* ══ CLOZE TEST ══ */
-function rClozeTest(){
-  const el=document.getElementById('writing');
-  if(!el)return;
-  const arts=READINGS||[];
-
-  if(!CLST.art){
-    // List view
-    el.innerHTML='<div class="sec fu" style="max-width:700px">'
-      +'<div class="sl mb4" style="color:var(--vi)">WRITING</div>'
-      +'<div class="fp f16 b mb16">Cloze Tests — Συμπλήρωσε τα κενά</div>'
-      +'<p class="f12 c2 mb16" style="line-height:1.6">Επέλεξε ένα κείμενο. Μερικές λέξεις θα αφαιρεθούν — συμπλήρωσε τα κενά από μνήμη.</p>'
-      +'<div class="g2">'
-      +arts.map(a=>'<button onclick="startCloze(this)" data-id="'+a.id+'" style="padding:14px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;cursor:pointer;text-align:left;width:100%">'
-        +'<div style="font-size:12px;font-weight:700;color:var(--t1);margin-bottom:4px">'+a.t+'</div>'
-        +'<div style="font-size:11px;color:var(--t3)">'+a.lv+' · '+a.time+'</div>'
-        +'</button>').join('')
-      +'</div></div>';
-    return;
-  }
-
-  const art=arts.find(a=>a.id===CLST.art);
-  if(!art){CLST.art=null;rClozeTest();return;}
-
-  // Build cloze: remove every 7th content word
-  const stripped=art.text.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
-  const words=stripped.split(' ');
-  let blanks=[];
-  const clozeWords=words.map((w,i)=>{
-    const clean=w.replace(/[^a-zA-Z]/g,'');
-    if(clean.length>4 && i%7===6){
-      blanks.push({idx:i,word:clean,orig:w});
-      return '<input data-idx="'+i+'" type="text" placeholder="___" style="width:'+(clean.length*10+20)+'px;padding:2px 6px;background:var(--s2);border:1px solid var(--bl);border-radius:4px;font-size:13px;color:var(--t1);text-align:center">';
-    }
-    return w;
-  });
-
-  const checked=CLST.checked;
-  let clozeHtml=clozeWords.join(' ');
-
-  if(checked){
-    // Show results
-    blanks.forEach(b=>{
-      const ans=(CLST.answers[b.idx]||'').trim().toLowerCase();
-      const correct=b.word.toLowerCase();
-      const col=ans===correct?'var(--gr)':'var(--ro)';
-      clozeHtml=clozeHtml.replace(
-        'data-idx="'+b.idx+'"',
-        'data-idx="'+b.idx+'" style="width:'+(b.word.length*10+20)+'px;padding:2px 6px;background:'+col+'22;border:1px solid '+col+';border-radius:4px;font-size:13px;color:'+col+';text-align:center" value="'+(CLST.answers[b.idx]||'')+'" readonly'
-      );
-    });
-    const correct=blanks.filter(b=>(CLST.answers[b.idx]||'').trim().toLowerCase()===b.word.toLowerCase()).length;
-    clozeHtml+='<div style="margin-top:16px;padding:12px;background:var(--s2);border-radius:8px;font-size:13px">Σκορ: <strong style="color:var(--bl)">'+correct+'/'+blanks.length+'</strong> — '+Math.round(correct/blanks.length*100)+'%</div>';
-    blanks.forEach(b=>{
-      if((CLST.answers[b.idx]||'').trim().toLowerCase()!==b.word.toLowerCase()){
-        clozeHtml+='<div style="font-size:11px;color:var(--t3);margin-top:4px">Σωστό: <strong>'+b.orig+'</strong></div>';
-      }
-    });
-  }
-
-  el.innerHTML='<div class="sec fu" style="max-width:700px">'
-    +'<div class="sl mb4" style="color:var(--vi)">CLOZE TEST</div>'
-    +'<div class="fp f14 b mb16">'+art.t+'</div>'
-    +'<div class="card mb16" style="line-height:2;font-size:13px">'+clozeHtml+'</div>'
-    +(!checked
-      ?'<div class="fx g8"><button onclick="checkCloze()" class="btn bp">✓ Έλεγχος</button><button onclick="CLST.art=null;rClozeTest()" class="btn bgh">← Πίσω</button></div>'
-      :'<div class="fx g8"><button onclick="CLST.art=null;CLST.checked=false;rClozeTest()" class="btn bp">🔄 Νέο</button><button onclick="CLST.art=null;rClozeTest()" class="btn bgh">← Λίστα</button></div>')
-    +'</div>';
-
-  // Attach input change handlers
-  if(!checked){
-    el.querySelectorAll('input[data-idx]').forEach(inp=>{
-      inp.addEventListener('input',()=>{CLST.answers[inp.dataset.idx]=inp.value;});
-    });
-  }
-}
-
-function checkCloze(){
-  CLST.checked=true;
-  const el=document.getElementById('writing');
-  el&&el.querySelectorAll('input[data-idx]').forEach(inp=>{
-    CLST.answers[inp.dataset.idx]=inp.value;
-  });
-  addXP(15);
-  rClozeTest();
-}
-
-/* SLANG MODE */
-let SLANGST={idx:0,mode:'learn',score:0,total:0,cards:[]};
-const SLANG_DATA=[
-  {s:"Gonna",f:"Going to",e:"I'm gonna grab a coffee.",n:"Casual — ποτέ σε γραπτό"},
-  {s:"Wanna",f:"Want to",e:"You wanna come with us?",n:"Πολύ συνηθισμένο"},
-  {s:"Gotta",f:"Have got to",e:"I've gotta run!",n:"Εκφράζει επείγον"},
-  {s:"Kinda",f:"Kind of",e:"It's kinda complicated.",n:"Μετριάζει αυτό που λες"},
-  {s:"Gimme",f:"Give me",e:"Gimme a sec.",n:"Πολύ casual — μόνο φίλοι"},
-  {s:"Lemme",f:"Let me",e:"Lemme check that.",n:"Casual"},
-  {s:"My bad",f:"My mistake",e:"Oh my bad, I forgot!",n:"Αναγνωρίζεις λάθος"},
-  {s:"No worries",f:"It is fine",e:"No worries, I'll sort it.",n:"British/Australian"},
-  {s:"Totally",f:"Completely",e:"I totally agree.",n:"Ενισχύει αυτό που λες"},
-  {s:"Hang on",f:"Wait a moment",e:"Hang on, let me think.",n:"Ζητάς χρόνο"},
-  {s:"I'm down",f:"I'm up for it",e:"A barbecue? I'm down!",n:"Αποδέχεσαι πρόταση"},
-  {s:"Catch you later",f:"See you later",e:"Gotta go, catch you later!",n:"Αποχαιρετισμός"},
-  {s:"No-brainer",f:"Obvious decision",e:"Take that job, it's a no-brainer.",n:"Κάτι εύκολο/προφανές"},
-  {s:"I'm swamped",f:"I'm very busy",e:"Can't meet, totally swamped.",n:"Overwhelmed"},
-  {s:"On the same page",f:"In agreement",e:"Good, we're on the same page.",n:"Συμφωνούμε"},
-  {s:"Touch base",f:"Make brief contact",e:"Let's touch base tomorrow.",n:"Brief check-in"},
-  {s:"ASAP",f:"As soon as possible",e:"Send it ASAP!",n:"Λέγεται A-S-A-P"},
-  {s:"FYI",f:"For your information",e:"FYI, meeting moved to 3pm.",n:"Ενημέρωση"},
-  {s:"No biggie",f:"Not a big deal",e:"Don't worry, no biggie.",n:"Δεν πειράζει"},
-  {s:"Chill out",f:"Relax",e:"Chill out! It'll be fine.",n:"Για stressed κάποιον"},
-  {s:"That's fire",f:"That's excellent",e:"This pizza is fire!",n:"Gen Z slang"},
-  {s:"I'm dead",f:"That's hilarious",e:"He said what? I'm dead!",n:"Γελάς πολύ"},
-  {s:"Low-key",f:"Secretly",e:"I low-key love this song.",n:"Κάτι που δεν παραδέχεσαι"},
-  {s:"High-key",f:"Obviously",e:"I high-key need a holiday.",n:"Αντίθετο του low-key"},
-  {s:"Hit me up",f:"Contact me",e:"Hit me up when you're free.",n:"Πες μου να βρεθούμε"},
-  {s:"Spill the tea",f:"Tell me the gossip",e:"Spill the tea, what happened?",n:"Θέλεις να ακούσεις"},
-  {s:"Ghosted",f:"Stopped all contact",e:"He ghosted me after 3 dates.",n:"Εξαφανίστηκε χωρίς εξήγηση"},
-  {s:"It slaps",f:"It's really good",e:"This song slaps!",n:"Gen Z για μουσική/φαγητό"},
-  {s:"Vibe",f:"Atmosphere / feeling",e:"The vibe here is great.",n:"Η ατμόσφαιρα/αίσθηση"},
-  {s:"That hits different",f:"That feels special",e:"Coffee at sunrise hits different.",n:"Κάτι που αισθάνεσαι βαθύτερα"},
+const THINKING_QS=[
+  "What did you do this morning?",
+  "Describe your bedroom in 3 sentences.",
+  "What is your favourite food and why?",
+  "What would you do with one million euros?",
+  "Describe a person you admire.",
+  "What are your plans for the weekend?",
+  "Describe your job or daily routine.",
+  "What is your favourite holiday destination?",
+  "Talk about a book or film you enjoyed recently.",
+  "What would you change about your city?",
+  "Describe a challenge you faced and how you solved it.",
+  "What technology could you not live without?",
+  "Talk about a skill you would like to learn.",
+  "Describe your ideal house.",
+  "What do you think about social media?",
+  "Talk about a memorable trip you took.",
+  "Describe your favourite season and why.",
+  "What qualities do you look for in a friend?",
+  "Talk about something you are proud of.",
+  "What does success mean to you?"
 ];
 
 function startSlangMode(mode){
@@ -8830,19 +8522,15 @@ function _renderRoleplay(vm){
 // Override rAIConversation to also refresh practice panel
 
 function rAIConversation(){
-  const vm=document.getElementById('practice-vm');
-  const inPractice = document.getElementById('practice')?.style.display!=='none';
-  if(inPractice && vm && PRACTICE_TAB==='aiconv'){
-    vm.innerHTML='';
-    if(!CONVST.scenario) _renderConvGrid(vm);
-    else _renderConvChat(vm);
-    return;
-  }
-  if(_orig_rAIC2) _orig_rAIC2();
-  else {
-    const sp=document.getElementById('speaking');
-    if(sp){ if(!CONVST.scenario)_renderConvGrid(sp); else _renderConvChat(sp); }
-  }
+  // Find where to render: practice-vm if Practice panel is active, else #speaking
+  const practiceEl = document.getElementById('practice');
+  const inPractice = practiceEl && practiceEl.style.display !== 'none';
+  const vm = inPractice ? document.getElementById('practice-vm') : null;
+  const target = vm || document.getElementById('speaking');
+  if(!target) return;
+  target.innerHTML = '';
+  if(!CONVST.scenario) _renderConvGrid(target);
+  else _renderConvChat(target);
 }
 
 /* ── WRITE panel ── */
@@ -9013,34 +8701,59 @@ function rMoreHub(){
   wrap.style.cssText='max-width:600px;margin:0 auto;padding:20px 16px 80px;width:100%';
   el.appendChild(wrap);
   
-  // Header
   const hdr=document.createElement('div');
-  hdr.style.cssText='font-size:20px;font-weight:800;margin-bottom:20px';
-  hdr.textContent='⚙️ Περισσότερα';
+  hdr.style.cssText='font-size:18px;font-weight:800;margin-bottom:20px;color:var(--t1)';
+  hdr.textContent='Επιπλέον';
   wrap.appendChild(hdr);
-  
-  // Menu items
+
+  // Grid of ALL features
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px';
+  wrap.appendChild(grid);
+
   const items=[
-    {ic:'📊',title:'Στατιστικά',sub:'Progress, XP, achievements',fn:()=>{ go('stats'); }},
-    {ic:'⚙️',title:'Settings',sub:'API Key, επίπεδο, εμφάνιση',fn:()=>{ go('settings'); }},
-    {ic:'🎯',title:'Daily Lessons',sub:'Δομημένα μαθήματα',fn:()=>{ go('lessons'); }},
-    {ic:'🚫',title:'False Friends',sub:'Λέξεις-παγίδες',fn:()=>{ go('falsefriends'); }},
-    {ic:'🔧',title:'Sentence Builder',sub:'Δόμηση προτάσεων',fn:()=>{ go('builder'); }},
-    {ic:'📈',title:'Progress Tracker',sub:'Λεπτομερής παρακολούθηση',fn:()=>{ go('tracker'); }},
+    {ic:'📊',title:'Στατιστικά',sub:'Progress & achievements',fn:()=>go('stats'),col:'var(--bl)'},
+    {ic:'⚙️',title:'Settings',sub:'API Key, επίπεδο',fn:()=>go('settings'),col:'var(--t3)'},
+    {ic:'🎯',title:'Daily Lessons',sub:'Δομημένα μαθήματα',fn:()=>go('lessons'),col:'var(--gr)'},
+    {ic:'🚫',title:'False Friends',sub:'Λέξεις-παγίδες',fn:()=>go('falsefriends'),col:'var(--ro)'},
+    {ic:'🔧',title:'Sentence Builder',sub:'Δόμηση προτάσεων',fn:()=>go('builder'),col:'var(--vi)'},
+    {ic:'📈',title:'Tracker',sub:'Ημερήσια παρακολούθηση',fn:()=>go('tracker'),col:'var(--tl)'},
   ];
-  
+
   items.forEach(item=>{
-    const row=document.createElement('div');
-    row.style.cssText='display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--s2);border:1px solid var(--ln);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:border-color .15s';
-    row.onmouseover=()=>row.style.borderColor='var(--bl)';
-    row.onmouseout=()=>row.style.borderColor='var(--ln)';
-    row.onclick=item.fn;
-    row.innerHTML='<span style="font-size:26px;width:36px;text-align:center">'+item.ic+'</span>'
-      +'<div style="flex:1"><div style="font-size:14px;font-weight:600">'+item.title+'</div>'
-      +'<div style="font-size:11px;color:var(--t3)">'+item.sub+'</div></div>'
-      +'<span style="color:var(--t3)">›</span>';
-    wrap.appendChild(row);
+    const card=document.createElement('div');
+    card.style.cssText='background:var(--s2);border:1px solid var(--ln);border-radius:12px;padding:16px;cursor:pointer;transition:border-color .15s';
+    card.onmouseover=()=>card.style.borderColor=item.col;
+    card.onmouseout=()=>card.style.borderColor='var(--ln)';
+    card.onclick=item.fn;
+    card.innerHTML='<div style="font-size:28px;margin-bottom:8px">'+item.ic+'</div>'
+      +'<div style="font-size:13px;font-weight:700;color:var(--t1)">'+item.title+'</div>'
+      +'<div style="font-size:11px;color:var(--t3);margin-top:2px">'+item.sub+'</div>';
+    grid.appendChild(card);
   });
+  
+  // Quick stats row at bottom
+  const xp=DB.get('xp',0);
+  const streak=typeof calcStreak==='function'?calcStreak():0;
+  const learned=typeof learnedW==='function'?learnedW().length:0;
+  const statsRow=document.createElement('div');
+  statsRow.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px';
+  [{ic:'⭐',v:xp,l:'XP'},{ic:'🔥',v:streak,l:'Streak'},{ic:'📖',v:learned,l:'Λέξεις'}].forEach(s=>{
+    const cell=document.createElement('div');
+    cell.style.cssText='background:var(--s2);border:1px solid var(--ln);border-radius:10px;padding:10px 6px;text-align:center';
+    cell.innerHTML='<div style="font-size:16px;margin-bottom:2px">'+s.ic+'</div>'
+      +'<div style="font-size:16px;font-weight:800">'+s.v+'</div>'
+      +'<div style="font-size:10px;color:var(--t3)">'+s.l+'</div>';
+    statsRow.appendChild(cell);
+  });
+  wrap.appendChild(statsRow);
+}
+
+function speakReading(artId){
+  const art=(READINGS||[]).find(x=>x.id===artId);
+  if(!art)return;
+  const txt=(art.t||'')+'. '+(art.text||'').replace(/<[^>]+>/g,'');
+  speak(txt,'en-GB');
 }
 function initApp(){
   if(DB.get('light_mode',false)) document.documentElement.setAttribute('data-theme','light');
