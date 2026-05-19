@@ -727,7 +727,7 @@ input:focus, textarea:focus {
   <button class="mnb" onclick="go('home')"     id="mn-home">
     <span class="mn-ic">🏠</span>Home
   </button>
-  <button class="mnb" onclick="go('vocab')"    id="mn-learn">
+  <button class="mnb" onclick="goMain('learn')" id="mn-learn">
     <span class="mn-ic">📚</span>Learn
   </button>
   <button class="mnb" onclick="go('speaking')" id="mn-practice">
@@ -2212,6 +2212,7 @@ function sortedW(cat='all'){
 let VS={mode:'all',cat:'all',search:'',sbOpen:true,q:{mode:'mixed',sess:[],idx:0,res:[],fl:false,opts:[],sel:-1,fill:'',fd:false}};
 function rVocab(){
   const el=document.getElementById('vocab');
+  _injectLearnTabs(el, 'vocab');
   const lc=learnedW().length,due=dueW().length,all=getAllW().length;
   el.innerHTML=`
   ${!VS.sbOpen?`<button onclick="VS.sbOpen=true;rVocab()" style="width:36px;flex-shrink:0;background:var(--s2);border:none;border-right:1px solid var(--ln);color:var(--t2);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;writing-mode:vertical-lr;letter-spacing:1px;padding:10px 4px">Μενού</button>`:''}
@@ -3770,6 +3771,7 @@ let TST={idx:0,tab:'theory',qa:{},qs:false,qsc:null,ta:{},tc:{},te:{},ts:{},tips
 
 function rTenses(){
   const el=document.getElementById('tenses');
+  _injectLearnTabs(el, 'tenses');
   const isOpen=DB.get('tsb_open',true);
   el.innerHTML=`
     ${!isOpen?`<button onclick="DB.set('tsb_open',true);rTenses()" style="width:36px;flex-shrink:0;background:var(--s2);border:none;border-right:1px solid var(--ln);color:var(--t2);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;writing-mode:vertical-lr;letter-spacing:1px;padding:10px 4px">Μενού</button>`:''}
@@ -4446,6 +4448,7 @@ let GST={topic:null,ea:{},es:false,esc:null};
 function rGrammar(){
   unlockAch('gr1');{const gd=DB.get('gramDone',[]);const gt=GST.topic;if(gt&&!gd.includes(gt)){gd.push(gt);DB.set('gramDone',gd);}if(gd.length>=5)unlockAch('gr5');}
   const el=document.getElementById('grammar');
+  _injectLearnTabs(el, 'grammar');
   if(!GST.topic){
     el.innerHTML=`<div class="sec fu">
       <div class="sl mb4 cgr">GRAMMAR</div>
@@ -6379,6 +6382,7 @@ const MILESTONES=[
 function rReading(){
   unlockAch('rd1');{const rd2=DB.get('rdDone',[]);if(rd2.length>=5)unlockAch('rd5');}
   const el=document.getElementById('reading');
+  _injectLearnTabs(el, 'reading');
   if(!RST.art){
     el.innerHTML=`<div class="sec fu">
       <div class="sl mb4 cam">READING COMPREHENSION</div>
@@ -8873,6 +8877,42 @@ function speakReading(artId){
   if(!art)return;
   const txt=(art.t||'')+'. '+(art.text||'').replace(/<[^>]+>/g,'');
   speak(txt,'en-GB');
+}
+
+/* ══ LEARN SUB-TAB BAR ══ */
+function _injectLearnTabs(el, activeTab){
+  // Remove any existing learn-tab bar first
+  const existing = el.querySelector('#learn-subtab-bar');
+  if(existing) existing.remove();
+
+  const bar = document.createElement('div');
+  bar.id = 'learn-subtab-bar';
+  bar.style.cssText = 'display:flex;overflow-x:auto;border-bottom:1px solid var(--ln);'
+    + 'margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:var(--s1);'
+    + 'position:sticky;top:0;z-index:10;flex-shrink:0';
+
+  const tabs = [
+    {id:'vocab',   ic:'📖', lb:'Vocab'},
+    {id:'tenses',  ic:'⏱',  lb:'Tenses'},
+    {id:'grammar', ic:'📝', lb:'Grammar'},
+    {id:'reading', ic:'📚', lb:'Reading'},
+  ];
+
+  tabs.forEach(t => {
+    const btn = document.createElement('button');
+    const isActive = activeTab === t.id;
+    btn.style.cssText = 'flex-shrink:0;padding:10px 16px;background:none;border:none;'
+      + 'border-bottom:2px solid ' + (isActive ? 'var(--bl)' : 'transparent') + ';'
+      + 'cursor:pointer;font-size:12px;font-weight:700;'
+      + 'color:' + (isActive ? 'var(--bl)' : 'var(--t3)') + ';'
+      + 'white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:5px';
+    btn.innerHTML = '<span>' + t.ic + '</span><span>' + t.lb + '</span>';
+    btn.onclick = () => { LEARN_TAB = t.id; go(t.id); };
+    bar.appendChild(btn);
+  });
+
+  // Insert at the very top of the panel
+  el.insertBefore(bar, el.firstChild);
 }
 function initApp(){
   if(DB.get('light_mode',false)) document.documentElement.setAttribute('data-theme','light');
