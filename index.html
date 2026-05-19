@@ -554,63 +554,41 @@ input:focus, textarea:focus {
   </div>
 </nav>
 <div id="cnt">
-  <!-- NEW 5 main panels -->
-  <div id="home"     class="pnl" style="display:flex"></div>
-  <div id="learn"    class="pnl fpnl"></div>
-  <div id="practice" class="pnl fpnl"></div>
-  <div id="write"    class="pnl fpnl"></div>
-  <div id="more"     class="pnl fpnl"></div>
-  <!-- Legacy panels (hidden, used as content sources) -->
-  <div id="vocab"        class="pnl fpnl" style="display:none"></div>
-  <div id="tenses"       class="pnl fpnl" style="display:none"></div>
-  <div id="grammar"      class="pnl"      style="display:none"></div>
-  <div id="writing"      class="pnl"      style="display:none"></div>
-  <div id="reading"      class="pnl"      style="display:none"></div>
-  <div id="speaking"     class="pnl"      style="display:none"></div>
-  <div id="lessons"      class="pnl"      style="display:none"></div>
-  <div id="builder"      class="pnl"      style="display:none"></div>
-  <div id="falsefriends" class="pnl"      style="display:none"></div>
-  <div id="stats"        class="pnl"      style="display:none"></div>
-  <div id="tracker"      class="pnl fpnl" style="display:none"></div>
-  <div id="settings"     class="pnl"      style="display:none"></div>
+  <div id="home"        class="pnl fpnl"></div>
+  <div id="vocab"       class="pnl fpnl"></div>
+  <div id="tenses"      class="pnl fpnl"></div>
+  <div id="grammar"     class="pnl fpnl"></div>
+  <div id="writing"     class="pnl fpnl"></div>
+  <div id="reading"     class="pnl fpnl"></div>
+  <div id="speaking"    class="pnl fpnl"></div>
+  <div id="lessons"     class="pnl fpnl"></div>
+  <div id="builder"     class="pnl fpnl"></div>
+  <div id="falsefriends"class="pnl fpnl"></div>
+  <div id="stats"       class="pnl fpnl"></div>
+  <div id="tracker"     class="pnl fpnl"></div>
+  <div id="settings"    class="pnl fpnl"></div>
 </div>
 </div>
 
-<!-- Mobile Bottom Navigation - 5 tabs -->
+<!-- Mobile Bottom Navigation -->
 <nav id="mobile-nav">
-  <button class="mnb on" onclick="goMain('home')" id="mn-home">
+  <button class="mnb" onclick="go('home')" id="mn-home">
     <span class="mn-ic">🏠</span><span class="mn-lb">Home</span>
   </button>
-  <button class="mnb" onclick="goMain('learn')" id="mn-learn">
+  <button class="mnb" onclick="go('vocab')" id="mn-learn">
     <span class="mn-ic">📚</span><span class="mn-lb">Learn</span>
   </button>
-  <button class="mnb" onclick="goMain('practice')" id="mn-practice">
+  <button class="mnb" onclick="go('speaking')" id="mn-practice">
     <span class="mn-ic">🗣</span><span class="mn-lb">Practice</span>
   </button>
-  <button class="mnb" onclick="goMain('write')" id="mn-write">
+  <button class="mnb" onclick="go('writing')" id="mn-write">
     <span class="mn-ic">✍️</span><span class="mn-lb">Write</span>
   </button>
-  <button class="mnb" onclick="goMain('more')" id="mn-more">
+  <button class="mnb" onclick="goMore()" id="mn-more">
     <span class="mn-ic">⚙️</span><span class="mn-lb">More</span>
   </button>
 </nav>
 
-<!-- Mobile More Menu -->
-<div id="mobile-more" style="display:none;position:fixed;inset:0;z-index:8888;background:rgba(0,0,0,.6)" onclick="hideMobileMenu()">
-  <div id="mobile-more-sheet" onclick="event.stopPropagation()" style="position:absolute;bottom:0;left:0;right:0;background:var(--s1);border-radius:20px 20px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))">
-    <div style="width:36px;height:4px;background:var(--ln2);border-radius:2px;margin:0 auto 16px"></div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
-      <button onclick="go('tenses');hideMobileMenu()" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;background:var(--s2);border-radius:10px;color:var(--t1)"><span style="font-size:22px">⏱</span><span style="font-size:10px;color:var(--t3)">Tenses</span></button>
-      <button onclick="go('writing');hideMobileMenu()" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;background:var(--s2);border-radius:10px;color:var(--t1)"><span style="font-size:22px">✍</span><span style="font-size:10px;color:var(--t3)">Writing</span></button>
-      <button onclick="go('reading');hideMobileMenu()" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;background:var(--s2);border-radius:10px;color:var(--t1)"><span style="font-size:22px">📄</span><span style="font-size:10px;color:var(--t3)">Reading</span></button>
-      <button onclick="go('speaking');hideMobileMenu()" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;background:var(--s2);border-radius:10px;color:var(--t1)"><span style="font-size:22px">🗣</span><span style="font-size:10px;color:var(--t3)">Speaking</span></button>
-      <button onclick="go('stats');hideMobileMenu()" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;background:var(--s2);border-radius:10px;color:var(--t1)"><span style="font-size:22px">📊</span><span style="font-size:10px;color:var(--t3)">Stats</span></button>
-      <button onclick="go('tracker');hideMobileMenu()" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;background:var(--s2);border-radius:10px;color:var(--t1)"><span style="font-size:22px">📅</span><span style="font-size:10px;color:var(--t3)">Tracker</span></button>
-      <button onclick="go('falsefriends');hideMobileMenu()" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;background:var(--s2);border-radius:10px;color:var(--t1)"><span style="font-size:22px">⚠</span><span style="font-size:10px;color:var(--t3)">False Friends</span></button>
-      <button onclick="go('settings');hideMobileMenu()" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;background:var(--s2);border-radius:10px;color:var(--t1)"><span style="font-size:22px">⚙</span><span style="font-size:10px;color:var(--t3)">Settings</span></button>
-    </div>
-  </div>
-</div>
 
 <div id="toast"></div>
 
@@ -8626,13 +8604,11 @@ function phClick(el){
 
 // Current sub-tab state for each panel
 function goMain(id){
-  // Map 5-tab nav to the correct panel to show
   if(id==='home')          go('home');
   else if(id==='learn')    go(LEARN_TAB||'vocab');
-  else if(id==='practice'){ SPST.tab=PRACTICE_TAB||'aiconv'; go('speaking'); }
+  else if(id==='practice'){SPST.tab=PRACTICE_TAB||'aiconv';go('speaking');}
   else if(id==='write')    go('writing');
   else if(id==='more')     go(MORE_TAB||'stats');
-  // go() already updates the nav buttons
 }
 
 // Keep old go() working (used everywhere in app)
@@ -8964,60 +8940,112 @@ function startConvScenario(id,title){
 
 /* ── Update go() to also handle old panel names ── */
 function go(id){
-  // Map legacy panel names to what they show
-  const panelTab={
-    home:'home',
-    vocab:'vocab',tenses:'tenses',grammar:'grammar',reading:'reading',
-    writing:'writing',
-    speaking:'speaking',
-    stats:'stats',settings:'settings',lessons:'lessons',
-    tracker:'tracker',builder:'builder',falsefriends:'falsefriends',
-  };
+  const FPNLS=['home','vocab','tenses','grammar','writing','reading','speaking',
+               'lessons','builder','falsefriends','stats','tracker','settings'];
+  if(!FPNLS.includes(id)){console.warn('Unknown panel:',id);return;}
 
-  // Set sub-tab state for the 5-nav
-  if(id==='vocab'||id==='tenses'||id==='grammar'||id==='reading') LEARN_TAB=id;
-  if(id==='speaking') {}  // SPST.tab already set before go() is called
-  if(id==='writing') WRITE_TAB='freewrite';
-  if(id==='stats'||id==='settings'||id==='lessons') MORE_TAB=id;
+  // Hide all
+  FPNLS.forEach(pid=>{
+    const el=document.getElementById(pid);
+    if(el) el.style.display='none';
+  });
 
-  // Show the panel
-  const panelId = panelTab[id] || id;
-  document.querySelectorAll('.pnl,.fpnl').forEach(p=>p.style.display='none');
-  const p = document.getElementById(panelId);
-  if(!p){ console.warn('Panel not found:',panelId); return; }
-  p.style.display = FPANELS&&FPANELS.includes(panelId)?'flex':'block';
+  // Show target
+  const p=document.getElementById(id);
+  if(!p){console.warn('Panel element not found:',id);return;}
+  p.style.display='flex';
+  p.scrollTop=0;
 
-  // Update nav: highlight the right 5-tab button
-  document.querySelectorAll('.mnb').forEach(b=>b.classList.remove('on'));
-  const navMap={
-    home:'home',
-    vocab:'learn',tenses:'learn',grammar:'learn',reading:'learn',
-    speaking:'practice',
-    writing:'write',
-    stats:'more',settings:'more',lessons:'more',tracker:'more',
-  };
-  const navId='mn-'+(navMap[panelId]||'home');
-  const mn=document.getElementById(navId); if(mn) mn.classList.add('on');
-
-  // Also highlight desktop tab if exists
+  // Desktop nav highlight
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-  const dt=document.getElementById('t-'+panelId); if(dt) dt.classList.add('on');
+  const dt=document.getElementById('t-'+id); if(dt) dt.classList.add('on');
+
+  // Mobile nav highlight
+  document.querySelectorAll('.mnb').forEach(b=>b.classList.remove('on'));
+  const mobMap={
+    home:'mn-home',
+    vocab:'mn-learn',tenses:'mn-learn',grammar:'mn-learn',reading:'mn-learn',
+    speaking:'mn-practice',
+    writing:'mn-write',
+    stats:'mn-more',settings:'mn-more',lessons:'mn-more',
+    tracker:'mn-more',builder:'mn-more',falsefriends:'mn-learn',
+  };
+  const mn=document.getElementById(mobMap[id]||'mn-home');
+  if(mn) mn.classList.add('on');
 
   // Render
   const renderers={
-    home:rHome2,vocab:rVocab,tenses:rTenses,grammar:rGrammar,writing:rWriting,
-    reading:rReading,speaking:rSpeaking,lessons:rLessons,builder:rBuilder,
-    falsefriends:rFalseFriends,stats:rStats,tracker:rTracker,settings:rSettings,
+    home:rHome2, vocab:rVocab, tenses:rTenses, grammar:rGrammar,
+    writing:rWriting, reading:rReading, speaking:rSpeaking,
+    lessons:rLessons, builder:rBuilder, falsefriends:rFalseFriends,
+    stats:rStats, tracker:rTracker, settings:rSettings,
   };
-  if(renderers[panelId]) renderers[panelId]();
-  if(p) p.scrollTop=0;
+  if(renderers[id]) renderers[id]();
 }
 
 /* ── Update initApp ── */
+
+/* ══ MORE PANEL ══ */
+function goMore(){
+  // Hide all panels
+  const FPNLS=['home','vocab','tenses','grammar','writing','reading','speaking',
+               'lessons','builder','falsefriends','stats','tracker','settings'];
+  FPNLS.forEach(pid=>{
+    const el=document.getElementById(pid);
+    if(el) el.style.display='none';
+  });
+  // Show stats panel (used as the "More" hub)
+  const p=document.getElementById('stats');
+  if(p){ p.style.display='flex'; p.scrollTop=0; }
+  // Nav highlight
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.mnb').forEach(b=>b.classList.remove('on'));
+  const mn=document.getElementById('mn-more'); if(mn) mn.classList.add('on');
+  // Render the More hub
+  rMoreHub();
+}
+
+function rMoreHub(){
+  const el=document.getElementById('stats');
+  if(!el) return;
+  el.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.style.cssText='max-width:600px;margin:0 auto;padding:20px 16px 80px;width:100%';
+  el.appendChild(wrap);
+  
+  // Header
+  const hdr=document.createElement('div');
+  hdr.style.cssText='font-size:20px;font-weight:800;margin-bottom:20px';
+  hdr.textContent='⚙️ Περισσότερα';
+  wrap.appendChild(hdr);
+  
+  // Menu items
+  const items=[
+    {ic:'📊',title:'Στατιστικά',sub:'Progress, XP, achievements',fn:()=>{ go('stats'); }},
+    {ic:'⚙️',title:'Settings',sub:'API Key, επίπεδο, εμφάνιση',fn:()=>{ go('settings'); }},
+    {ic:'🎯',title:'Daily Lessons',sub:'Δομημένα μαθήματα',fn:()=>{ go('lessons'); }},
+    {ic:'🚫',title:'False Friends',sub:'Λέξεις-παγίδες',fn:()=>{ go('falsefriends'); }},
+    {ic:'🔧',title:'Sentence Builder',sub:'Δόμηση προτάσεων',fn:()=>{ go('builder'); }},
+    {ic:'📈',title:'Progress Tracker',sub:'Λεπτομερής παρακολούθηση',fn:()=>{ go('tracker'); }},
+  ];
+  
+  items.forEach(item=>{
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--s2);border:1px solid var(--ln);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:border-color .15s';
+    row.onmouseover=()=>row.style.borderColor='var(--bl)';
+    row.onmouseout=()=>row.style.borderColor='var(--ln)';
+    row.onclick=item.fn;
+    row.innerHTML='<span style="font-size:26px;width:36px;text-align:center">'+item.ic+'</span>'
+      +'<div style="flex:1"><div style="font-size:14px;font-weight:600">'+item.title+'</div>'
+      +'<div style="font-size:11px;color:var(--t3)">'+item.sub+'</div></div>'
+      +'<span style="color:var(--t3)">›</span>';
+    wrap.appendChild(row);
+  });
+}
 function initApp(){
   if(DB.get('light_mode',false)) document.documentElement.setAttribute('data-theme','light');
   typeof updXP==='function' && updXP();
-  goMain('home');
+  go('home');
   if(!DB.get('onboarded',false)) setTimeout(()=>typeof showOnboarding==='function'&&showOnboarding(),500);
 }
 if(document.readyState==='loading'){
