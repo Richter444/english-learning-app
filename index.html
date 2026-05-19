@@ -707,6 +707,12 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100%;
+  background: var(--bg);
+}
+
+/* Content container */
+#cnt {
+  background: var(--bg);
 }
 
 /* Content container — natural flow */
@@ -721,11 +727,13 @@ body {
   min-height: 100vh;
   padding-bottom: 80px;
   overflow: visible;
+  background: var(--bg);
+  color: var(--t1);
 }
 
 /* Active panel shown by go() */
-.pnl[style*="flex"],
-.fpnl[style*="flex"] {
+.pnl[style*="block"],
+.fpnl[style*="block"] {
   overflow: visible;
 }
 
@@ -8856,7 +8864,7 @@ function go(id){
   // Show target
   const p=document.getElementById(id);
   if(!p){console.warn('Panel element not found:',id);return;}
-  p.style.display='flex';
+  p.style.display='block';
   p.scrollTop=0;
 
   // Desktop nav highlight
