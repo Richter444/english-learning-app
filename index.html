@@ -561,7 +561,126 @@ input:focus, textarea:focus {
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x mandatory;
 }
+
+/* ═══════════════════════════════════
+   MOBILE LAYOUT (≤700px)
+   ═══════════════════════════════════ */
+@media (max-width: 700px) {
+
+  /* Hide desktop top nav entirely */
+  #nav { display: none !important; }
+
+  /* App fills full screen */
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    height: 100vh; /* fallback */
+    overflow: hidden;
+  }
+
+  /* Content area: full height minus bottom nav */
+  #cnt {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    height: calc(100dvh - 60px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Each panel fills the container */
+  .pnl, .fpnl {
+    min-height: calc(100dvh - 60px);
+    padding-bottom: 20px !important;
+  }
+
+  /* Bottom nav */
+  #mobile-nav {
+    display: flex !important;
+    position: fixed;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: var(--s1);
+    border-top: 1px solid var(--ln);
+    z-index: 1000;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 0 -2px 12px rgba(0,0,0,.15);
+  }
+
+  .mnb {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 6px 4px;
+    background: none;
+    border: none;
+    color: var(--t3);
+    font-size: 9px;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    letter-spacing: .3px;
+    text-transform: uppercase;
+    transition: color .15s;
+  }
+  .mnb .mn-ic { font-size: 22px; line-height: 1; display: block; }
+  .mnb.on { color: var(--bl); }
+
+  /* Typography */
+  .fp.f16, .fp.f18 { font-size: 15px !important; }
+  .fp.f14 { font-size: 13px !important; }
+  .f12 { font-size: 11px !important; }
+  .sl { font-size: 9px !important; }
+
+  /* Cards */
+  .card { padding: 12px !important; border-radius: 10px !important; }
+  .scard { padding: 11px !important; }
+
+  /* Grids: force 2 columns max */
+  .g3, .g4 { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+
+  /* Sections */
+  .sec { padding: 12px 14px !important; }
+  .sec.fu { padding: 12px 14px !important; max-width: 100% !important; }
+
+  /* Inputs: prevent zoom on iOS */
+  input, textarea, select {
+    font-size: 16px !important;
+    border-radius: 10px;
+  }
+
+  /* Buttons */
+  .btn { min-height: 38px; padding: 8px 14px !important; }
+
+  /* Tab bars inside panels */
+  .subtab-bar, div[style*="overflow-x:auto"] {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Speaking panel tabs */
+  .ttab { font-size: 11px !important; padding: 7px 11px !important; }
+
+  /* Home panel */
+  #home > div { padding: 14px !important; }
+
+  /* Vocab flashcard */
+  .vcard { min-height: 160px !important; }
+}
+
+@media (min-width: 701px) {
+  /* Desktop: hide bottom nav */
+  #mobile-nav { display: none !important; }
+  /* Desktop: top nav shows */
+  #nav { display: flex !important; }
+}
+
 </style>
+
 </head>
 <body>
 <div id="app">
@@ -605,20 +724,20 @@ input:focus, textarea:focus {
 
 <!-- Mobile Bottom Navigation -->
 <nav id="mobile-nav">
-  <button class="mnb" onclick="go('home')" id="mn-home">
-    <span class="mn-ic">🏠</span><span class="mn-lb">Home</span>
+  <button class="mnb" onclick="go('home')"     id="mn-home">
+    <span class="mn-ic">🏠</span>Home
   </button>
-  <button class="mnb" onclick="go('vocab')" id="mn-learn">
-    <span class="mn-ic">📚</span><span class="mn-lb">Learn</span>
+  <button class="mnb" onclick="go('vocab')"    id="mn-learn">
+    <span class="mn-ic">📚</span>Learn
   </button>
   <button class="mnb" onclick="go('speaking')" id="mn-practice">
-    <span class="mn-ic">🗣</span><span class="mn-lb">Practice</span>
+    <span class="mn-ic">🗣</span>Practice
   </button>
-  <button class="mnb" onclick="go('writing')" id="mn-write">
-    <span class="mn-ic">✍️</span><span class="mn-lb">Write</span>
+  <button class="mnb" onclick="go('writing')"  id="mn-write">
+    <span class="mn-ic">✍️</span>Write
   </button>
-  <button class="mnb" onclick="goMore()" id="mn-more">
-    <span class="mn-ic">⚙️</span><span class="mn-lb">More</span>
+  <button class="mnb" onclick="goMore()"       id="mn-more">
+    <span class="mn-ic">⚙️</span>More
   </button>
 </nav>
 
