@@ -739,7 +739,7 @@ function saveAPIKeyFromSettings(){
   if(key.length < 10){ toast('Το key είναι πολύ μικρό.','var(--am)'); return; }
   DB.set('anthropic_key', key);
   DB.set('api_key', key);
-  toast('✅ Αποθηκεύτηκε! Πάτα Test για επιβεβαίωση.','var(--gr)');
+  toast('✅ Αποθηκεύτηκε! ('+key.length+' chars) Πάτα Test για επιβεβαίωση.','var(--gr)');
   rSettings();
 }
 
@@ -6882,9 +6882,16 @@ function rSettings(){
         ?'<div class="fx ac jb mb8"><span class="f12" style="color:var(--gr)">✅ Key αποθηκευμένο (sk-ant-...'+DB.get('anthropic_key','').slice(-4)+')</span><button onclick="DB.delete(\'anthropic_key\');rSettings()" style="color:var(--ro);background:none;border:none;cursor:pointer;font-size:11px">Διαγραφή</button></div>'
         :'<div class="f11 c3 mb8">Χρειάζεσαι key για τα AI features. Δωρεάν από <a href=\"https://console.anthropic.com\" target=\"_blank\" style=\"color:var(--bl)\">console.anthropic.com</a></div>'}
       <div class="fx g8 mb8" style="align-items:center">
-        <input id="settings-api-input" type="password" placeholder="sk-ant-api03-..." style="flex:1;padding:9px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px;font-family:monospace;min-width:0">
+        <input id="settings-api-input" type="text" placeholder="sk-ant-api03-..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" style="flex:1;padding:9px 12px;background:var(--s2);border:1px solid var(--ln);border-radius:8px;color:var(--t1);font-size:13px;font-family:monospace;min-width:0;-webkit-user-select:text;user-select:text" oninput="document.getElementById('api-key-len').textContent=this.value.length+' chars'">
         <button onclick="saveAPIKeyFromSettings()" class="btn bp bsm" style="white-space:nowrap">💾 Αποθήκευση</button>
         <button onclick="testAPIKey()" class="btn bgh bsm" style="white-space:nowrap">🔌 Test</button>
+      </div>
+      <div style="font-size:11px;color:var(--t3);margin-top:4px">
+        Μήκος: <span id="api-key-len">0 chars</span> (πρέπει να είναι ~108)
+        &nbsp;|&nbsp;
+        <button onclick="if(navigator.clipboard){navigator.clipboard.readText().then(t=>{const inp=document.getElementById('settings-api-input');inp.value=t.trim();document.getElementById('api-key-len').textContent=t.trim().length+' chars';toast('📋 Επικολλήθηκε! '+t.trim().length+' chars','var(--gr)');}).catch(()=>toast('Χρησιμοποίησε long-press paste','var(--am)'));}" style="background:none;border:none;color:var(--bl);font-size:11px;cursor:pointer;padding:0;text-decoration:underline">📋 Επικόλλησε από clipboard</button>
+      </div>
+      <div style="display:none
       </div>
     </div>
 
