@@ -673,7 +673,19 @@ body {
 
 /* ── Key helpers ── */
 function getAPIKey(){
-  return DB.get('anthropic_key','') || DB.get('api_key','') || '';
+  // Try multiple storage locations for compatibility
+  try {
+    const k1 = DB.get('anthropic_key','');
+    if(k1 && k1.length > 5) return k1;
+    const k2 = DB.get('api_key','');
+    if(k2 && k2.length > 5) return k2;
+    // Direct localStorage fallback
+    const k3 = localStorage.getItem('anthropic_key');
+    if(k3 && k3.length > 5) return k3.replace(/^"|"$/g,''); // strip JSON quotes
+    const k4 = localStorage.getItem('api_key');
+    if(k4 && k4.length > 5) return k4.replace(/^"|"$/g,'');
+  } catch(e) {}
+  return '';
 }
 function hasAPIKey(){
   return getAPIKey().length > 20;
@@ -726,7 +738,8 @@ async function callAI(userMsg, systemMsg, historyArr){
     if(fetchErr.name === 'AbortError'){
       throw new Error('⏱ Timeout (28s). Δοκίμασε ξανά.');
     }
-    throw new Error('🌐 Σφάλμα σύνδεσης. Έλεγξε το internet.');
+    const errDetail = fetchErr.message || fetchErr.toString();
+    throw new Error('🌐 Σφάλμα σύνδεσης: ' + errDetail + ' — Βεβαιώσου ότι έχεις internet και ότι δεν μπλοκάρει το browser.');
   }
   clearTimeout(tid);
 
@@ -761,12 +774,7 @@ function saveAPIKeyFromSettings(){
   if(!inp) return;
   const key = inp.value.trim();
   if(!key){ toast('Εισήγαγε το API Key.','var(--am)'); return; }
-  if(!key.startsWith('sk-ant')){
-    toast('Το key πρεπει να ξεκινά με sk-ant-...','var(--am)'); return;
-  }
-  if(key.length < 40){
-    toast('Το key φαίνεται πολύ μικρό','var(--am)'); return;
-  }
+  if(key.length < 10){ toast('Το key είναι πολύ μικρό.','var(--am)'); return; }
   DB.set('anthropic_key', key);
   DB.set('api_key', key);
   toast('✅ API Key αποθηκεύτηκε! Πάτα Test για επιβεβαίωση.','var(--gr)');
@@ -778,8 +786,10 @@ async function testAPIKey(){
   const key = getAPIKey();
   if(!key){ toast('Πρωτα αποθηκευσε ενα API Key.','var(--am)'); return; }
   const btn = document.querySelector('[onclick="testAPIKey()"]');
-  if(btn){ btn.disabled=true; btn.textContent='⏳...'; }
+  const dbgEl = document.getElementById('api-debug');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Testing...'; }
   const restore=()=>{ if(btn){ btn.disabled=false; btn.textContent='🔌 Test'; } };
+  if(dbgEl){ dbgEl.style.display='block'; dbgEl.textContent='Testing...'; }
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
@@ -796,17 +806,29 @@ async function testAPIKey(){
       })
     });
     restore();
+    const rawText = await res.text();
+    if(dbgEl){ dbgEl.textContent='Status: '+res.status+'\n'+rawText.substring(0,500); }
     if(res.ok){
-      const d=await res.json();
-      toast('✅ Key λειτουργει! '+( d.content?.[0]?.text||'OK').slice(0,15),'var(--gr)');
+      let d; try{d=JSON.parse(rawText);}catch(e){d=null;}
+      const txt=(d&&d.content&&d.content[0]&&d.content[0].text)||rawText.slice(0,20);
+      toast('✅ Key λειτουργει! AI: '+txt,'var(--gr)');
     } else if(res.status===401){
-      toast('❌ 401: Λαθος API Key — invalid key','var(--ro)');
+      toast('❌ 401: Invalid API Key — το key είναι λάθος','var(--ro)');
+    } else if(res.status===403){
+      toast('❌ 403: Δεν έχεις access σε αυτό το μοντέλο','var(--ro)');
+    } else if(res.status===529||res.status===503){
+      toast('⚠ '+res.status+': Anthropic overloaded — δοκίμασε ξανά','var(--am)');
     } else {
-      toast('❌ Error '+res.status,'var(--ro)');
+      toast('❌ Error '+res.status+': '+rawText.substring(0,80),'var(--ro)');
     }
   }catch(e){
     restore();
-    toast('❌ Network error: '+e.message,'var(--ro)');
+    if(dbgEl){ dbgEl.textContent='Network error: '+e.message; }
+    if(e.name==='TypeError'||e.message.includes('fetch')){
+      toast('🌐 CORS/Network error — check console','var(--ro)');
+    } else {
+      toast('❌ '+e.message,'var(--ro)');
+    }
   }
 }
 
@@ -1481,8 +1503,8 @@ function showAPIKeyModal(reason){
 
 function saveAPIKey(){
   const key = document.getElementById('api-key-input')?.value?.trim();
-  if(!key||key.length<20){
-    toast('Το key φαίνεται λανθασμένο (πολύ μικρό).','var(--ro)');
+  if(!key||key.length<10){
+    toast('Βάλε το API Key.','var(--ro)');
     return;
   }
   DB.set('anthropic_key',key);
@@ -6940,6 +6962,7 @@ function rSettings(){
         <button onclick="saveAPIKeyFromSettings()" class="btn bp bsm" style="white-space:nowrap">💾 Αποθήκευση</button>
         <button onclick="testAPIKey()" class="btn bgh bsm" style="white-space:nowrap">🔌 Test</button>
       </div>
+      <div id="api-debug" style="display:none;margin-top:8px;padding:10px;background:#000;border:1px solid var(--ln);border-radius:6px;font-size:10px;font-family:monospace;color:#0f0;white-space:pre-wrap;word-break:break-all;max-height:100px;overflow-y:auto"></div>
     </div>
 
     <div class="sl mb10 c3">ΕΠΙΚΙΝΔΥΝΗ ΖΩΝΗ</div>
