@@ -397,19 +397,9 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
 @media(max-width:700px){
   /* scroll via body */
   /* Panels grow with content, don't restrict height */
-  .pnl{
-    height:auto!important;
-    min-height:100%!important;
-    overflow-y:visible!important;
-    padding-bottom:100px!important;
-  }
+
   /* Flex panels (Vocab, Tenses) */
-  .fpnl{
-    height:auto!important;
-    min-height:100%!important;
-    overflow-y:visible!important;
-    padding-bottom:100px!important;
-  }
+
   
   /* Nav bar */
   .tabs{display:none}
@@ -480,7 +470,7 @@ button,a,.card,.rcard,.scard,.gch,.wcard,.hcard{-webkit-tap-highlight-color:tran
   .fp.f16{font-size:14px!important}
   
   /* fpnl = flex panels need height adjustment */
-  .fpnl{flex-direction:column;overflow-y:auto;height:auto}
+  .fpnl{flex-direction:column}
   .fpnl .vm,.fpnl .tmain{overflow-y:visible;flex:none;min-height:300px}
   
   /* Home cards */
@@ -8992,19 +8982,12 @@ function _renderRoleplay(vm){
 // Override rAIConversation to also refresh practice panel
 
 function rAIConversation(){
-  const vm=document.getElementById('practice-vm');
-  const inPractice = document.getElementById('practice')?.style.display!=='none';
-  if(inPractice && vm && PRACTICE_TAB==='aiconv'){
-    vm.innerHTML='';
-    if(!CONVST.scenario) _renderConvGrid(vm);
-    else _renderConvChat(vm);
-    return;
-  }
-  if(_orig_rAIC2) _orig_rAIC2();
-  else {
-    const sp=document.getElementById('speaking');
-    if(sp){ if(!CONVST.scenario)_renderConvGrid(sp); else _renderConvChat(sp); }
-  }
+  const el = document.getElementById('speaking');
+  if(!el) return;
+  const vm = el.querySelector('.vm') || el;
+  vm.innerHTML = '';
+  if(!CONVST.scenario) _renderConvGrid(vm);
+  else _renderConvChat(vm);
 }
 
 /* ── WRITE panel ── */
@@ -9199,6 +9182,55 @@ function go(id){
 }
 
 /* ── Update initApp ── */
+
+/* ══ MORE HUB ══ */
+function goMore(){
+  go('stats');
+  const el=document.getElementById('stats');
+  if(!el)return;
+  el.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.style.cssText='max-width:600px;margin:0 auto;padding:20px 16px 80px;width:100%';
+  el.appendChild(wrap);
+  const hdr=document.createElement('div');
+  hdr.style.cssText='font-size:18px;font-weight:800;margin-bottom:20px';
+  hdr.textContent='⚙️ Περισσότερα';
+  wrap.appendChild(hdr);
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px';
+  wrap.appendChild(grid);
+  [{ic:'📊',title:'Στατιστικά',sub:'Progress',fn:()=>{ const s=document.getElementById('stats');if(s)s.innerHTML='';rStats(); }},
+   {ic:'⚙️',title:'Settings',sub:'API Key',fn:()=>go('settings')},
+   {ic:'🎯',title:'Lessons',sub:'Δομημένα',fn:()=>go('lessons')},
+   {ic:'🚫',title:'False Friends',sub:'Παγίδες',fn:()=>go('falsefriends')},
+   {ic:'🔧',title:'Builder',sub:'Προτάσεις',fn:()=>go('builder')},
+   {ic:'📈',title:'Tracker',sub:'Πρόοδος',fn:()=>go('tracker')},
+  ].forEach(item=>{
+    const card=document.createElement('div');
+    card.style.cssText='background:var(--s2);border:1px solid var(--ln);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s';
+    card.onmouseover=()=>card.style.borderColor='var(--bl)';
+    card.onmouseout=()=>card.style.borderColor='var(--ln)';
+    card.onclick=item.fn;
+    card.innerHTML='<div style="font-size:24px;margin-bottom:6px">'+item.ic+'</div>'
+      +'<div style="font-size:13px;font-weight:700">'+item.title+'</div>'
+      +'<div style="font-size:11px;color:var(--t3)">'+item.sub+'</div>';
+    grid.appendChild(card);
+  });
+  const xp=DB.get('xp',0);
+  const streak=typeof calcStreak==='function'?calcStreak():0;
+  const learned=typeof learnedW==='function'?learnedW().length:0;
+  const row=document.createElement('div');
+  row.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px';
+  [{ic:'⭐',v:xp,l:'XP'},{ic:'🔥',v:streak,l:'Streak'},{ic:'📖',v:learned,l:'Λέξεις'}].forEach(s=>{
+    const cell=document.createElement('div');
+    cell.style.cssText='background:var(--s2);border:1px solid var(--ln);border-radius:10px;padding:10px;text-align:center';
+    cell.innerHTML='<div style="font-size:16px">'+s.ic+'</div><div style="font-size:16px;font-weight:800">'+s.v+'</div><div style="font-size:10px;color:var(--t3)">'+s.l+'</div>';
+    row.appendChild(cell);
+  });
+  wrap.appendChild(row);
+  document.querySelectorAll('.mnb').forEach(b=>b.classList.remove('on'));
+  const mn=document.getElementById('mn-more');if(mn)mn.classList.add('on');
+}
 function initApp(){
   if(DB.get('light_mode',false)) document.documentElement.setAttribute('data-theme','light');
   typeof updXP==='function' && updXP();
