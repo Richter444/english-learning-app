@@ -648,10 +648,11 @@ input:focus, textarea:focus {
 function getAPIKey(){
   try{
     const k1 = DB.get('anthropic_key','');
+    if(typeof console!=='undefined') console.log('[getAPIKey] k1 type:', typeof k1, 'len:', (k1||'').length, 'prefix:', (k1||'').substring(0,8));
     if(k1 && k1.length>5) return k1;
     const k2 = DB.get('api_key','');
     if(k2 && k2.length>5) return k2;
-  }catch(e){}
+  }catch(e){ console.log('[getAPIKey] error:', e); }
   return '';
 }
 function hasAPIKey(){
@@ -666,6 +667,8 @@ async function callAI(userMsg, systemMsg, historyArr){
     go('settings');
     throw new Error('NO_KEY');
   }
+  // DEBUG: show key prefix in console
+  if(typeof console !== 'undefined') console.log('[callAI] key prefix:', key.substring(0,12), 'len:', key.length);
 
   let messages = [];
   if(Array.isArray(historyArr) && historyArr.length){
@@ -710,8 +713,10 @@ async function callAI(userMsg, systemMsg, historyArr){
     let errBody = '';
     try{ errBody = await res.text(); }catch(e){}
     if(res.status === 401){
-      toast('❌ 401: Λάθος API Key — πήγαινε Settings.','var(--ro)');
-      setTimeout(()=>go('settings'), 1000);
+      const storedKey = getAPIKey();
+      const keyInfo = storedKey ? storedKey.substring(0,12)+'...(len:'+storedKey.length+')' : 'EMPTY';
+      toast('❌ 401 Invalid Key. Stored: '+keyInfo+' — Πήγαινε Settings και ξαναβάλε το key.','var(--ro)');
+      setTimeout(()=>go('settings'), 2000);
       throw new Error('NO_KEY');
     }
     if(res.status === 429) throw new Error('⏳ Rate limit. Δοκίμασε σε λίγο.');
