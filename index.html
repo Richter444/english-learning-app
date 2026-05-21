@@ -5357,7 +5357,7 @@ function rListeningEx(el){
             <span class="tag f9" style="background:var(--s2);border:1px solid var(--ln2);color:var(--t3)">❓ ${ex.questions.length}Q</span>
           </div>
         </div>
-        <div class="fx fw g6 mt6">${ex.vocab.map(v=>'<span class="tag f9" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr)">'+v+'</span>').join('')}</div>
+        <div class="fx fw g6 mt6">${(ex.vocab||[]).map(v=>'<span class="tag f9" style="background:var(--gr)1a;border:1px solid var(--gr)33;color:var(--gr)">'+v+'</span>').join('')}</div>
       </div>`).join('')}`;
   } else {
     const ex=LISTENING_EX.find(x=>x.id===LEST.art);
@@ -5372,10 +5372,10 @@ function rListeningEx(el){
         <div class="f13 c2" style="line-height:1.9">${ex.transcript}</div>
       </div>
       <div class="card c-info mb12"><div class="sl mb8 ctl">KEY PHRASES</div>
-        ${ex.keyPhrases.map(ph=>'<div class="f12 c2 mb4" style="padding:5px 10px;background:var(--s3);border-left:2px solid var(--tl)44;border-radius:0 6px 6px 0">"'+ph+'"</div>').join('')}
+        ${(ex.keyPhrases||[]).map(ph=>'<div class="f12 c2 mb4" style="padding:5px 10px;background:var(--s3);border-left:2px solid var(--tl)44;border-radius:0 6px 6px 0">"'+ph+'"</div>').join('')}
       </div>
       <div class="sl mb10">COMPREHENSION QUESTIONS</div>
-      ${ex.questions.map((q,i)=>{
+      ${(ex.questions||[]).map((q,i)=>{
         const opts=q.opts.map(opt=>{
           let bg='var(--s2)',br='var(--ln)',col='var(--t2)';
           if(LEST.ans[i]===opt){bg='var(--s3)';br='var(--tl)';col='var(--tl)';}
