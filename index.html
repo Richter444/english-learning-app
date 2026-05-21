@@ -1134,7 +1134,7 @@ async function getAIWritingFeedback(){
   const text = ta && ta.value.trim();
   if(!text || text.length < 10){ toast('Γράψε τουλάχιστον μια πρόταση!','var(--am)'); return; }
 
-  const btn = document.getElementById('wf-btn') || document.querySelector('[onclick*="getAIWritingFeedback"]');
+  const btn = document.getElementById('wf-btn') || document.getElementById('ai-feedback-btn') || document.querySelector('[onclick*="getAIWritingFeedback"]');
   if(btn){ btn.disabled=true; btn.textContent='⏳ Αναλύω...'; }
   const restoreBtn = () => { if(btn){ btn.disabled=false; btn.textContent='🤖 AI Feedback'; } };
 
@@ -5255,6 +5255,13 @@ function rListeningEx(el){
   if(!el)return;
   if(!LEST.art){
     el.innerHTML=`<div class="fp f13 b mb16">Listening Comprehension Exercises</div>
+
+  // Back button
+  const _bb2=document.createElement('button');
+  _bb2.style.cssText='font-size:13px;font-weight:700;color:var(--bl);background:none;border:none;cursor:pointer;padding:4px 0 10px 0;display:block';
+  _bb2.innerHTML='← Πίσω';
+  _bb2.onclick=()=>{SPST.tab='conversations';rSpeaking();};
+  (el.querySelector('.vm')||el).insertBefore(_bb2,(el.querySelector('.vm')||el).firstChild);
       <p class="f12 c2 mb16" style="line-height:1.6">7 texts · British, American, Australian accents · Read → answer → listen → shadow.</p>
       ${(LISTENING_EX||[]).map(ex=>`<div class="scard" onclick="LEST.art='${ex.id}';LEST.ans={};LEST.done=false;LEST.score=0;rSpeaking()">
         <div class="fx ac jb mb8">
@@ -5333,11 +5340,11 @@ function rSpeaking(){
 
   // Tab bar — scrollable
   const tabBar = document.createElement('div');
-  tabBar.style.cssText = 'display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:16px;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:0';
+  tabBar.style.cssText = 'display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:12px;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:0;flex-shrink:0;width:100%';
   TABS.forEach(([id, lb]) => {
     const btn = document.createElement('button');
     btn.className = 'ttab' + (SPST.tab === id ? ' on' : '');
-    btn.style.cssText = '--tc:var(--gr);white-space:nowrap;flex-shrink:0';
+    btn.style.cssText = 'white-space:nowrap;flex-shrink:0;padding:8px 10px;font-size:11px;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;color:var(--t3);font-weight:600;transition:all .15s';
     btn.textContent = lb;
     btn.onclick = () => { SPST.tab = id; SPST.convIdx = null; rSpeaking(); };
     tabBar.appendChild(btn);
@@ -8064,6 +8071,13 @@ function renderThinking(){
   const target=vm||el;
   target.innerHTML='';
 
+  // Back button
+  const _bb=document.createElement('button');
+  _bb.style.cssText='font-size:13px;font-weight:700;color:var(--bl);background:none;border:none;cursor:pointer;padding:4px 0 10px 0;display:block';
+  _bb.innerHTML='← Πίσω';
+  _bb.onclick=()=>{SPST.tab='conversations';rSpeaking();};
+  (vm||el).appendChild(_bb);
+
   if(TEST.idx>=10){
     addXP(TEST.score*5);
     const _spk=DB.get('spk_stats',{t:0,i:0,s:0,j:0,ai:0});_spk.t++;DB.set('spk_stats',_spk);
@@ -8119,6 +8133,13 @@ function renderInstant(){
   const vm=el.querySelector('.vm');
   const target=vm||el;
   target.innerHTML='';
+
+  // Back button
+  const _bb=document.createElement('button');
+  _bb.style.cssText='font-size:13px;font-weight:700;color:var(--bl);background:none;border:none;cursor:pointer;padding:4px 0 10px 0;display:block';
+  _bb.innerHTML='← Πίσω';
+  _bb.onclick=()=>{SPST.tab='conversations';rSpeaking();};
+  (vm||el).appendChild(_bb);
   if(IRST.idx>=IRST.questions.length){
     addXP(IRST.score*4);
     const _spk2=DB.get('spk_stats',{t:0,i:0,s:0,j:0,ai:0});_spk2.i++;DB.set('spk_stats',_spk2);
@@ -8154,6 +8175,13 @@ function renderJournal(){
   if(!el)return;
   const vm=el.querySelector('.vm');
   const target=vm||el;
+
+  // Back button
+  const _bb=document.createElement('button');
+  _bb.style.cssText='font-size:13px;font-weight:700;color:var(--bl);background:none;border:none;cursor:pointer;padding:4px 0 10px 0;display:block';
+  _bb.innerHTML='← Πίσω';
+  _bb.onclick=()=>{SPST.tab='conversations';rSpeaking();};
+  target.appendChild(_bb);
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   const hasVoice=!!SR&&(location.protocol==='https:'||!!window.AndroidTTS);
   const prompt=JOURNAL_PROMPTS[new Date().getDay()%JOURNAL_PROMPTS.length];
@@ -8210,6 +8238,13 @@ function renderShadowing(){
   const vm=el.querySelector('.vm');
   const target=vm||el;
   target.innerHTML='';
+
+  // Back button
+  const _bb=document.createElement('button');
+  _bb.style.cssText='font-size:13px;font-weight:700;color:var(--bl);background:none;border:none;cursor:pointer;padding:4px 0 10px 0;display:block';
+  _bb.innerHTML='← Πίσω';
+  _bb.onclick=()=>{SPST.tab='conversations';rSpeaking();};
+  (vm||el).appendChild(_bb);
 
   if(SHST.idx>=SHADOW_SENTS.length){
     addXP(30);
@@ -8424,6 +8459,13 @@ function renderSlang(){
   if(!el)return;
   const vm=el.querySelector('.vm');
   const target=vm||el;
+
+  // Back button
+  const _bb2=document.createElement('button');
+  _bb2.style.cssText='font-size:13px;font-weight:700;color:var(--bl);background:none;border:none;cursor:pointer;padding:4px 0 10px 0;display:block';
+  _bb2.innerHTML='← Πίσω';
+  _bb2.onclick=()=>{SPST.tab='conversations';rSpeaking();};
+  (el.querySelector('.vm')||el).insertBefore(_bb2,(el.querySelector('.vm')||el).firstChild);
   target.innerHTML='';
 
   if(SLANGST.idx>=SLANGST.cards.length){
