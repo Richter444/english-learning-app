@@ -1041,73 +1041,153 @@ function _renderConvChat(el){
 function rRoleplay(){
   const el = document.getElementById('speaking');
   if(!el) return;
-  el.innerHTML = '';
-  const wrap = _mkDiv('sec fu','max-width:640px');
-  el.appendChild(wrap);
-  _mkEl(wrap,'div','fp f16 b mb16',null,{text:'🎭 Roleplay'});
+  const vm = el.querySelector('.vm') || el;
+  vm.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'max-width:560px;margin:0 auto;width:100%';
+  vm.appendChild(wrap);
+
+  // Back button (always shown)
+  const back = document.createElement('button');
+  back.style.cssText = 'font-size:13px;font-weight:700;color:var(--bl);background:none;border:none;'
+    + 'cursor:pointer;padding:0 0 14px 0;display:flex;align-items:center;gap:4px';
+  back.innerHTML = '← Πίσω';
+  back.onclick = () => { SPST.tab = 'conversations'; rSpeaking(); };
+  wrap.appendChild(back);
 
   if(!RPST.scenario){
-    _mkEl(wrap,'p','f12 c2 mb16',null,{style:'line-height:1.6',text:'Επέλεξε ρόλο και εξασκήσου σε πραγματικές καταστάσεις.'});
+    // Role list
+    const hdr = document.createElement('div');
+    hdr.innerHTML = '<div class="sl mb4" style="color:var(--vi)">ROLEPLAY</div>'
+      + '<div class="fp f16 b mb6">Επέλεξε ρόλο</div>'
+      + '<p class="f12 c3 mb16">Εξασκήσου σε πραγματικές καθημερινές καταστάσεις.</p>';
+    wrap.appendChild(hdr);
+
     const roles = [
-      {id:'r1',title:'Customer & Shop Assistant',ic:'🛒'},
-      {id:'r2',title:'Doctor & Patient',ic:'🏥'},
-      {id:'r3',title:'Boss & Employee',ic:'💼'},
-      {id:'r4',title:'Tourist & Local',ic:'🗺'},
-      {id:'r5',title:'Landlord & Tenant',ic:'🏠'},
-      {id:'r6',title:'Teacher & Student',ic:'📚'},
+      {id:'r1', title:'Customer & Shop Assistant', ic:'🛒'},
+      {id:'r2', title:'Doctor & Patient',          ic:'🏥'},
+      {id:'r3', title:'Boss & Employee',            ic:'💼'},
+      {id:'r4', title:'Tourist & Local',            ic:'🗺'},
+      {id:'r5', title:'Landlord & Tenant',          ic:'🏠'},
+      {id:'r6', title:'Teacher & Student',          ic:'📚'},
     ];
     roles.forEach(r => {
-      const card = _mkDiv('card mb10','cursor:pointer');
+      const card = document.createElement('div');
+      card.style.cssText = 'background:var(--s2);border:1px solid var(--ln);border-radius:12px;'
+        + 'padding:14px 16px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;'
+        + 'transition:border-color .15s';
+      card.onmouseover = () => card.style.borderColor = 'var(--vi)';
+      card.onmouseout  = () => card.style.borderColor = 'var(--ln)';
       card.onclick = () => startRoleplay(r.id, r.title);
-      _mkEl(card,'div','fp f13 b',null,{text: r.ic + ' ' + r.title});
+      card.innerHTML = '<span style="font-size:28px">' + r.ic + '</span>'
+        + '<div><div class="fp f13 b">' + r.title + '</div>'
+        + '<div class="f11 c3 mt2">Πάτα για να ξεκινήσεις</div></div>';
       wrap.appendChild(card);
     });
-    return;
+  } else {
+    // Chat mode - back goes to role list
+    back.onclick = () => {
+      RPST.scenario = null; RPST.history = []; RPST.loading = false;
+      rRoleplay();
+    };
+
+    // Title
+    const title = document.createElement('div');
+    title.style.cssText = 'font-size:14px;font-weight:700;margin-bottom:12px;color:var(--t1)';
+    title.textContent = '🎭 ' + RPST.scenario;
+    wrap.appendChild(title);
+
+    // Chat box
+    const chatBox = document.createElement('div');
+    chatBox.style.cssText = 'background:var(--s2);border-radius:12px;padding:12px;'
+      + 'margin-bottom:12px;min-height:150px;max-height:40vh;overflow-y:auto;'
+      + 'display:flex;flex-direction:column;gap:8px;-webkit-overflow-scrolling:touch';
+    wrap.appendChild(chatBox);
+
+    if(RPST.loading && !RPST.history.length){
+      chatBox.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t3)">⏳ Ξεκινάει...</div>';
+    } else {
+      RPST.history.forEach(msg => {
+        const bubble = document.createElement('div');
+        const isUser = msg.role === 'user';
+        bubble.style.cssText = 'max-width:85%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6;'
+          + (isUser
+            ? 'align-self:flex-end;background:var(--bl);color:#fff;border-bottom-right-radius:3px'
+            : 'align-self:flex-start;background:var(--s3);color:var(--t1);border-bottom-left-radius:3px');
+        bubble.textContent = msg.content;
+        if(!isUser){
+          const listenBtn = document.createElement('button');
+          listenBtn.style.cssText = 'display:block;margin-top:6px;font-size:10px;color:var(--bl);background:none;border:none;cursor:pointer;padding:0';
+          listenBtn.textContent = '🔊 Άκουσε';
+          listenBtn.onclick = () => speak(msg.content, 'en-GB');
+          bubble.appendChild(listenBtn);
+        }
+        chatBox.appendChild(bubble);
+      });
+      if(RPST.loading){
+        const typing = document.createElement('div');
+        typing.style.cssText = 'align-self:flex-start;background:var(--s3);border-radius:12px;padding:10px 14px;font-size:13px;color:var(--t3)';
+        typing.textContent = '⏳...';
+        chatBox.appendChild(typing);
+      }
+      setTimeout(() => chatBox.scrollTop = chatBox.scrollHeight, 50);
+    }
+
+    // Done?
+    if(RPST.done){
+      const doneDiv = document.createElement('div');
+      doneDiv.style.cssText = 'background:rgba(76,175,80,.1);border:1px solid var(--gr);border-radius:10px;padding:14px;margin-bottom:12px;text-align:center';
+      doneDiv.innerHTML = '<div style="font-size:14px;font-weight:700;color:var(--gr)">🎉 Ολοκληρώθηκε!</div>'
+        + '<div style="font-size:11px;color:var(--t3);margin-top:4px">Πολύ καλή δουλειά!</div>';
+      wrap.appendChild(doneDiv);
+      const newBtn = document.createElement('button');
+      newBtn.className = 'btn bp';
+      newBtn.style.cssText = 'width:100%;justify-content:center';
+      newBtn.textContent = '🔄 Νέο Roleplay';
+      newBtn.onclick = () => { RPST.scenario=null; RPST.history=[]; RPST.done=false; rRoleplay(); };
+      wrap.appendChild(newBtn);
+      return;
+    }
+
+    // Input row
+    const inputRow = document.createElement('div');
+    inputRow.style.cssText = 'display:flex;gap:8px;align-items:center';
+    const inp = document.createElement('input');
+    inp.id = 'rp-input';
+    inp.type = 'text';
+    inp.placeholder = 'Γράψε ή πάτα 🎤...';
+    inp.style.cssText = 'flex:1;padding:10px 14px;background:var(--s2);border:1px solid var(--ln);'
+      + 'border-radius:10px;color:var(--t1);font-size:16px;min-width:0';
+    inp.onkeydown = e => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); rpSend(); } };
+    inputRow.appendChild(inp);
+
+    const sendBtn = document.createElement('button');
+    sendBtn.className = 'btn bp';
+    sendBtn.style.cssText = 'padding:10px 16px;flex-shrink:0';
+    sendBtn.textContent = '→';
+    sendBtn.onclick = () => rpSend();
+    inputRow.appendChild(sendBtn);
+
+    const micBtn = document.createElement('button');
+    micBtn.style.cssText = 'width:42px;height:42px;border-radius:50%;background:var(--s3);border:1px solid var(--ln);cursor:pointer;font-size:16px;flex-shrink:0';
+    micBtn.textContent = '🎤';
+    micBtn.onclick = () => {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if(!SpeechRec){ toast('Speech not supported','var(--am)'); return; }
+      const rec = new SpeechRec();
+      rec.lang = 'en-US'; rec.continuous = false; rec.interimResults = false;
+      rec.onresult = e => { inp.value = e.results[0][0].transcript; rpSend(); };
+      rec.onerror = () => toast('Mic error','var(--ro)');
+      rec.start();
+    };
+    inputRow.appendChild(micBtn);
+    wrap.appendChild(inputRow);
+
+    const turns = document.createElement('div');
+    turns.style.cssText = 'text-align:center;font-size:10px;color:var(--t3);margin-top:8px';
+    turns.textContent = 'Turn ' + RPST.turn + '/6';
+    wrap.appendChild(turns);
   }
-
-  // Chat UI same as conversation
-  const backBtn = document.createElement('button');
-  backBtn.style.cssText = 'font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer;margin-bottom:12px';
-  backBtn.textContent = '← Πίσω';
-  backBtn.onclick = () => { RPST.scenario=null; RPST.history=[]; RPST.loading=false; rRoleplay(); };
-  wrap.appendChild(backBtn);
-  _mkEl(wrap,'div','fp f14 b mb12',null,{text: RPST.scenario});
-
-  const chatBox = _mkDiv(null,'background:var(--s2);border-radius:12px;padding:12px;margin-bottom:12px;min-height:150px;max-height:350px;overflow-y:auto;display:flex;flex-direction:column;gap:8px');
-  wrap.appendChild(chatBox);
-
-  if(RPST.loading && !RPST.history.length){
-    _mkEl(chatBox,'div','f12 c3',null,{style:'text-align:center;padding:20px',text:'⏳...'});
-  }
-  RPST.history.forEach(msg => {
-    const isUser = msg.role === 'user';
-    const bub = _mkDiv(null,'max-width:85%;padding:8px 12px;border-radius:12px;font-size:13px;line-height:1.6;'
-      +(isUser?'align-self:flex-end;background:var(--bl);color:#fff':'align-self:flex-start;background:var(--s1);color:var(--t1);border:1px solid var(--ln)'));
-    bub.textContent = msg.content;
-    chatBox.appendChild(bub);
-  });
-  if(RPST.loading && RPST.history.length){
-    const t = _mkDiv(null,'align-self:flex-start;background:var(--s1);border:1px solid var(--ln);border-radius:12px;padding:8px 12px;font-size:13px;color:var(--t3)');
-    t.textContent='...'; chatBox.appendChild(t);
-  }
-  chatBox.scrollTop = chatBox.scrollHeight;
-
-  const row = _mkDiv(null,'display:flex;gap:8px;align-items:center');
-  const inp = document.createElement('input');
-  inp.id = 'rp-input'; inp.type='text'; inp.placeholder='Απάντησέ...';
-  inp.style.cssText='flex:1;padding:10px 14px;background:var(--s2);border:1px solid var(--ln);border-radius:10px;color:var(--t1);font-size:13px;min-width:0';
-  inp.onkeydown = e => { if(e.key==='Enter') rpSend(); };
-  row.appendChild(inp);
-  const mic = document.createElement('button');
-  mic.style.cssText='width:40px;height:40px;border-radius:50%;background:var(--s2);border:1px solid var(--ln);cursor:pointer;font-size:18px';
-  mic.textContent='🎤'; mic.onclick=()=>startConvVoice(inp,mic);
-  row.appendChild(mic);
-  const sb = document.createElement('button');
-  sb.className='btn bp'; sb.style.cssText+=';flex-shrink:0;padding:10px 14px';
-  sb.textContent='→'; sb.onclick=rpSend;
-  if(RPST.loading) sb.disabled=true;
-  row.appendChild(sb);
-  wrap.appendChild(row);
 }
 
 function startRoleplay(id, title){
@@ -1134,9 +1214,14 @@ async function getAIWritingFeedback(){
   const text = ta && ta.value.trim();
   if(!text || text.length < 10){ toast('Γράψε τουλάχιστον μια πρόταση!','var(--am)'); return; }
 
-  const btn = document.getElementById('wf-btn') || document.getElementById('ai-feedback-btn') || document.querySelector('[onclick*="getAIWritingFeedback"]');
+  const btn = document.getElementById('wf-btn') || document.getElementById('ai-feedback-btn') || document.querySelector('.btn[onclick*="Feedback"]') || document.querySelector('[onclick*="getAIWritingFeedback"]');
   if(btn){ btn.disabled=true; btn.textContent='⏳ Αναλύω...'; }
-  const restoreBtn = () => { if(btn){ btn.disabled=false; btn.textContent='🤖 AI Feedback'; } };
+  const restoreBtn = () => { 
+    if(btn){ btn.disabled=false; btn.textContent='🤖 AI Feedback'; }
+    // Also restore ai-feedback-btn if different
+    const aiBtn = document.getElementById('ai-feedback-btn');
+    if(aiBtn && aiBtn !== btn){ aiBtn.disabled=false; aiBtn.textContent='🤖 AI Feedback'; }
+  };
 
   const sys = 'You are an English writing teacher. Analyse the student text.'
     + ' Respond ONLY in Greek using EXACTLY this format:\n'
@@ -5308,61 +5393,83 @@ function rListeningEx(el){
 let SPST={tab:'conversations',convIdx:null};
 /* ══ SPEAKING PANEL ══ */
 function rSpeaking(){
-  unlockAch('sp1');
   const el = document.getElementById('speaking');
   if(!el) return;
   el.innerHTML = '';
 
   const TABS = [
-    ['conversations','💬 Phrases'],
-    ['aiconv','🤖 AI Chat'],
-    ['roleplay','🎭 Roleplay'],
-    ['shadowing','📖 Shadow'],
-    ['thinking','🧠 Think'],
-    ['instant','⚡ Instant'],
-    ['journal','📔 Journal'],
-    ['slang','🗣 Slang'],
-    ['listening','🎧 Listen'],
-    ['pronunciation','🔤 Pron'],
+    {id:'conversations', ic:'💬', lb:'Phrases'},
+    {id:'aiconv',        ic:'🤖', lb:'AI Chat'},
+    {id:'roleplay',      ic:'🎭', lb:'Roleplay'},
+    {id:'shadowing',     ic:'📖', lb:'Shadow'},
+    {id:'thinking',      ic:'🧠', lb:'Think'},
+    {id:'instant',       ic:'⚡', lb:'Instant'},
+    {id:'journal',       ic:'📔', lb:'Journal'},
+    {id:'slang',         ic:'🗣', lb:'Slang'},
+    {id:'listening',     ic:'🎧', lb:'Listen'},
+    {id:'pronunciation', ic:'🔤', lb:'Pron'},
   ];
 
-  // Outer wrapper
   const wrap = document.createElement('div');
-  wrap.className = 'sec fu';
-  wrap.style.maxWidth = '840px';
+  wrap.style.cssText = 'display:flex;flex-direction:column;height:100%;min-height:100vh';
   el.appendChild(wrap);
 
   // Header
   const hdr = document.createElement('div');
-  hdr.innerHTML = '<div class="sl mb4" style="color:var(--gr)">SPEAKING</div>'
-    + '<div class="fp f16 b mb16">Ομιλία & Προφορά</div>';
+  hdr.style.cssText = 'padding:16px 16px 0';
+  hdr.innerHTML = '<div class="sl mb4 cgr">SPEAKING</div>'
+    + '<div class="fp f18 b mb12">Ομιλία & Προφορά</div>';
   wrap.appendChild(hdr);
 
-  // Tab bar — scrollable
-  const tabBar = document.createElement('div');
-  tabBar.style.cssText = 'display:flex;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid var(--ln);margin-bottom:12px;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:0;flex-shrink:0;width:100%';
-  TABS.forEach(([id, lb]) => {
+  // Tab bar — scrolls horizontally
+  const bar = document.createElement('div');
+  bar.style.cssText = 'display:flex;overflow-x:auto;overflow-y:hidden;'
+    + 'border-bottom:2px solid var(--ln);margin:0 0 0 0;padding:0 12px;'
+    + '-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-shrink:0;'
+    + 'background:var(--s1);position:sticky;top:0;z-index:5';
+  bar.id = 'spk-tabbar';
+  wrap.appendChild(bar);
+
+  const cur = SPST.tab || 'conversations';
+
+  TABS.forEach(t => {
     const btn = document.createElement('button');
-    btn.className = 'ttab' + (SPST.tab === id ? ' on' : '');
-    btn.style.cssText = 'white-space:nowrap;flex-shrink:0;padding:8px 10px;font-size:11px;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;color:var(--t3);font-weight:600;transition:all .15s';
-    btn.textContent = lb;
-    btn.onclick = () => { SPST.tab = id; SPST.convIdx = null; rSpeaking(); };
-    tabBar.appendChild(btn);
+    const active = t.id === cur;
+    btn.style.cssText = 'flex-shrink:0;padding:10px 12px;background:none;border:none;'
+      + 'border-bottom:2px solid ' + (active ? 'var(--bl)' : 'transparent') + ';'
+      + 'margin-bottom:-2px;cursor:pointer;font-size:12px;font-weight:' + (active ? '700' : '500') + ';'
+      + 'color:' + (active ? 'var(--bl)' : 'var(--t3)') + ';white-space:nowrap;'
+      + 'transition:all .15s;display:flex;align-items:center;gap:4px;'
+      + '-webkit-tap-highlight-color:transparent';
+    btn.innerHTML = '<span style="font-size:14px">' + t.ic + '</span>'
+      + '<span>' + t.lb + '</span>';
+    btn.onclick = () => {
+      SPST.tab = t.id;
+      rSpeaking();
+      // Scroll active tab into view
+      setTimeout(() => btn.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}), 50);
+    };
+    bar.appendChild(btn);
   });
-  wrap.appendChild(tabBar);
+
+  // Scroll active tab into view after render
+  setTimeout(() => {
+    const activeBtn = [...bar.children].find(b => b.style.borderBottomColor.includes('bl') || b.style.fontWeight === '700');
+    if(activeBtn) activeBtn.scrollIntoView({behavior:'auto',block:'nearest',inline:'center'});
+  }, 100);
 
   // Content area
   const vm = document.createElement('div');
   vm.className = 'vm';
-  vm.style.minHeight = '400px';
+  vm.style.cssText = 'flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch';
   wrap.appendChild(vm);
 
-  // Route to tab
+  // Route to correct sub-panel
   try {
-    spkRoute(vm, SPST.tab);
+    spkRoute(vm, cur);
   } catch(e) {
-    vm.innerHTML = '<div style="color:var(--ro);padding:20px;text-align:center">⚠ ' + (e.message||'Σφάλμα') + '</div>';
-    console.error('rSpeaking tab error:', e);
+    console.error('spkRoute error:', e);
+    vm.innerHTML = '<div style="padding:20px;color:var(--ro)">⚠ Error: ' + e.message + '</div>';
   }
 }
 
