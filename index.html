@@ -673,7 +673,6 @@ body {
 function getAPIKey(){
   try{
     const k1 = DB.get('anthropic_key','');
-    if(typeof console!=='undefined') console.log('[getAPIKey] k1 type:', typeof k1, 'len:', (k1||'').length, 'prefix:', (k1||'').substring(0,8));
     if(k1 && k1.length>5) return k1;
     const k2 = DB.get('api_key','');
     if(k2 && k2.length>5) return k2;
@@ -693,7 +692,6 @@ async function callAI(userMsg, systemMsg, historyArr){
     throw new Error('NO_KEY');
   }
   // DEBUG: show key prefix in console
-  if(typeof console !== 'undefined') console.log('[callAI] key prefix:', key.substring(0,12), 'len:', key.length);
 
   let messages = [];
   if(Array.isArray(historyArr) && historyArr.length){
@@ -761,10 +759,13 @@ function saveAPIKeyFromSettings(){
   if(!inp) return;
   const key = inp.value.trim();
   if(!key){ toast('Εισήγαγε το API Key.','var(--am)'); return; }
-  if(key.length < 10){ toast('Το key είναι πολύ μικρό.','var(--am)'); return; }
+  if(key.length < 50){
+    toast('❌ Το key είναι μόνο '+key.length+' χαρακτήρες! Πρέπει να είναι ~108. Κάνε paste ολόκληρο το key.','var(--ro)');
+    return;
+  }
   DB.set('anthropic_key', key);
   DB.set('api_key', key);
-  toast('✅ Αποθηκεύτηκε! ('+key.length+' chars) Πάτα Test για επιβεβαίωση.','var(--gr)');
+  toast('✅ Αποθηκεύτηκε! '+key.length+' chars — Πάτα Test.','var(--gr)');
   rSettings();
 }
 
@@ -1108,6 +1109,18 @@ function rRoleplay(){
       chatBox.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t3)">⏳ Ξεκινάει...</div>';
     } else {
       RPST.history.forEach(msg => {
+        if(msg.role === 'correction'){
+          // Grammar correction bubble
+          const isCorrect = msg.content.includes('✓');
+          const corrBubble = document.createElement('div');
+          corrBubble.style.cssText = 'font-size:11px;padding:6px 12px;border-radius:8px;margin:2px 0 6px auto;max-width:90%;'
+            + (isCorrect
+              ? 'background:rgba(76,175,80,.12);color:var(--gr);border:1px solid rgba(76,175,80,.3)'
+              : 'background:rgba(255,193,7,.12);color:#e6a800;border:1px solid rgba(255,193,7,.3)');
+          corrBubble.textContent = (isCorrect ? '✅ ' : '📝 ') + msg.content;
+          chatBox.appendChild(corrBubble);
+          return;
+        }
         const bubble = document.createElement('div');
         const isUser = msg.role === 'user';
         bubble.style.cssText = 'max-width:85%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6;'
@@ -1172,13 +1185,27 @@ function rRoleplay(){
     micBtn.style.cssText = 'width:42px;height:42px;border-radius:50%;background:var(--s3);border:1px solid var(--ln);cursor:pointer;font-size:16px;flex-shrink:0';
     micBtn.textContent = '🎤';
     micBtn.onclick = () => {
+      if(location.protocol !== 'https:' && !window.AndroidTTS){
+        toast('🔒 Χρειάζεται HTTPS για μικρόφωνο','var(--am)'); return;
+      }
       const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if(!SpeechRec){ toast('Speech not supported','var(--am)'); return; }
+      if(!SpeechRec){ toast('Ο browser δεν υποστηρίζει μικρόφωνο','var(--am)'); return; }
+      micBtn.textContent = '🔴';
+      micBtn.style.background = 'var(--ro)';
       const rec = new SpeechRec();
       rec.lang = 'en-US'; rec.continuous = false; rec.interimResults = false;
-      rec.onresult = e => { inp.value = e.results[0][0].transcript; rpSend(); };
-      rec.onerror = () => toast('Mic error','var(--ro)');
-      rec.start();
+      rec.onresult = e => {
+        inp.value = e.results[0][0].transcript;
+        micBtn.textContent = '🎤'; micBtn.style.background = 'var(--s3)';
+        rpSend();
+      };
+      rec.onerror = e => {
+        micBtn.textContent = '🎤'; micBtn.style.background = 'var(--s3)';
+        toast('Mic: ' + e.error,'var(--ro)');
+      };
+      rec.onend = () => { micBtn.textContent = '🎤'; micBtn.style.background = 'var(--s3)'; };
+      try{ rec.start(); }
+      catch(e){ micBtn.textContent='🎤'; micBtn.style.background='var(--s3)'; toast('Mic error: '+e.message,'var(--ro)'); }
     };
     inputRow.appendChild(micBtn);
     wrap.appendChild(inputRow);
@@ -5341,12 +5368,6 @@ function rListeningEx(el){
   if(!LEST.art){
     el.innerHTML=`<div class="fp f13 b mb16">Listening Comprehension Exercises</div>
 
-  // Back button
-  const _bb2=document.createElement('button');
-  _bb2.style.cssText='font-size:13px;font-weight:700;color:var(--bl);background:none;border:none;cursor:pointer;padding:4px 0 10px 0;display:block';
-  _bb2.innerHTML='← Πίσω';
-  _bb2.onclick=()=>{SPST.tab='conversations';rSpeaking();};
-  (el.querySelector('.vm')||el).insertBefore(_bb2,(el.querySelector('.vm')||el).firstChild);
       <p class="f12 c2 mb16" style="line-height:1.6">7 texts · British, American, Australian accents · Read → answer → listen → shadow.</p>
       ${(LISTENING_EX||[]).map(ex=>`<div class="scard" onclick="LEST.art='${ex.id}';LEST.ans={};LEST.done=false;LEST.score=0;rSpeaking()">
         <div class="fx ac jb mb8">
@@ -8566,14 +8587,13 @@ function renderSlang(){
   if(!el)return;
   const vm=el.querySelector('.vm');
   const target=vm||el;
-
-  // Back button
-  const _bb2=document.createElement('button');
-  _bb2.style.cssText='font-size:13px;font-weight:700;color:var(--bl);background:none;border:none;cursor:pointer;padding:4px 0 10px 0;display:block';
-  _bb2.innerHTML='← Πίσω';
-  _bb2.onclick=()=>{SPST.tab='conversations';rSpeaking();};
-  (el.querySelector('.vm')||el).insertBefore(_bb2,(el.querySelector('.vm')||el).firstChild);
   target.innerHTML='';
+  // Back button (after clear)
+  const _bb3=document.createElement('button');
+  _bb3.style.cssText='font-size:13px;font-weight:700;color:var(--bl);background:none;border:none;cursor:pointer;padding:4px 0 10px 0;display:block';
+  _bb3.textContent='← Πίσω';
+  _bb3.onclick=()=>{SPST.tab='conversations';rSpeaking();};
+  target.appendChild(_bb3);
 
   if(SLANGST.idx>=SLANGST.cards.length){
     if(SLANGST.total>0)addXP(SLANGST.score*3);
@@ -9247,25 +9267,47 @@ function _renderInto(vm, key, fnMap){
 async function rpSend(){
   if(!hasAPIKey()){ toast('⚙ API Key στα Settings.','var(--am)'); return; }
   if(RPST.loading) return;
-  const inp=document.getElementById('rp-input');
-  if(!inp||!inp.value.trim()) return;
-  const txt=inp.value.trim(); inp.value='';
-  RPST.loading=true;
-  RPST.history.push({role:'user',content:txt});
-  // Refresh display
-  const vm=document.getElementById('practice-vm');
-  if(vm && PRACTICE_TAB==='roleplay') rRoleplay();
-  const sys='You are playing: '+RPST.scenario+'. Student level: '+DB.get('placement_lv','B1')+'. Keep replies SHORT (1-2 sentences).';
+  const inp = document.getElementById('rp-input');
+  if(!inp || !inp.value.trim()) return;
+  const txt = inp.value.trim();
+  inp.value = '';
+
+  RPST.history.push({role:'user', content:txt});
+  RPST.loading = true;
+  RPST.turn = (RPST.turn||0) + 1;
+  rRoleplay();
+
+  const level = DB.get('placement_lv','B1');
+  const sys = 'You are playing the role of: '+RPST.scenario+'. Student level: '+level+'.'
+    + ' Keep replies SHORT (1-2 sentences max). Be natural and conversational.'
+    + ' After your reply, on a new line add: CORRECTION: [fix any grammar errors in student message, or write "✓ Correct!" if no errors]';
+
   try{
-    const r=await callAI(txt,sys,RPST.history.slice(0,-1));
-    RPST.history.push({role:'assistant',content:r});
-    RPST.loading=false;
-    if(vm && PRACTICE_TAB==='roleplay') rRoleplay();
-    speak(r,'en-GB');
-  }catch(e){
-    RPST.loading=false; if(RPST.history.length) RPST.history.pop();
-    if(e.message!=='NO_KEY') toast('⚠ '+e.message,'var(--am)');
-    if(vm && PRACTICE_TAB==='roleplay') rRoleplay();
+    const r = await callAI(txt, sys, RPST.history.slice(0,-1));
+
+    // Split response and correction
+    let aiReply = r;
+    let correction = '';
+    if(r.includes('CORRECTION:')){
+      const parts = r.split('CORRECTION:');
+      aiReply = parts[0].trim();
+      correction = parts[1].trim();
+    }
+
+    RPST.history.push({role:'assistant', content:aiReply});
+    if(correction) RPST.history.push({role:'correction', content:correction});
+    RPST.loading = false;
+
+    if(RPST.turn >= 6) RPST.done = true;
+
+    speak(aiReply, 'en-GB');
+    addXP(5);
+    rRoleplay();
+  } catch(e){
+    RPST.loading = false;
+    RPST.history.pop(); // remove failed user message
+    if(e.message !== 'NO_KEY') toast('❌ '+e.message,'var(--ro)');
+    rRoleplay();
   }
 }
 
