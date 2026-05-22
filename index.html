@@ -4619,7 +4619,7 @@ const EMAIL_TEMPLATES=[
 function rWriting(){unlockAch('wr1');
   const el=document.getElementById('writing');
   if(!WST.topic){
-    el.innerHTML=`<div class="sec fu">
+    el.innerHTML=`<button onclick="WST.topic=null;rWriting()" style="font-size:13px;font-weight:700;color:var(--bl);background:none;border:none;cursor:pointer;padding:4px 0 14px;display:block">← Πίσω</button><div class="sec fu">
       <div class="sl mb4 cpk">WRITING</div>
       <div class="fx ac jb mb4">
         <div class="fp f16 b">Γραφή</div>
@@ -8258,26 +8258,122 @@ function startInstantTraining(){
 function renderInstant(){
   const el=document.getElementById('speaking');
   if(!el)return;
-  const vm=el.querySelector('.vm');
-  const target=vm||el;
-  target.innerHTML='';
-
+  const vm=el.querySelector('.vm')||el;
+  const S=IRST_STATE||{};
+  
+  if(!S.questions||!S.questions.length){startInstantTraining();return;}
+  
+  vm.innerHTML='';
   // Back button
-  const _bb=document.createElement('button');
-  _bb.style.cssText='font-size:13px;font-weight:700;color:var(--bl);background:none;border:none;cursor:pointer;padding:4px 0 10px 0;display:block';
-  _bb.innerHTML='← Πίσω';
-  _bb.onclick=()=>{SPST.tab='conversations';rSpeaking();};
-  (vm||el).appendChild(_bb);
-  if(IRST.idx>=IRST.questions.length){
-    addXP(IRST.score*4);
-    const _spk2=DB.get('spk_stats',{t:0,i:0,s:0,j:0,ai:0});_spk2.i++;DB.set('spk_stats',_spk2);
-    const rows=IRST.history.map((h,i)=>'<div style="padding:8px 0;border-bottom:1px solid var(--ln)"><div style="font-size:11px;color:var(--t3)">'+h.q+'</div><div style="font-size:12px;color:var(--t1);margin-top:2px">'+h.a+'</div></div>').join('');
-    target.innerHTML='<div style="max-width:480px;margin:0 auto"><div style="text-align:center;margin-bottom:20px"><div style="font-size:36px;margin-bottom:8px">⚡</div><div style="font-size:16px;font-weight:700;margin-bottom:4px">Instant Response!</div><div style="font-size:12px;color:var(--t3)">'+IRST.score+'/10 · +'+(IRST.score*4)+' XP</div></div><div style="background:var(--s2);border-radius:10px;padding:12px;max-height:280px;overflow-y:auto;margin-bottom:16px">'+rows+'</div><button onclick="startInstantTraining()" class="btn bp" style="width:100%;justify-content:center">Ξανά</button></div>';
+  const bb=document.createElement('button');
+  bb.style.cssText='font-size:13px;font-weight:700;color:var(--bl);background:none;border:none;cursor:pointer;padding:4px 0 10px 0;display:block';
+  bb.textContent='← Πίσω'; bb.onclick=()=>{SPST.tab='conversations';rSpeaking();};
+  vm.appendChild(bb);
+
+  const wrap=document.createElement('div');
+  wrap.style.cssText='max-width:520px;margin:0 auto;width:100%';
+  vm.appendChild(wrap);
+
+  // Done screen
+  if(S.idx>=S.questions.length){
+    const pct=Math.round((S.score||0)/S.questions.length*100);
+    addXP((S.score||0)*8);
+    wrap.innerHTML='<div style="text-align:center;padding:20px">'
+      +'<div style="font-size:48px;margin-bottom:12px">'+(pct>=80?'🎉':pct>=60?'👍':'💪')+'</div>'
+      +'<div style="font-size:20px;font-weight:800;margin-bottom:8px">'+(S.score||0)+'/'+S.questions.length+'</div>'
+      +'<div style="font-size:13px;color:var(--t3);margin-bottom:20px">'+pct+'% — '+(pct>=80?'Εξαιρετικά!':pct>=60?'Καλά!':'Συνέχισε!')+'</div>'
+      +'<button class="btn bp" onclick="startInstantTraining()">🔄 Νέο Quiz</button></div>';
     return;
   }
-  const item=IRST.questions[IRST.idx];
-  target.innerHTML='<div style="max-width:440px;margin:0 auto"><div style="display:flex;justify-content:space-between;margin-bottom:16px"><div style="font-size:12px;color:var(--t3)">⚡ INSTANT RESPONSE</div><div style="font-size:12px;color:var(--t3)">'+(IRST.idx+1)+'/'+IRST.questions.length+'</div></div><div style="font-size:24px;font-weight:700;text-align:center;margin-bottom:8px;line-height:1.4">'+item.q+'</div><div style="font-size:12px;color:var(--t3);text-align:center;margin-bottom:20px">'+item.h+'</div><textarea id="instant-input" placeholder="Answer now..." style="width:100%;height:80px;padding:12px;background:var(--s2);border:2px solid var(--vi);border-radius:10px;color:var(--t1);font-size:14px;resize:none;font-family:var(--font)"></textarea><button onclick="submitInstant()" class="btn" style="margin-top:10px;width:100%;justify-content:center;background:var(--vi);color:#fff;border:none">Next</button></div>';
-  setTimeout(()=>document.getElementById('instant-input')?.focus(),50);
+
+  const q=S.questions[S.idx];
+  // Progress
+  const pbar=document.createElement('div');
+  pbar.style.cssText='height:4px;background:var(--s3);border-radius:4px;margin-bottom:16px;overflow:hidden';
+  const pfill=document.createElement('div');
+  pfill.style.cssText='height:100%;background:var(--bl);border-radius:4px;width:'+Math.round((S.idx/S.questions.length)*100)+'%';
+  pbar.appendChild(pfill); wrap.appendChild(pbar);
+
+  // Question card
+  const qcard=document.createElement('div');
+  qcard.style.cssText='background:var(--s2);border-radius:14px;padding:20px;margin-bottom:16px;text-align:center';
+  qcard.innerHTML='<div style="font-size:11px;color:var(--t3);margin-bottom:8px;text-transform:uppercase">⚡ INSTANT — '+(S.idx+1)+'/'+S.questions.length+'</div>'
+    +'<div style="font-size:16px;font-weight:700;line-height:1.5">'+q.q+'</div>'
+    +'<div style="font-size:12px;color:var(--bl);margin-top:8px">Σωστή απάντηση: <b>'+q.a+'</b></div>';
+  wrap.appendChild(qcard);
+
+  // Response area
+  if(S.lastResponse){
+    const resp=document.createElement('div');
+    const isCorrect=S.lastResponse.toLowerCase().trim().includes(q.a.toLowerCase().replace(/[^a-z]/g,'').substring(0,6));
+    resp.style.cssText='padding:12px;border-radius:10px;margin-bottom:12px;font-size:13px;'
+      +(isCorrect?'background:rgba(76,175,80,.15);border:1px solid var(--gr);color:var(--gr)'
+                 :'background:rgba(244,67,54,.1);border:1px solid var(--ro);color:var(--ro)');
+    resp.innerHTML=(isCorrect?'✅ ':'❌ ')+'Είπες: "'+S.lastResponse+'"'
+      +(isCorrect?'' : '<br><span style="font-size:11px;opacity:.8">Σωστό: '+q.a+'</span>');
+    wrap.appendChild(resp);
+
+    const nextBtn=document.createElement('button');
+    nextBtn.className='btn bp';nextBtn.style.cssText='width:100%;justify-content:center;margin-top:4px';
+    nextBtn.textContent='Επόμενο →';
+    nextBtn.onclick=()=>{
+      if(isCorrect) S.score=(S.score||0)+1;
+      S.idx=(S.idx||0)+1; S.lastResponse=null;
+      renderInstant();
+    };
+    wrap.appendChild(nextBtn);
+    return;
+  }
+
+  // Voice input buttons
+  const btnRow=document.createElement('div');
+  btnRow.style.cssText='display:flex;gap:10px;justify-content:center;flex-wrap:wrap';
+
+  // Mic button
+  const micBtn=document.createElement('button');
+  micBtn.style.cssText='width:64px;height:64px;border-radius:50%;background:var(--bl);border:none;cursor:pointer;font-size:24px;transition:all .2s';
+  micBtn.textContent='🎤';
+  micBtn.onclick=()=>{
+    if(location.protocol!=='https:'&&!window.AndroidTTS){toast('🔒 Χρειάζεται HTTPS','var(--am)');return;}
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){toast('Browser δεν υποστηρίζει μικρόφωνο','var(--am)');return;}
+    micBtn.textContent='🔴';micBtn.style.background='var(--ro)';
+    const rec=new SR();
+    rec.lang='en-US';rec.continuous=false;rec.interimResults=false;
+    rec.onresult=e=>{
+      S.lastResponse=e.results[0][0].transcript;
+      micBtn.textContent='🎤';micBtn.style.background='var(--bl)';
+      renderInstant();
+    };
+    rec.onerror=e=>{
+      micBtn.textContent='🎤';micBtn.style.background='var(--bl)';
+      toast('Mic error: '+e.error,'var(--ro)');
+    };
+    rec.onend=()=>{micBtn.textContent='🎤';micBtn.style.background='var(--bl)';};
+    rec.start();
+  };
+  btnRow.appendChild(micBtn);
+
+  // Text fallback
+  const textBtn=document.createElement('button');
+  textBtn.className='btn bgh bsm';textBtn.textContent='⌨ Γράψε';
+  textBtn.onclick=()=>{
+    const ans=prompt('Απάντηση: '+q.q);
+    if(ans){S.lastResponse=ans;renderInstant();}
+  };
+  btnRow.appendChild(textBtn);
+
+  // Skip
+  const skipBtn=document.createElement('button');
+  skipBtn.className='btn bgh bsm';skipBtn.textContent='→ Skip';
+  skipBtn.onclick=()=>{S.idx=(S.idx||0)+1;S.lastResponse=null;renderInstant();};
+  btnRow.appendChild(skipBtn);
+  wrap.appendChild(btnRow);
+
+  const hint=document.createElement('div');
+  hint.style.cssText='text-align:center;font-size:11px;color:var(--t3);margin-top:12px';
+  hint.textContent='Πάτα 🎤 και πες την απάντηση στα Αγγλικά';
+  wrap.appendChild(hint);
 }
 
 function submitInstant(){
@@ -8374,29 +8470,29 @@ function renderShadowing(){
   _bb.onclick=()=>{SPST.tab='conversations';rSpeaking();};
   (vm||el).appendChild(_bb);
 
-  if(SHST.idx>=SHADOW_SENTS.length){
+  if(SHST_STATE.idx>=SHADOW_SENTS.length){
     addXP(30);
     const _spk3=DB.get('spk_stats',{t:0,i:0,s:0,j:0,ai:0});_spk3.s++;DB.set('spk_stats',_spk3);
     target.innerHTML='<div style="max-width:480px;margin:0 auto;text-align:center;padding:40px 0"><div style="font-size:40px;margin-bottom:12px">🎯</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">Shadowing Complete!</div><div style="font-size:12px;color:var(--t3);margin-bottom:20px">'+SHADOW_SENTS.length+' sentences · +30 XP</div><button onclick="startShadowing()" class="btn bp" style="justify-content:center">Ξανά</button></div>';
     return;
   }
 
-  const item=SHADOW_SENTS[SHST.idx];
-  const pct=Math.round(SHST.idx/SHADOW_SENTS.length*100);
+  const item=SHADOW_SENTS[SHST_STATE.idx];
+  const pct=Math.round(SHST_STATE.idx/SHADOW_SENTS.length*100);
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   const hasVoice=!!SR&&(location.protocol==='https:'||!!window.AndroidTTS);
 
   const wrap=document.createElement('div');
   wrap.style.cssText='max-width:520px;margin:0 auto';
 
-  const progress_html='<div style="display:flex;justify-content:space-between;margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:var(--t3)">📖 SHADOWING</div><div style="font-size:12px;color:var(--t3)">'+(SHST.idx+1)+'/'+SHADOW_SENTS.length+'</div></div><div style="height:3px;background:var(--s3);border-radius:3px;margin-bottom:20px"><div style="height:100%;width:'+pct+'%;background:var(--bl);border-radius:3px"></div></div>';
+  const progress_html='<div style="display:flex;justify-content:space-between;margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:var(--t3)">📖 SHADOWING</div><div style="font-size:12px;color:var(--t3)">'+(SHST_STATE.idx+1)+'/'+SHADOW_SENTS.length+'</div></div><div style="height:3px;background:var(--s3);border-radius:3px;margin-bottom:20px"><div style="height:100%;width:'+pct+'%;background:var(--bl);border-radius:3px"></div></div>';
 
   const card_html='<div style="background:var(--s2);border-radius:12px;padding:24px;text-align:center;margin-bottom:12px"><div style="font-size:19px;font-weight:600;line-height:1.6;color:var(--t1)">'+item.t+'</div></div>';
 
   const tip_html='<div style="font-size:12px;color:var(--t3);margin-bottom:16px;padding:8px 12px;background:var(--s2);border-radius:8px">💡 '+item.tip+'</div>';
 
-  const transcript_html=SHST.transcript
-    ?'<div style="font-size:12px;color:var(--t3);margin-bottom:12px;padding:8px 12px;background:var(--s2);border-radius:8px;border-left:3px solid var(--gr)">Είπες: <span style="color:var(--t1)">'+escHTML(SHST.transcript)+'</span></div>'
+  const transcript_html=SHST_STATE.transcript
+    ?'<div style="font-size:12px;color:var(--t3);margin-bottom:12px;padding:8px 12px;background:var(--s2);border-radius:8px;border-left:3px solid var(--gr)">Είπες: <span style="color:var(--t1)">'+escHTML(SHST_STATE.transcript)+'</span></div>'
     :'';
 
   wrap.innerHTML=progress_html+card_html+tip_html+transcript_html;
@@ -8408,14 +8504,14 @@ function renderShadowing(){
   const listenBtn=document.createElement('button');
   listenBtn.style.cssText='flex:1;padding:10px;background:var(--bl);border-radius:8px;color:#fff;border:none;cursor:pointer;font-size:13px';
   listenBtn.textContent='🔊 Άκουσε';
-  listenBtn.onclick=()=>speak(SHADOW_SENTS[SHST.idx].t,'en-GB');
+  listenBtn.onclick=()=>speak(SHADOW_SENTS[SHST_STATE.idx].t,'en-GB');
   btnRow.appendChild(listenBtn);
 
   if(hasVoice){
     const micBtn=document.createElement('button');
     micBtn.id='shadow-mic';
-    micBtn.style.cssText='flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:13px;border:1px solid var(--ln);background:'+(SHST.recording?'var(--ro)':'var(--s2)')+';color:'+(SHST.recording?'#fff':'var(--t1)');
-    micBtn.textContent=SHST.recording?'⏹ Stop':'🎤 Επανέλαβε';
+    micBtn.style.cssText='flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:13px;border:1px solid var(--ln);background:'+(SHST_STATE.recording?'var(--ro)':'var(--s2)')+';color:'+(SHST_STATE.recording?'#fff':'var(--t1)');
+    micBtn.textContent=SHST_STATE.recording?'⏹ Stop':'🎤 Επανέλαβε';
     micBtn.onclick=shadowRecord;
     btnRow.appendChild(micBtn);
   }
@@ -8438,13 +8534,13 @@ function shadowRecord(){
   if(location.protocol!=='https:'&&!window.AndroidTTS){
     toast('🔒 Το μικρόφωνο λειτουργεί στο Android app ή στο richter444.github.io','var(--am)');return;
   }
-  if(SHST.recording&&SHST.rec){SHST.rec.stop();return;}
+  if(SHST_STATE.recording&&SHST_STATE.rec){SHST_STATE.rec.stop();return;}
   const rec=new SR();
-  SHST.rec=rec;SHST.recording=true;
+  SHST_STATE.rec=rec;SHST_STATE.recording=true;
   rec.lang='en-US';rec.continuous=false;rec.interimResults=false;
-  rec.onresult=(e)=>{SHST.transcript=e.results[0][0].transcript;};
-  rec.onend=()=>{SHST.recording=false;SHST.rec=null;renderShadowing();};
-  rec.onerror=(e)=>{SHST.recording=false;if(e.error!=='aborted')toast('Σφάλμα: '+e.error,'var(--am)');renderShadowing();};
+  rec.onresult=(e)=>{SHST_STATE.transcript=e.results[0][0].transcript;};
+  rec.onend=()=>{SHST_STATE.recording=false;SHST_STATE.rec=null;renderShadowing();};
+  rec.onerror=(e)=>{SHST_STATE.recording=false;if(e.error!=='aborted')toast('Σφάλμα: '+e.error,'var(--am)');renderShadowing();};
   rec.start();renderShadowing();
 }
 
@@ -9421,6 +9517,33 @@ function goMore(){
   wrap.appendChild(row);
   document.querySelectorAll('.mnb').forEach(b=>b.classList.remove('on'));
   const mn=document.getElementById('mn-more');if(mn)mn.classList.add('on');
+}
+
+function _renderEmailWriter(){
+  WRITE_TAB = 'email';
+  const el = document.getElementById('writing');
+  if(!el) return;
+  el.innerHTML = '';
+  if(typeof _injectWriteTabs === 'function') _injectWriteTabs(el, 'email');
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'padding:16px;max-width:640px;margin:0 auto;width:100%';
+  wrap.innerHTML = '<div style="font-size:16px;font-weight:700;margin-bottom:6px">📧 Email Improver</div>'
+    + '<p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.6">Γράψε ένα email — το AI θα το κάνει πιο επαγγελματικό.</p>';
+  const ta = document.createElement('textarea');
+  ta.id = 'email-input';
+  ta.placeholder = 'Dear Sir/Madam...';
+  ta.style.cssText = 'width:100%;min-height:140px;padding:12px;background:var(--s2);border:1px solid var(--ln);'
+    + 'border-radius:10px;color:var(--t1);font-size:16px;line-height:1.7;resize:vertical;font-family:inherit;margin-bottom:10px;box-sizing:border-box';
+  wrap.appendChild(ta);
+  const btn = document.createElement('button');
+  btn.id='email-improve-btn'; btn.className='btn bp'; btn.textContent='✨ Βελτίωσε με AI';
+  btn.style.marginBottom='12px';
+  btn.onclick=()=>improveEmail();
+  wrap.appendChild(btn);
+  const out = document.createElement('div');
+  out.id='email-output'; out.style.marginTop='12px';
+  wrap.appendChild(out);
+  el.appendChild(wrap);
 }
 function initApp(){
   if(DB.get('light_mode',false)) document.documentElement.setAttribute('data-theme','light');
