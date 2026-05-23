@@ -2274,6 +2274,8 @@ function rVocab(){
   else if(VS.mode==='collocations')rCollocations();
   else if(VS.mode==='learned')rVLearned(vm);
   else if(VS.mode==='add')rVAdd(vm);
+
+  _injectLearnTabs(el, 'vocab');
 }
 
 
@@ -3808,6 +3810,8 @@ function rTenses(){
   `;
   if(isOpen) buildTSB();
   rTM();
+
+  _injectLearnTabs(el, 'tenses');
 }
 
 function buildTSB(){
@@ -4521,6 +4525,8 @@ function rGrammar(){
       </div>
     </div>`;
   } else rGTopic();
+
+  _injectLearnTabs(el, 'grammar');
 }
 
 function rGTopic(){
@@ -6487,6 +6493,8 @@ function rReading(){
            </div><button onclick="RST.ra={};RST.rs=false;RST.rsc=null;rReading()" style="padding:9px 16px;border:1px solid ${a.col};border-radius:7px;color:${a.col};background:transparent;cursor:pointer;font-size:10px;font-weight:700">ΞΑΝΑ</button></div>`}
     </div>`;
   }
+
+  _injectLearnTabs(el, 'reading');
 }
 
 
@@ -9546,6 +9554,36 @@ function _renderEmailWriter(){
   out.id='email-output'; out.style.marginTop='12px';
   wrap.appendChild(out);
   el.appendChild(wrap);
+}
+
+function _injectLearnTabs(el, activeTab){
+  const TABS = [
+    {id:'vocab',   ic:'📖', lb:'Vocab'},
+    {id:'tenses',  ic:'⏱',  lb:'Tenses'},
+    {id:'grammar', ic:'📝', lb:'Grammar'},
+    {id:'reading', ic:'📚', lb:'Reading'},
+  ];
+  const bar = document.createElement('div');
+  bar.style.cssText = 'display:flex;overflow-x:auto;overflow-y:hidden;'
+    + 'border-bottom:2px solid var(--ln);padding:0 12px;'
+    + '-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-shrink:0;'
+    + 'background:var(--s1);position:sticky;top:0;z-index:5;margin-bottom:0';
+  TABS.forEach(t => {
+    const btn = document.createElement('button');
+    const active = t.id === activeTab;
+    btn.style.cssText = 'flex-shrink:0;padding:10px 14px;background:none;border:none;'
+      + 'border-bottom:2px solid ' + (active?'var(--bl)':'transparent') + ';'
+      + 'margin-bottom:-2px;cursor:pointer;font-size:12px;font-weight:'+(active?'700':'500')+';'
+      + 'color:'+(active?'var(--bl)':'var(--t3)')+';white-space:nowrap;'
+      + '-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:4px';
+    btn.innerHTML = '<span>'+t.ic+'</span><span>'+t.lb+'</span>';
+    btn.onclick = () => {
+      LEARN_TAB = t.id;
+      go(t.id);
+    };
+    bar.appendChild(btn);
+  });
+  el.insertBefore(bar, el.firstChild);
 }
 function initApp(){
   if(DB.get('light_mode',false)) document.documentElement.setAttribute('data-theme','light');
